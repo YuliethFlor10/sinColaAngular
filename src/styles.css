@@ -1,1 +1,418 @@
 /* You can add global styles to this file, and also import other style files */
+/* ========================================
+   RESET Y ESTILOS BASE
+   ======================================== */
+   * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+  }
+
+  /* ========================================
+     ESTILOS PARA ICONOS UNICODE
+     ======================================== */
+  .icon {
+    font-size: 1.2em;
+    display: inline-block;
+    line-height: 1;
+  }
+
+  .nav-icon {
+    font-size: 1.1em;
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+    line-height: 1;
+  }
+
+/* ========================================
+   CONTENIDO PRINCIPAL Y VISTAS
+   ======================================== */
+   .main-content {
+    flex: 1;
+    padding: 2rem;
+    margin-left: 280px;
+    transition: margin-left 0.3s ease;
+  }
+
+/* ========================================
+   DISEÑO RESPONSIVE
+   ======================================== */
+
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+  .appointments-layout {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .appointments-sidebar {
+    order: 1;
+  }
+
+  .appointments-main {
+    order: 2;
+  }
+
+  .datetime-section {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .form-row {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .main-container {
+    flex-direction: column;
+    margin-left: 0;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 80px;
+    width: 280px;
+    height: calc(100vh - 80px);
+    transform: translateX(-100%);
+    transition: transform 0.3s;
+    z-index: 999;
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .overlay.show {
+    display: block;
+  }
+    .appointments-calendar {
+    max-width: 320px;
+    padding: 0.75rem;
+  }
+  .calendar-section h3 {
+    font-size: 1rem;
+  }
+  .calendar-header span {
+    font-size: 0.85rem;
+  }
+  .calendar-days-header span,
+  .calendar-day {
+    font-size: 0.75rem;
+    padding: 0.3rem 0;
+  }
+}
+
+/* Móviles y tablets pequeñas */
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem 1.5rem;
+    height: 80px;
+  }
+
+  .logo {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  .main-container {
+    margin-top: 80px;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    top: 80px;
+    height: calc(100vh - 80px);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  .overlay.show {
+    display: block;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .card-header {
+    padding: 1.5rem 1.5rem 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .card-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .card-content {
+    padding: 1.5rem;
+  }
+
+  .toggle-view-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .appointments-stats {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center; /* Hace que cada estadística ocupe el ancho disponible */
+    width: 100%;
+    max-width: 340px;         /* Limita el ancho total */
+  }
+  .stat-item {
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .appointments-list {
+   flex-direction: column;
+    gap: 0.5rem;
+    align-items: center; /* Hace que cada estadística ocupe el ancho disponible */
+    width: 100%;
+    max-width: 340px;
+  }
+  .appointment-item {
+    border-radius: 10px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    width: 100%;
+  }
+  .appointments-sidebar{
+     flex-direction: column;
+    gap: 0.5rem;
+    align-items: center; /* Hace que cada estadística ocupe el ancho disponible */
+    width: 100%;
+    max-width: 340px;
+  }
+  .appointment-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .appointment-date {
+    flex-direction: column;
+    min-width: auto;
+    margin-right: 0;
+    gap: 0.5rem;
+  }
+
+  .appointment-details {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .time-slots {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .appointments-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .appointment-item {
+    flex-direction: row;
+    align-items: center;      /* Centra verticalmente los hijos */
+  }
+  .appointment-details {
+    flex: 1;
+    width: auto;
+  }
+  .appointment-actions {
+    margin-left: auto;        /* Empuja el botón a la derecha */
+    align-items: center;      /* Centra el botón verticalmente */
+    justify-content: flex-end;
+    display: flex;
+    height: 100%;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  .header {
+    padding: 0.75rem 1rem;
+    height: 70px;
+  }
+
+  .header-left {
+    gap: 1rem;
+  }
+
+  .logo {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .menu-toggle {
+    padding: 0.5rem;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  .main-container {
+    margin-top: 70px;
+  }
+
+  .sidebar {
+    top: 70px;
+    height: calc(100vh - 70px);
+  }
+
+  .form-row {
+    gap: 0.75rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 0.625rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-create {
+    width: 100%;
+    padding: 0.875rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .card-header {
+    padding: 1rem;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  .sidebar-content {
+    padding: 1rem;
+  }
+
+  .nav-item {
+    padding: 0.625rem;
+    font-size: 0.9rem;
+  }
+
+  .nav-icon {
+    font-size: 1rem;
+    width: 18px;
+  }
+
+  .menu-toggle .icon {
+    font-size: 1.2rem;
+  }
+
+  .time-slots {
+    grid-template-columns: 1fr;
+  }
+
+  .appointments-stats {
+    gap: 0.5rem;
+  }
+
+  .filter-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .modal-container {
+    margin: 1rem;
+    max-width: calc(100% - 2rem);
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .cancel-title {
+    font-size: 1.25rem;
+  }
+
+  .warning-icon {
+    font-size: 3rem;
+  }
+}
+
+/* Estados hover solo para dispositivos que soportan hover */
+@media (hover: hover) {
+  .nav-item:hover {
+    background-color: #f3f4f6;
+  }
+
+  .menu-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-create:hover {
+    background: #fdbf30c2;
+    transform: translateY(-1px);
+  }
+
+  .toggle-view-button:hover {
+    background: #fdbf30c2;
+    transform: translateY(-1px);
+  }
+}
+
+/* Tamaños táctiles amigables para móvil */
+@media (max-width: 768px) {
+  .nav-item {
+    min-height: 44px;
+  }
+
+  .menu-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .time-slot {
+    min-height: 44px;
+  }
+
+  .calendar-day {
+    min-height: 6px;
+  }
+}

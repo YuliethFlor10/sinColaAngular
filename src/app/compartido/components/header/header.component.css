@@ -1,0 +1,114 @@
+.header {
+  /* Barra superior fija con gradiente y sombra */
+  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  color: white;
+  padding: 1.5rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 90px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.logo {
+  width: 56px;
+  height: 56px;
+  background: rgba(8, 8, 8, 0);
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-top: 7px;
+}
+
+.menu-toggle {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.6rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 10px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  min-height: 50px;
+}
+
+.menu-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-toggle .icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.user-avatar {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive header */
+@media (max-width: 768px) {
+  .header {
+    padding: 1rem 1.5rem;
+    height: 80px;
+  }
+  .logo {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+  .user-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 1.2rem;
+  }
+}
+@media (max-width: 480px) {
+  .header {
+    padding: 0.75rem 1rem;
+    height: 70px;
+  }
+  .header-left {
+    gap: 1rem;
+  }
+  .logo {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  .user-avatar {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  .menu-toggle {
+    padding: 0.5rem;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
