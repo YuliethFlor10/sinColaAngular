@@ -1,12 +1,12 @@
 .sidebar {
   /* Menú lateral fijo con sombra y fondo blanco */
-  width: 280px;
+  width: 250px;
   background: white;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
   position: fixed;
   left: 0;
-  top: 90px;
+  top: 80px;
   height: calc(100vh - 90px);
   overflow-y: auto;
   z-index: 999;
@@ -67,7 +67,7 @@
 }
 
 .nav-item:hover {
-  background-color: #f3f4f6;
+  background-color: #63fee773;
 }
 
 .nav-item.active {

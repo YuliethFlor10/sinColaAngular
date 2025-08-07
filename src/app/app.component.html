@@ -1,0 +1,7 @@
+<app-header (toggle)="sidebarOpen = !sidebarOpen"></app-header>
+<app-sidebar [isOpen]="sidebarOpen"></app-sidebar>
+
+<main class="main-content">
+  <router-outlet></router-outlet>
+</main>
+

@@ -3,7 +3,7 @@
    ======================================== */
 .main-container {
   display: flex;
-  margin-top: 90px; /* ACTUALIZADO: ajustado al nuevo height del header */
+  margin-top: 80px; /* ACTUALIZADO: ajustado al nuevo height del header */
   min-height: calc(100vh - 90px); /* ACTUALIZADO: ajustado al nuevo height */
 }
 /* Tarjeta contenedora del formulario */
@@ -11,8 +11,9 @@
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  max-width: 1200px;
+  max-width: 1450px;
   margin: 0 auto;
+  margin-left: -25px;
 }
 
 /* Encabezado de la tarjeta */

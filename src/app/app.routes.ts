@@ -1,12 +1,12 @@
 import { Routes } from '@angular/router';
 
-import { CrearUsuarioComponent } from './pages/crear-usuario/crear-usuario.component';
-import { CitasComponent } from './pages/citas/citas.component';
-import { HorarioComponent } from './pages/horario/horario.component';
-import { InformeComponent } from './pages/informe/informe.component';
-import { PlanComponent } from './pages/plan/plan.component';
+import { CrearUsuarioComponent } from './pages/admin-web/crear-usuario/crear-usuario.component';
+import { CitasComponent } from './pages/admin-web/citas/citas.component';
+import { HorarioComponent } from './pages/admin-web/horario/horario.component';
+import { InformeComponent } from './pages/admin-web/informe/informe.component';
+import { PlanComponent } from './pages/admin-web/plan/plan.component';
 import { InicioSesionComponent } from './pages/inicio-sesion/inicio-sesion.component';
-import { ListaServicioComponent } from './pages/lista-servicio/lista-servicio.component';
+import { ListaServicioComponent } from './pages/admin-web/lista-servicio/lista-servicio.component';
 import { PaginaInicioComponent } from './pages/pagina-inicio/pagina-inicio.component';
 import { AdminWeb } from './pages/admin-web/admin-web';
 
@@ -27,8 +27,11 @@ export const routes: Routes = [
     component: AdminWeb,
     children:[
      { path: 'citas', component: CitasComponent, data: { title: 'Gestión de citas.'} },
-     { path: 'usuarios', component: CrearUsuarioComponent, data: { title: 'Gestión de usuarios.'} },
-     { path: 'servicios', component: ListaServicioComponent, data: { title: 'Gestión de servicios.'} },
+     { path: 'crear-usuario', component: CrearUsuarioComponent, data: { title: 'Gestión de usuarios.'} },
+     { path: 'lista-servicio', component: ListaServicioComponent, data: { title: 'Gestión de servicios.'} },
+     { path: 'horario', component: HorarioComponent, data: { title: 'Gestión de horarios.'} },
+     { path: 'informe', component: InformeComponent, data: { title: 'Generación de informes.'} },
+     { path: 'plan', component: PlanComponent, data: { title: 'Gestión de planes.'} },
      { path: '', redirectTo: 'citas', pathMatch: 'full' }
   ]
   },
