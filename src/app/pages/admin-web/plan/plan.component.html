@@ -1,7 +1,67 @@
-<div>
-  <app-admin-web></app-admin-web>
-  <app-contenido [title]="'Mi plan'">
+<app-admin-web></app-admin-web>
 
-  </app-contenido>
+<main class="main-content">
+            <div class="content-card">
+                <div class="card-header">
+                    <h1>Mi Plan</h1>
+                </div>
+                <div class="card-content">
+                    <div class="plan-section plan-actual-flex">
+                        <h2>Plan actual</h2>
+                        <div class="lp-plans-grid">
+                            <div class="lp-plan-card lp-plan-advanced">
+                                <div class="lp-plan-header lp-plan-header-advanced">
+                                    <span class="lp-plan-type">Plan Avanzado</span>
+                                    <span class="lp-plan-messages">500 notificaciones/mes</span>
+                                </div>
+                                <span class="lp-plan-price">$35.000 COP/mes</span>
+                                <ul>
+                                    <li>Recordatorio + confirmación</li>
+                                    <li>Reprogramación automática</li>
+                                    <li>Branding personalizado</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="plan-info">
+                            <p>Fecha de inicio: <span id="startDate">Jun 10, 2025</span></p>
+                            <p>Fecha de fin: <span id="endDate">Jul 10, 2025</span></p>
+                            <p><span id="notificationsUsed">200</span> notificaciones gastadas de <span id="totalNotifications">500</span></p>
+                            <p>Te quedan <span id="notificationsRemaining">300</span></p>
+                        </div>
+                    </div>
 
-</div>
+                    <div class="plan-section">
+                        <h2>Otros planes</h2>
+                        <div class="lp-plans-grid">
+                            <div class="lp-plan-card lp-plan-essential">
+                                <div class="lp-plan-header lp-plan-header-essential">
+                                    <span class="lp-plan-type">Plan Esencial</span>
+                                    <span class="lp-plan-messages">150 notificaciones/mes</span>
+                                </div>
+                                <span class="lp-plan-price">$30.000 COP/mes</span>
+                                <ul>
+                                    <li>Funciones básicas</li>
+                                    <li>Automatizaciones</li>
+                                    <li>Soporte estándar</li>
+                                </ul>
+                            </div>
+                            <div class="lp-plan-card lp-plan-unlimited">
+                                <div class="lp-plan-header lp-plan-header-unlimited">
+                                    <span class="lp-plan-type">Plan Ilimitado</span>
+                                    <span class="lp-plan-messages">Notificaciones ilimitadas</span>
+                                </div>
+                                <span class="lp-plan-price">$70.000 COP/mes</span>
+                                <ul>
+                                    <li>Todas las funciones</li>
+                                    <li>Estadísticas</li>
+                                    <li>Branding avanzado</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    
+
+    <div class="overlay" id="overlay"></div>

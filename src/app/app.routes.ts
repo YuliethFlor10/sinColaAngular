@@ -6,7 +6,7 @@ import { HorarioComponent } from './pages/admin-web/horario/horario.component';
 import { InformeComponent } from './pages/admin-web/informe/informe.component';
 import { PlanComponent } from './pages/admin-web/plan/plan.component';
 import { InicioSesionComponent } from './pages/inicio-sesion/inicio-sesion.component';
-import { ListaServicioComponent } from './pages/admin-web/lista-servicio/lista-servicio.component';
+import { ServiciosComponent } from './pages/admin-web/lista-servicio/lista-servicio.component';
 import { PaginaInicioComponent } from './pages/pagina-inicio/pagina-inicio.component';
 import { AdminWeb } from './pages/admin-web/admin-web';
 
@@ -19,7 +19,7 @@ export const routes: Routes = [
   { path: 'informe', component: InformeComponent },
   { path: 'plan', component: PlanComponent },
   { path: 'inicio-sesion', component: InicioSesionComponent },
-  { path: 'lista-servicio', component: ListaServicioComponent },
+  { path: 'lista-servicio', component: ServiciosComponent },
 
   // rutas admin web
   {
@@ -28,7 +28,7 @@ export const routes: Routes = [
     children:[
      { path: 'citas', component: CitasComponent, data: { title: 'Gestión de citas.'} },
      { path: 'crear-usuario', component: CrearUsuarioComponent, data: { title: 'Gestión de usuarios.'} },
-     { path: 'lista-servicio', component: ListaServicioComponent, data: { title: 'Gestión de servicios.'} },
+     { path: 'lista-servicio', component: ServiciosComponent, data: { title: 'Gestión de servicios.'} },
      { path: 'horario', component: HorarioComponent, data: { title: 'Gestión de horarios.'} },
      { path: 'informe', component: InformeComponent, data: { title: 'Generación de informes.'} },
      { path: 'plan', component: PlanComponent, data: { title: 'Gestión de planes.'} },

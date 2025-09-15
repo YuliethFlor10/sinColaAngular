@@ -1,7 +1,139 @@
-<div>
-  <app-admin-web></app-admin-web>
-  <app-contenido [title]="'Crear nuevo usuario'">
+<app-admin-web></app-admin-web>
 
-  </app-contenido>
+ <main class="main-content">
+            <div class="content-view active" id="user-management-view">
+                <div class="content-card sub-view active" id="create-user-section">
+                    <div class="card-header">
+                        <h1>Crear usuario nuevo</h1>
+                        <button class="toggle-view-button" data-target-section="list-users-section">
+                            <i class="fa fa-list"></i> Ver Lista de usuarios
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <form id="userForm" class="user-form">
+                            <div class="form-section">
+                                <h3>Datos personales</h3>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="documentType">Tipo de documento</label>
+                                        <select id="documentType" name="documentType" required>
+                                            <option value="">Seleccione el tipo</option>
+                                            <option value="cedula">Cédula</option>
+                                            <option value="pasaporte">Pasaporte</option>
+                                            <option value="tarjeta">Tarjeta de identidad</option>
+                                        </select>
+                                        <div class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="documentNumber">Número de documento</label>
+                                        <input type="text" id="documentNumber" name="documentNumber"
+                                               placeholder="Ingrese el número" required>
+                                        <div class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="name">Nombre</label>
+                                        <input type="text" id="name" name="name"
+                                               placeholder="Nombre completo" required>
+                                        <div class="error-message"></div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="birthDate">Fecha de nacimiento</label>
+                                        <input type="date" id="birthDate" name="birthDate" required>
+                                        <div class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phoneNumber">Número de teléfono</label>
+                                        <input type="tel" id="phoneNumber" name="phoneNumber"
+                                               placeholder="Ingrese su número" required>
+                                        <div class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email">Email</label>
+                                        <input type="email" id="email" name="email"
+                                               placeholder="ejemplo@gmail.com" required>
+                                        <div class="error-message"></div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="userType">Tipo de usuario</label>
+                                        <select id="userType" name="userType" required>
+                                            <option value="Cliente">Cliente</option>
+                                            <option value="Administrador">Administrador</option>
+                                            <option value="Empleado" selected>Empleado</option>
+                                        </select>
+                                        <div class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="password">Crear contraseña</label>
+                                        <input type="password" id="password" name="password"
+                                               placeholder="Contraseña" required>
+                                        <div class="error-message"></div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="confirmPassword">Confirmar contraseña</label>
+                                        <input type="password" id="confirmPassword" name="confirmPassword"
+                                               placeholder="Confirmar contraseña" required>
+                                        <div class="error-message"></div>
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label for="service">Servicios que atiende</label>
+                                        <select id="service" name="service">
+                                            <option value="">Seleccione los servicios</option>
+                                            <option value="unas-semi">Uñas semi</option>
+                                            <option value="unas-permanentes">Uñas permanentes</option>
+                                            <option value="unas-tradicionales">Uñas tradicionales</option>
+                                            <option value="pestanas">Pestañas</option>
+                                        </select>
+                                        <div class="error-message"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn-create">Crear usuario</button>
+                            </div>
+                        </form>
+                    </div>
+                </div> <div class="content-card sub-view" id="list-users-section">
+                    <div class="card-header">
+                        <h1>Lista de usuarios</h1>
+                        <button class="toggle-view-button" data-target-section="create-user-section">
+                            <i class="fa fa-user-plus"></i> Crear usuario
+                        </button>
+                    </div>
+                    <div class="card-content">
+                        <div class="toolbar">
+                            <div class="search-bar">
+                                <input type="text" id="userSearch" placeholder="Buscar usuario...">
+                                <button class="search-button"><i class="fa fa-search"></i></button>
+                            </div>
+                            </div>
 
-</div>
+                        <div class="table-responsive">
+                            <table class="user-table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Documento</th>
+                                        <th>Tipo de Usuario</th>
+                                        <th>Teléfono</th>
+                                        <th>Email</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody">
+                                    </tbody>
+                            </table>
+                        </div>
+
+                        <div class="pagination">
+                            <button id="prevPage" class="pagination-button" disabled>Anterior</button>
+                            <span id="pageInfo">Página 1 de 1</span>
+                            <button id="nextPage" class="pagination-button" disabled>Siguiente</button>
+                        </div>
+                    </div>
+                </div> </div>

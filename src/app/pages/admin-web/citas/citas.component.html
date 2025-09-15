@@ -1,7 +1,212 @@
 <div>
   <app-admin-web></app-admin-web>
-  <app-contenido [title]="'Gestion de citas'">
+  <app-contenido [title]="'Crear nueva cita'">
+
+    <!-- Si ya usas un <form [formGroup]="form"> en el padre, pon esto dentro. -->
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="container">
+      <!-- ***** FILAS SUPERIORES (igual a tu código original) ***** -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="document-type">Tipo de documento</label>
+          <select id="document-type" class="form-select" formControlName="documentType">
+            <option value="">Seleccione un tipo</option>
+            @for (type of documentTypes; track type) {
+              <option [value]="type.value">
+                {{ type.label }}
+              </option>
+            }
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="document-number">Número de documento</label>
+          <input type="text" id="document-number" class="form-input" placeholder="Ingrese número"
+                 formControlName="documentNumber">
+        </div>
+
+        <div class="form-group">
+          <label for="name">Nombre</label>
+          <input type="text" id="name" class="form-input" placeholder="Ingrese nombre completo"
+                 formControlName="name">
+        </div>
+      </div>
+
+      <!-- Segunda fila -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" class="form-input" placeholder="correo@ejemplo.com"
+                 formControlName="email">
+        </div>
+        <div class="form-group">
+          <label for="birth-date">Fecha de nacimiento</label>
+          <input type="date" id="birth-date" class="form-input" formControlName="birthDate">
+        </div>
+        <div class="form-group">
+          <label for="phone">Número de teléfono</label>
+          <input type="tel" id="phone" class="form-input" placeholder="Ingrese su número"
+                 formControlName="phone">
+        </div>
+      </div>
+
+      <!-- Tercera fila -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="appointment-type">Tipo de cita</label>
+          <select id="appointment-type" class="form-select" formControlName="appointmentType"
+                  (change)="onAppointmentTypeChange()">
+            <option value="">Procedimiento a realizar</option>
+            @for (type of appointmentTypes; track type) {
+              <option [value]="type.value">
+                {{ type.label }}
+              </option>
+            }
+          </select>
+
+          @if (selectedAppointmentInfo.price > 0) {
+            <div class="appointment-info">
+              <div class="info-item">
+                <span class="label">Valor:</span>
+                <span class="value">${{selectedAppointmentInfo.price | number}}</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Duración:</span>
+                <span class="value">{{selectedAppointmentInfo.duration}}</span>
+              </div>
+              <div class="recommendation">
+                <span class="label">Recomendación:</span>
+                <span class="text">{{selectedAppointmentInfo.recommendation}}</span>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="staff">Personal que realiza el servicio</label>
+          <select id="staff" class="form-select" formControlName="staff">
+            <option value="">Seleccione al personal de preferencia</option>
+            @for (staff of staffMembers; track staff) {
+              <option [value]="staff.value">
+                {{ staff.label }}
+              </option>
+            }
+          </select>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label for="observations">Observaciones o peticiones</label>
+          <textarea id="observations" class="form-textarea" placeholder="Comentario opcional"
+                    formControlName="observations"></textarea>
+        </div>
+      </div>
+
+      <!-- ***** SECCIÓN DE FECHA Y HORA (CORREGIDA) ***** -->
+      <div class="datetime-section">
+
+        <!-- Encabezado de pequeños selectores (iconos + texto) -->
+        <div class="date-time-selectors">
+          <div class="selector-group">
+            <div class="selector-header">
+              <span class="selector-icon">
+                <img src="/iconos/cita.svg" alt="Icono calendario" class="icon">
+              </span>
+              <div>
+                <div class="selector-title">Selecciona la fecha</div>
+                <div class="selected-info small">{{ getSelectedDateInfo() }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="selector-group">
+            <div class="selector-header">
+              <span class="selector-icon">
+                <img src="/iconos/horario.svg" alt="Icono horario" class="icon">
+              </span>
+              <div>
+                <div class="selector-title">Selecciona la hora</div>
+                <div class="selected-info small">{{ getSelectedTimeInfo() }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contenedor principal: calendario (izq) + selector horas (der) -->
+        <div class="calendar-time-container">
+
+          <!-- CALENDARIO -->
+          <div class="calendar">
+            <div class="calendar-header">
+              <button type="button" class="nav-btn" (click)="prevMonth()">‹</button>
+              <h3 class="month-title">{{ currentMonthYear }}</h3>
+              <button type="button" class="nav-btn" (click)="nextMonth()">›</button>
+            </div>
+
+            <div class="calendar-grid">
+              <div class="weekdays">
+                <div class="weekday">L</div>
+                <div class="weekday">M</div>
+                <div class="weekday">M</div>
+                <div class="weekday">J</div>
+                <div class="weekday">V</div>
+                <div class="weekday">S</div>
+                <div class="weekday">D</div>
+              </div>
+
+              <div class="days">
+                @for (dayObj of calendarDays; track dayObj) {
+                  <button
+                    type="button"
+                    class="day"
+                    [class.other-month]="dayObj.isOtherMonth"
+                    [class.selected]="dayObj.isSelected"
+                    [class.today]="dayObj.isToday"
+                    (click)="selectDate(dayObj)"
+                    [disabled]="dayObj.isOtherMonth">
+                    {{ dayObj.day }}
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+
+          <!-- SELECTOR DE HORAS -->
+          <div class="time-selector">
+            <div class="time-slots">
+              @for (time of timeSlots; track time) {
+                <button
+                  type="button"
+                  class="time-slot"
+                  [class.selected]="time === selectedTime"
+                  (click)="selectTime(time)">
+                  {{ time }}
+                </button>
+              }
+            </div>
+
+            <div class="time-legend">
+              <div class="legend-item">
+                <span class="legend-color selected-color"></span>
+                <span>Hora seleccionada</span>
+              </div>
+              <div class="legend-item">
+                <span class="legend-color available-color"></span>
+                <span>Hora disponible</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Botón crear cita -->
+      <div class="form-actions">
+        <button type="submit" class="btn-create">Crear cita</button>
+      </div>
+
+    </form>
 
   </app-contenido>
-
 </div>
