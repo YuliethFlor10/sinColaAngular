@@ -1,0 +1,127 @@
+<h1>Personalización de Branding</h1>
+<form [formGroup]="brandingForm" (ngSubmit)="guardar()">
+	<div>
+		<label>Nombre comercial</label>
+		<input formControlName="nombre_comercial" />
+	</div>
+	<div>
+		<label>Eslogan</label>
+		<input formControlName="eslogan" />
+	</div>
+	<div>
+		<label>Descripción</label>
+		<textarea formControlName="descripcion_negocio"></textarea>
+	</div>
+
+	<!-- Color Picker compartido -->
+	<color-picker formControlName="color_primario"></color-picker>
+	<color-picker formControlName="color_secundario"></color-picker>
+	<color-picker formControlName="color_fondo_izquierdo"></color-picker>
+	<color-picker formControlName="color_fondo_derecho"></color-picker>
+	<color-picker formControlName="color_texto_principal"></color-picker>
+	<color-picker formControlName="color_texto_secundario"></color-picker>
+
+	<!-- Logo Uploader compartido -->
+	<logo-uploader formControlName="logo_principal"></logo-uploader>
+	<logo-uploader formControlName="logo_pequeno"></logo-uploader>
+	<logo-uploader formControlName="favicon"></logo-uploader>
+
+	<!-- Social Links compartido -->
+	<social-links
+		[facebookUrl]="brandingForm.get('facebook_url')?.value"
+		[instagramUrl]="brandingForm.get('instagram_url')?.value"
+		[whatsappNumero]="brandingForm.get('whatsapp_numero')?.value"
+		[mostrarRedes]="brandingForm.get('mostrar_redes_sociales')?.value"
+		(facebookUrlChange)="brandingForm.get('facebook_url')?.setValue($event)"
+		(instagramUrlChange)="brandingForm.get('instagram_url')?.setValue($event)"
+		(whatsappNumeroChange)="brandingForm.get('whatsapp_numero')?.setValue($event)"
+		(mostrarRedesChange)="brandingForm.get('mostrar_redes_sociales')?.setValue($event)"
+	></social-links>
+
+	<!-- Payment Methods compartido -->
+	<payment-methods
+		[aceptaEfectivo]="brandingForm.get('acepta_efectivo')?.value"
+		[aceptaTarjeta]="brandingForm.get('acepta_tarjeta')?.value"
+		[aceptaNequi]="brandingForm.get('acepta_nequi')?.value"
+		[aceptaTransferencia]="brandingForm.get('acepta_transferencia')?.value"
+		(aceptaEfectivoChange)="brandingForm.get('acepta_efectivo')?.setValue($event)"
+		(aceptaTarjetaChange)="brandingForm.get('acepta_tarjeta')?.setValue($event)"
+		(aceptaNequiChange)="brandingForm.get('acepta_nequi')?.setValue($event)"
+		(aceptaTransferenciaChange)="brandingForm.get('acepta_transferencia')?.setValue($event)"
+	></payment-methods>
+
+	<div>
+		<label>Duración slot (minutos)</label>
+		<input type="number" formControlName="duracion_slot_minutos" />
+	</div>
+	<div>
+		<label>Anticipación mínima (horas)</label>
+		<input type="number" formControlName="anticipacion_minima_horas" />
+	</div>
+	<div>
+		<label>Horario atención inicio</label>
+		<input type="time" formControlName="horario_atencion_inicio" />
+	</div>
+	<div>
+		<label>Horario atención fin</label>
+		<input type="time" formControlName="horario_atencion_fin" />
+	</div>
+	<div>
+		<label>Días de atención</label>
+		<input formControlName="dias_atencion" />
+	</div>
+	<div>
+		<label>Máximo citas por día</label>
+		<input type="number" formControlName="maximo_citas_dia" />
+	</div>
+	<div>
+		<label>Título principal</label>
+		<input formControlName="titulo_principal" />
+	</div>
+	<div>
+		<label>Subtítulo formulario</label>
+		<input formControlName="subtitulo_formulario" />
+	</div>
+	<div>
+		<label>Mensaje bienvenida</label>
+		<input formControlName="mensaje_bienvenida" />
+	</div>
+	<div>
+		<label>Mensaje confirmación</label>
+		<input formControlName="mensaje_confirmacion" />
+	</div>
+	<div>
+		<label>Texto seguir redes</label>
+		<input formControlName="texto_seguir_redes" />
+	</div>
+	<div>
+		<label>Texto métodos de pago</label>
+		<input formControlName="texto_metodos_pago" />
+	</div>
+	<div>
+		<label>Mostrar precios públicos</label>
+		<input type="checkbox" formControlName="mostrar_precios_publicos" />
+	</div>
+	<div>
+		<label>Requiere confirmación email</label>
+		<input type="checkbox" formControlName="requiere_confirmacion_email" />
+	</div>
+	<div>
+		<label>Requiere confirmación teléfono</label>
+		<input type="checkbox" formControlName="requiere_confirmacion_telefono" />
+	</div>
+	<div>
+		<label>Permite cancelación cliente</label>
+		<input type="checkbox" formControlName="permite_cancelacion_cliente" />
+	</div>
+	<div>
+		<label>Horas límite cancelación</label>
+		<input type="number" formControlName="horas_limite_cancelacion" />
+	</div>
+	<div>
+		<label>Configuración extra</label>
+		<textarea formControlName="configuracion_extra"></textarea>
+	</div>
+
+	<button type="submit">Guardar</button>
+</form>

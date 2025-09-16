@@ -36,6 +36,10 @@ export const routes: Routes = [
   ]
   },
 
-  { path: '**', redirectTo: 'pagina-inicio' }
+  {
+    path: 'cliente-final',
+    loadChildren: () => import('./cliente-final/cliente-final-module').then(m => m.ClienteFinalModule)
+  },
+
 ];
 
