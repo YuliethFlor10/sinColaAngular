@@ -1,6 +1,253 @@
-<div>
-  <h2>Página de Inicio</h2>
+<!-- ===== Header ===== -->
+<header class="lp-header">
+  <div class="lp-logo">
+    <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+    <span>Tu tiempo es oro <br>no lo pongas en espera</span>
+  </div>
 
+  <nav class="lp-nav">
+    <ul>
+      <li><a href="#hero">Inicio</a></li>
+      <li><a href="#features">Características</a></li>
+      <li><a href="#plans">Planes</a></li>
+      <li><a href="#about">Quiénes Somos</a></li>
+    </ul>
 
-  <a routerLink="/admin/citas">admin citas</a>
-</div>
+  </nav>
+
+  <div class="lp-auth-buttons">
+     <a href="/crear-usuario" class="select-plan-btn"> Iniciar Sesión</a>
+      <a href="/crear-usuario" class="select-plan-btn"> Registrarce</a>
+
+  </div>
+</header>
+
+<!-- ===== Hero (versión Inicio 2) ===== -->
+<section id="hero" class="hero-section">
+  <div class="hero-content">
+    <div class="hero-text">
+      <h1 class="hero-title">¡Deja atrás el papel!</h1>
+      <p class="hero-subtitle">
+        Gestiona tus citas de forma digital y eficiente. Recibe notificaciones en tiempo real y mantén a tus clientes siempre informados.
+      </p>
+
+      <div class="cta-buttons">
+        <a href="#features" class="btn-primary">Descubre cómo</a>
+        <a href="/crear-usuario" class="btn-secondary">Ver planes</a>
+      </div>
+
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-number">500+</span><span class="stat-label">Citas organizadas</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">100+</span><span class="stat-label">Negocios activos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">99%</span><span class="stat-label">Satisfacción</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="feature-cards">
+        <div class="feature-card">
+          <i class="fas fa-calendar-alt feature-icon"></i>
+          <h3 class="feature-title">Agenda Digital</h3>
+          <p class="feature-description">Organiza todas tus citas en un solo lugar</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-bell feature-icon"></i>
+          <h3 class="feature-title">Notificaciones</h3>
+          <p class="feature-description">Recordatorios automáticos por WhatsApp</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-chart-line feature-icon"></i>
+          <h3 class="feature-title">Estadísticas</h3>
+          <p class="feature-description">Analiza el crecimiento de tu negocio</p>
+        </div>
+        <div class="feature-card">
+          <i class="fas fa-users feature-icon"></i>
+          <h3 class="feature-title">Gestión CRM</h3>
+          <p class="feature-description">Mantén el historial de tus clientes</p>
+        </div>
+      </div>
+
+      <div class="floating-card card-1">
+        <i class="fas fa-check-circle" style="color:var(--gold-color);font-size:1.5rem;"></i>
+        <p style="margin:10px 0 0;font-size:.9rem;">Cita confirmada</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Problema/Solución ===== -->
+<section id="intro" class="section bg-light">
+  <div class="lp-container">
+    <div class="intro-grid">
+      <div class="intro-text">
+        <h2>Un problema real, una solución innovadora.</h2>
+        <p>SinCola surge tras convivir con pequeños negocios que pierden clientes por manejar sus citas en papel.</p>
+        <p>Nuestra plataforma permite configurar horarios, enviar recordatorios y monitorear métricas en tiempo real, facilitando su transformación digital.</p>
+      </div>
+      <div class="intro-image">
+        <img src="assets/img/agenda.png" alt="Agenda digital organizada">
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Características ===== -->
+<section id="features" class="section">
+  <div class="lp-container">
+    <h2 class="section-title">Características que transforman tu negocio</h2>
+
+    <div class="features-grid">
+      <div class="feature-item">
+        <i class="fas fa-calendar-alt feature-item-icon"></i>
+        <h3>Agenda Digital Personalizada</h3>
+        <p>Horarios y duraciones adaptables a tu negocio.</p>
+      </div>
+
+      <div class="feature-item">
+        <i class="fas fa-bell feature-item-icon"></i>
+        <h3>Notificaciones Automáticas</h3>
+        <p>Recordatorios por correo, SMS o WhatsApp.</p>
+      </div>
+
+      <div class="feature-item">
+        <i class="fas fa-chart-line feature-item-icon"></i>
+        <h3>Panel de Estadísticas</h3>
+        <p>Métricas clave de ocupación y recurrencia.</p>
+      </div>
+
+      <div class="feature-item">
+        <i class="fas fa-users feature-item-icon"></i>
+        <h3>Gestión de Clientes (CRM)</h3>
+        <p>Historial y preferencias de cada cliente.</p>
+      </div>
+
+      <div class="feature-item">
+        <i class="fas fa-globe feature-item-icon"></i>
+        <h3>Reserva en Línea</h3>
+        <p>Link público para que tus clientes agenden solos.</p>
+      </div>
+
+      <div class="feature-item">
+        <i class="fas fa-headset feature-item-icon"></i>
+        <h3>Soporte Personalizado</h3>
+        <p>Acompañamiento por WhatsApp o correo.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Misión & Visión ===== -->
+<section id="mission-vision" class="section bg-light">
+  <div class="lp-container">
+    <h2 class="section-title">Nuestro Propósito</h2>
+
+    <div class="mv-grid">
+      <div class="mv-item">
+        <h3>Misión</h3>
+        <p>Brindar a los pequeños negocios una plataforma tecnológica que optimice su gestión de citas, mejore la experiencia de sus clientes y fortalezca su operación diaria.</p>
+      </div>
+
+      <div class="mv-item">
+        <h3>Visión</h3>
+        <p>Ser la plataforma líder en gestión de reservas para el mercado en Santander, reconocida por su accesibilidad, eficiencia y personalización.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Planes ===== -->
+<section id="plans" class="section">
+  <div class="lp-container">
+    <h2 class="section-title">Elige el plan perfecto para tu negocio</h2>
+
+    <div class="plans-grid">
+      <!-- Esencial -->
+      <div class="plan-card">
+        <div class="plan-header plan-header-essential">
+          <span class="plan-type">Plan Esencial</span>
+          <span class="plan-messages">150 notificaciones/mes</span>
+        </div>
+        <span class="plan-price">$15 000 COP/mes</span>
+        <ul>
+          <li>Agenda completa</li>
+          <li>Historial de citas</li>
+          <li>Recordatorio + confirmación</li>
+          <li>Branding personalizado</li>
+        </ul>
+        
+      </div>
+
+      <!-- Avanzado -->
+      <div class="plan-card plan-advanced">
+        <div class="plan-header plan-header-advanced">
+          <span class="plan-type">Plan Avanzado</span>
+          <span class="plan-messages">500 notificaciones/mes</span>
+        </div>
+        <span class="plan-price">$35 000 COP/mes</span>
+        <ul>
+          <li>Recordatorio + confirmación</li>
+          <li>Reprogramación automática</li>
+          <li>Dashboard con métricas</li>
+          <li>Branding personalizado</li>
+        </ul>
+        <a href="/crear-usuario" class="select-plan-btn">Seleccionar Plan</a>
+      </div>
+
+      <!-- Ilimitado -->
+      <div class="plan-card">
+        <div class="plan-header plan-header-unlimited">
+          <span class="plan-type">Plan Ilimitado</span>
+          <span class="plan-messages">Notificaciones ilimitadas</span>
+        </div>
+        <span class="plan-price">$70 000 COP/mes</span>
+        <ul>
+          <li>Todas las funciones</li>
+          <li>Estadísticas avanzadas</li>
+          <li>Integración con pasarelas de pago (futuro)</li>
+          <li>Branding personalizado</li>
+        </ul>
+        <a href="/crear-usuario" class="select-plan-btn">Seleccionar Plan</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Quiénes Somos ===== -->
+<section id="about" class="section bg-light">
+  <div class="lp-container">
+    <h2 class="section-title">Quiénes Somos</h2>
+    <p>SinCola está impulsado por un equipo apasionado por la transformación digital de pequeños negocios:</p>
+
+    <div class="team-grid">
+      <div class="team-member">
+        <img src="assets/iconos/yuli.svg" alt="Yulieth Flor" class="team-avatar">
+        <h3>Yulieth Flor</h3>
+        <p>Fundadora y desarrolladora full‑stack. Lidera la arquitectura, la lógica de negocio y la validación con usuarios reales.</p>
+      </div>
+
+      <div class="team-member">
+        <img src="assets/iconos/isa.svg" alt="Isabela García" class="team-avatar">
+        <h3>Isabela García</h3>
+        <p>Desarrolladora full‑stack y diseñadora UX/UI. Encargada de la experiencia visual, documentación y soporte al cliente.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== Footer ===== -->
+<footer class="footer">
+  <div class="lp-container">
+    <p>&copy; 2025 SinCola. Todos los derechos reservados.</p>
+    <div class="social-links">
+      <a href="mailto:sincola@gmail.com"><i class="fas fa-envelope"></i></a>
+      <a href="tel:+573107343607"><i class="fas fa-phone"></i></a>
+      <a href="https://www.instagram.com/sincola2025?igsh=aTlrdGs1cWVybWx1" target="_blank"><i class="fab fa-instagram"></i></a>
+    </div>
+  </div>
+</footer>

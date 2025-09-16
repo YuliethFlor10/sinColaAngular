@@ -1,1 +1,387 @@
-h2 { color: #1976d2; }
+/* ======= ESTILOS DEL COMPONENTE HORARIO (Angular encapsulado) ======= */
+:host {
+  display: block;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #333;
+  background-color: transparent;
+  padding: 0;
+}
+
+/* ========================================
+   HORARIO DE ATENCIÓN - ESTILOS ESPECÍFICOS
+   ======================================== */
+
+.horario-content {
+  padding-top: 1rem;
+}
+
+.horario-description {
+  color: #000000;
+  font-size: 0.97rem;
+  margin-bottom: 2rem;
+  max-width: 800px;
+  font-weight: 500;
+}
+
+.person-select-container {
+  margin-bottom: 2rem;
+  position: relative;
+  width: fit-content;
+  min-width: 250px;
+}
+
+.person-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  color: #000;
+}
+
+.person-select {
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.person-select:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* Flecha personalizada para el select */
+.person-select-container::after {
+  content: '▼';
+  position: absolute;
+  right: 1rem;
+  top: 3.4rem;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  pointer-events: none;
+  font-size: 0.8rem;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.day-schedule {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 350px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.day-schedule h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #000000;
+  margin-bottom: 0.5rem;
+}
+
+.status-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.status-text {
+  font-weight: 500;
+  color: #4B5563;
+  transition: color 0.2s;
+}
+
+.closed-status {
+  color: #EF4444;
+}
+
+/* Switch (Toggle Button) Styles */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ff0101;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #FDC030;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #FDC030;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.turnos {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.turno {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.turno label {
+  font-size: 0.85rem;
+  color: #4B5563;
+  font-weight: 500;
+}
+
+.time-inputs {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.time-input {
+  flex: 1;
+  padding: 0.5rem 0.2rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  text-align: center;
+  background-color: white;
+  cursor: pointer;
+  max-width: 110px;
+  transition: border-color .15s, box-shadow .15s;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.time-input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+.toggle-turno-btn {
+  margin: 0.5rem 0;
+  padding: 0.3rem 0.8rem;
+  background: #FDC030;
+  color: #000000;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 0.8rem;
+  align-self: flex-start;
+}
+
+.toggle-turno-btn:hover {
+  background: #fbbf24;
+}
+
+.toggle-turno-btn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Botones de acción */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn-create {
+  background: #FDC030;
+  color: #000000;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.btn-create:hover {
+  background: #fbbf24;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.btn-create:active {
+  transform: translateY(0);
+}
+
+/* Estados específicos para días cerrados */
+.domingo-turnos .time-input:disabled,
+.day-schedule:has(.closed-status) .time-input {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .schedule-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .schedule-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .horario-description {
+    margin-bottom: 1.5rem;
+  }
+  
+  .person-select-container {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .day-schedule {
+    max-width: none;
+  }
+  
+  .form-actions {
+    justify-content: stretch;
+  }
+  
+  .btn-create {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .day-schedule {
+    padding: 1rem;
+  }
+  
+  .day-schedule h2 {
+    font-size: 1.1rem;
+  }
+  
+  .time-inputs {
+    gap: 0.5rem;
+  }
+  
+  .time-input {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+    max-width: none;
+  }
+  
+  .toggle-turno-btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.6rem;
+  }
+}
+
+/* Animaciones suaves */
+.turno {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estados de hover para interactividad */
+@media (hover: hover) {
+  .time-input:hover:not(:disabled) {
+    border-color: #f97316;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.05);
+  }
+  
+  .switch:hover .slider:not(:has(input:disabled)) {
+    box-shadow: 0 0 5px rgba(253, 192, 48, 0.3);
+  }
+}
+
+/* Mejoras de accesibilidad */
+.switch input:focus + .slider {
+  box-shadow: 0 0 0 3px rgba(253, 192, 48, 0.3);
+}
+
+.time-input:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}
+
+.btn-create:focus-visible {
+  outline: 2px solid #f97316;
+  outline-offset: 2px;
+}

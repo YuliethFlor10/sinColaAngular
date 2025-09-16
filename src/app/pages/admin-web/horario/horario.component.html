@@ -2,6 +2,103 @@
   <app-admin-web></app-admin-web>
   <app-contenido [title]="'Horario de atención'">
 
-  </app-contenido>
+    <div class="horario-content">
+      <p class="horario-description">
+        Define los horarios específicos de atención de la empresa o personal encargado de atender los servicios agendados
+      </p>
+      
+      <div class="person-select-container">
+        <label for="personSelect" class="person-label">Seleccione empresa o personal</label>
+        <select id="personSelect" class="person-select" [(ngModel)]="selectedPerson">
+          <option value="empresa">Empresa</option>
+          <option value="yulieth">Yulieth</option>
+          <option value="juanito">Juanito</option>
+          <option value="pablito">Pablito</option>
+        </select>
+      </div>
 
+      <div class="schedule-grid">
+        <div class="day-schedule" *ngFor="let day of weekSchedule">
+          <h2>{{ day.name }}</h2>
+          
+          <div class="status-toggle">
+            <label class="switch">
+              <input 
+                type="checkbox" 
+                [id]="day.id + 'Toggle'"
+                [(ngModel)]="day.isOpen"
+                (change)="onDayToggle(day)">
+              <span class="slider round"></span>
+            </label>
+            <span 
+              class="status-text" 
+              [ngClass]="{'closed-status': !day.isOpen}">
+              {{ day.isOpen ? 'Abierto' : 'Cerrado' }}
+            </span>
+          </div>
+
+          <div class="turnos" [ngClass]="day.id + '-turnos'">
+            <!-- Primer turno -->
+            <div class="turno">
+              <label>Primer turno</label>
+              <div class="time-inputs">
+                <input 
+                  type="text" 
+                  class="time-input" 
+                  [value]="day.firstShift.start.display"
+                  [disabled]="!day.isOpen"
+                  (click)="openTimePicker(day.id, 'firstShift', 'start')"
+                  readonly>
+                <input 
+                  type="text" 
+                  class="time-input" 
+                  [value]="day.firstShift.end.display"
+                  [disabled]="!day.isOpen"
+                  (click)="openTimePicker(day.id, 'firstShift', 'end')"
+                  readonly>
+              </div>
+            </div>
+
+            <!-- Botón toggle segundo turno -->
+            <button 
+              type="button" 
+              class="toggle-turno-btn"
+              (click)="toggleSecondShift(day)"
+              [disabled]="!day.isOpen">
+              {{ day.secondShift.enabled ? 'Quitar segundo turno' : 'Agregar segundo turno' }}
+            </button>
+
+            <!-- Segundo turno -->
+            <div class="turno" *ngIf="day.secondShift.enabled">
+              <label>Segundo turno</label>
+              <div class="time-inputs">
+                <input 
+                  type="text" 
+                  class="time-input" 
+                  [value]="day.secondShift.start.display"
+                  [disabled]="!day.isOpen"
+                  (click)="openTimePicker(day.id, 'secondShift', 'start')"
+                  readonly>
+                <input 
+                  type="text" 
+                  class="time-input" 
+                  [value]="day.secondShift.end.display"
+                  [disabled]="!day.isOpen"
+                  (click)="openTimePicker(day.id, 'secondShift', 'end')"
+                  readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="form-actions">
+        <button type="button" class="btn-create" (click)="saveSchedule()">
+          Guardar horarios
+        </button>
+      </div>
+    </div>
+
+  </app-contenido>
 </div>

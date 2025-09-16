@@ -1,0 +1,149 @@
+<div>
+  <app-admin-web></app-admin-web>
+  <app-contenido [title]="'Gestión de Citas'">
+
+    <div class="container">
+      <!-- Primera fila -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="document-type">Tipo de documento</label>
+          <select id="document-type" class="form-select" formControlName="documentType">
+            <option value="">Seleccione un tipo</option>
+            <option *ngFor="let type of documentTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="document-number">Número de documento</label>
+          <input type="text" id="document-number" class="form-input"
+            placeholder="Ingrese número" formControlName="documentNumber" />
+        </div>
+        <div class="form-group">
+          <label for="name">Nombre</label>
+          <input type="text" id="name" class="form-input"
+            placeholder="Ingrese nombre completo" formControlName="name" />
+        </div>
+      </div>
+
+      <!-- Segunda fila -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" class="form-input"
+            placeholder="correo@ejemplo.com" formControlName="email" />
+        </div>
+        <div class="form-group">
+          <label for="birth-date">Fecha de nacimiento</label>
+          <input type="date" id="birth-date" class="form-input"
+            formControlName="birthDate" />
+        </div>
+        <div class="form-group">
+          <label for="phone">Número de teléfono</label>
+          <input type="tel" id="phone" class="form-input"
+            placeholder="Ingrese su número" formControlName="phone" />
+        </div>
+      </div>
+
+      <!-- Tercera fila -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="appointment-type">Tipo de cita</label>
+          <select id="appointment-type" class="form-select"
+            formControlName="appointmentType" (change)="onAppointmentTypeChange()">
+            <option value="">Procedimiento a realizar</option>
+            <option *ngFor="let type of appointmentTypes" [value]="type.value">
+              {{ type.label }}
+            </option>
+          </select>
+
+          <!-- Info procedimiento -->
+          <div class="appointment-info" *ngIf="selectedAppointmentInfo">
+            <div class="info-item">
+              <span class="label">Valor:</span>
+              <span class="value">${{ selectedAppointmentInfo.price | number }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">Duración:</span>
+              <span class="value">{{ selectedAppointmentInfo.duration }}</span>
+            </div>
+            <div class="recommendation">
+              <span class="label">Recomendación:</span>
+              <span class="text">{{ selectedAppointmentInfo.recommendation }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="staff">Personal que realiza el servicio</label>
+          <select id="staff" class="form-select" formControlName="staff">
+            <option value="">Seleccione al personal de preferencia</option>
+            <option *ngFor="let staff of staffMembers" [value]="staff.value">
+              {{ staff.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="form-row">
+        <div class="form-group full-width">
+          <label for="observations">Observaciones o peticiones</label>
+          <textarea id="observations" class="form-textarea"
+            placeholder="Comentario opcional" formControlName="observations"></textarea>
+        </div>
+      </div>
+
+      <!-- Fecha y hora -->
+      <div class="datetime-section">
+        <!-- Calendario -->
+        <div class="date-section">
+          <div class="section-header">
+            <img src="/iconos/cita.svg" class="icon" />
+            <span>Selecciona la fecha</span>
+          </div>
+          <div class="calendar-container">
+            <div class="calendar-header">
+              <button type="button" (click)="prevMonth()">‹</button>
+              <h3>{{ currentMonthYear }}</h3>
+              <button type="button" (click)="nextMonth()">›</button>
+            </div>
+            <div class="calendar-days-header">
+              <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+            </div>
+            <div class="calendar-days">
+              <button *ngFor="let day of calendarDays" type="button" class="calendar-day"
+                [class.other-month]="day.isOtherMonth"
+                [class.selected]="day.isSelected"
+                [class.today]="day.isToday"
+                (click)="selectDate(day)"
+                [disabled]="day.isOtherMonth">
+                {{ day.day }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Horas -->
+        <div class="time-section">
+          <div class="section-header">
+            <img src="/iconos/horario.svg" class="icon" />
+            <span>Selecciona la hora</span>
+          </div>
+          <div class="time-slots">
+            <button *ngFor="let time of timeSlots" type="button" class="time-slot"
+              [class.selected]="time === selectedTime"
+              (click)="selectTime(time)">
+              {{ time }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón -->
+      <div class="form-actions">
+        <button type="submit" class="btn-create">Crear cita</button>
+      </div>
+    </div>
+  </app-contenido>
+</div>
