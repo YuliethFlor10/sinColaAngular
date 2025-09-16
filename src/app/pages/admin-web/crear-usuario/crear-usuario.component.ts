@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/fo
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AdminWeb } from "../admin-web";
+import { UsersService } from '../../../services/users.service';
 
 // Interfaces para tipado fuerte
 interface User {
@@ -84,7 +85,10 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     { value: 'pestanas', label: 'Pestañas' }
   ];
 
-  constructor(private formBuilder: FormBuilder) {
+  constructor(
+    private formBuilder: FormBuilder,
+    private usersService: UsersService
+  ) {
     this.userForm = this.createUserForm();
   }
 
@@ -533,45 +537,41 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // Cargar usuarios
+  // Cargar usuarios desde la API
   loadUsers(): void {
-    const savedUsers = localStorage.getItem('beauty_salon_users');
-    if (savedUsers) {
-      this.users = JSON.parse(savedUsers);
-    } else {
-      // Datos de ejemplo
-      this.users = [
-        {
-          id: 'user_1',
-          documentType: 'cedula',
-          documentNumber: '12345678',
-          name: 'María González',
-          birthDate: '1990-05-15',
-          phoneNumber: '+57 300 123 4567',
-          email: 'maria.gonzalez@email.com',
-          userType: 'Empleado',
-          service: 'unas-semi',
-          createdAt: new Date('2024-01-15'),
-          status: 'active'
-        },
-        {
-          id: 'user_2',
-          documentType: 'cedula',
-          documentNumber: '87654321',
-          name: 'Ana Rodríguez',
-          birthDate: '1985-08-22',
-          phoneNumber: '+57 310 987 6543',
-          email: 'ana.rodriguez@email.com',
-          userType: 'Administrador',
-          createdAt: new Date('2024-01-10'),
-          status: 'active'
+    this.usersService.getAll().subscribe(
+      (data: any) => {
+        // Log the raw response for debugging
+        console.log('Respuesta de la API de usuarios:', data);
+        // Manejar ambos formatos: array directo o { data: array }
+        let usersArray: any[] = [];
+        if (Array.isArray(data)) {
+          usersArray = data;
+        } else if (data && Array.isArray(data.data)) {
+          usersArray = data.data;
+        } else {
+          // Si la respuesta no es válida, mostrar error
+          this.showErrorMessage('Formato de respuesta inesperado de la API de usuarios');
+          this.users = [];
+          this.filteredUsers = [];
+          this.updatePagination();
+          this.renderUsersTable();
+          return;
         }
-      ];
-    }
-
-    this.filteredUsers = [...this.users];
-    this.updatePagination();
-    this.renderUsersTable();
+        this.users = usersArray;
+        this.filteredUsers = [...this.users];
+        this.updatePagination();
+        this.renderUsersTable();
+      },
+      (err: any) => {
+        this.showErrorMessage('Error al cargar usuarios desde la API');
+        this.users = [];
+        this.filteredUsers = [];
+        this.updatePagination();
+        this.renderUsersTable();
+        console.error(err);
+      }
+    );
   }
 
   // Filtrar usuarios

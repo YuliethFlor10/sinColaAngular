@@ -1,17 +1,27 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
-  private apiUrl = 'http://127.0.0.1:8000'; // 👈 Aquí apuntas a tu API Laravel
+  private baseUrl = 'http://127.0.0.1:8000/'; // URL de tu API Laravel
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  // Ejemplo: obtener todos los productos (suponiendo que tienes una ruta /api/products en Laravel)
-  getProducts(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/products`);
+  private getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+  }
+
+  getUsers(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/users`, { headers: this.getHeaders() });
+  }
+
+  createUser(userData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/users`, userData, { headers: this.getHeaders() });
   }
 }
