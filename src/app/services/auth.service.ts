@@ -9,11 +9,14 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  login(credentials: { email: string; password: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, credentials).pipe(
-      tap((res: any) => {
-        if (res.token) {
-          localStorage.setItem('auth_token', res.token);
+  login(email: string, clave: string): Observable<{access_token: string, user: any}> {
+    return this.http.post<{access_token: string, user: any}>(
+      'http://localhost:8000/api/login',
+      { email, password: clave }
+    ).pipe(
+      tap((res) => {
+        if (res.access_token) {
+          localStorage.setItem('token', res.access_token);
         }
       }),
       catchError(this.handleError)
@@ -36,12 +39,7 @@ export class AuthService {
   }
 
   private handleError(error: HttpErrorResponse) {
-    let msg = 'Ocurrió un error inesperado.';
-    if (error.error && error.error.message) {
-      msg = error.error.message;
-    } else if (error.status === 422 && error.error && error.error.errors) {
-      msg = Object.values(error.error.errors).join(' ');
-    }
-    return throwError(() => msg);
+    // Devuelve el error completo para que el componente pueda acceder a error.error.message
+    return throwError(() => error);
   }
 }

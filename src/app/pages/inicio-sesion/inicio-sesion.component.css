@@ -1,3 +1,61 @@
+.btn-registrar {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-registrar:disabled {
+  background: #888;
+  cursor: not-allowed;
+}
+.registro-form input.ng-invalid.ng-touched,
+.registro-form select.ng-invalid.ng-touched {
+  border: 2px solid #ff4d4f !important;
+  background: #fff0f0;
+}
+/* Modal de error para login */
+
+/* Modal de error reforzado */
+.modal-overlay {
+  position: fixed;
+  display: flex !important;
+  opacity: 1 !important;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999 !important;
+  pointer-events: all;
+}
+.modal-content {
+  background: #fff0f0;
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 350px;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+  text-align: center;
+  position: relative;
+  animation: modalFadeIn 0.4s ease;
+}
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #ff4d4f;
+  cursor: pointer;
+  z-index: 100000;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -149,6 +207,7 @@ body {
   border: none;
   border-radius: 5px;
   text-decoration: none;
+  cursor: pointer;
 }
 
 /* ===========================

@@ -3,7 +3,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import { RouterModule } from '@angular/router';
 import { routes } from './app.routes';
 import { AppComponent } from './app.component';
-import { RegistraNegocioComponent } from './pages/registra-negocio.component';
+// import eliminado: RegistraNegocioComponent
 
 @NgModule({
 	imports: [
@@ -11,6 +11,6 @@ import { RegistraNegocioComponent } from './pages/registra-negocio.component';
 		RouterModule.forRoot(routes)
 	],
 	// No declarations, solo bootstrap para standalone
-	bootstrap: [AppComponent]
+	// No bootstrap array for standalone components
 })
 export class AppModule {}
