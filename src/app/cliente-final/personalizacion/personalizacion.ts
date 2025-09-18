@@ -1,14 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { SocialLinksComponent } from '../../compartido/components/social-links/social-links.component';
-import { PaymentMethodsComponent } from '../../compartido/components/payment-methods/payment-methods.component';
-import { BrandingConfig } from '../branding-config.model';
+
+
+import { ViewEncapsulation } from '@angular/core';
 
 @Component({
   selector: 'app-personalizacion',
-  imports: [ReactiveFormsModule, SocialLinksComponent, PaymentMethodsComponent],
+  imports: [ReactiveFormsModule],
   templateUrl: './personalizacion.html',
-  styleUrl: './personalizacion.css'
+  styleUrls: ['./personalizacion.css'],
+  encapsulation: ViewEncapsulation.None
 })
 export class Personalizacion implements OnInit {
   brandingForm!: FormGroup;
@@ -20,58 +21,34 @@ export class Personalizacion implements OnInit {
       nombre_comercial: [''],
       eslogan: [''],
       descripcion_negocio: [''],
-      color_primario: ['#e91e63'],
-      color_secundario: ['#d1477a'],
-      color_fondo_izquierdo: ['#f8d7da'],
-      color_fondo_derecho: ['#fff'],
-      color_texto_principal: ['#333'],
-      color_texto_secundario: ['#555'],
-      logo_principal: [''],
-      logo_pequeno: [''],
-      favicon: [''],
-      duracion_slot_minutos: [30],
-      anticipacion_minima_horas: [1],
-      horario_atencion_inicio: ['08:00'],
-      horario_atencion_fin: ['18:00'],
-      dias_atencion: ['L,M,M,J,V,S'],
-      maximo_citas_dia: [10],
-      titulo_principal: [''],
-      subtitulo_formulario: [''],
-      mensaje_bienvenida: [''],
-      mensaje_confirmacion: [''],
       texto_seguir_redes: [''],
+      texto_metodos_pago: [''],
+      logo_empresa: [null],
+      color_fondo_branding: ['#f8d7da'],
+      color_letra_branding: ['#333'],
       facebook_url: [''],
       instagram_url: [''],
       whatsapp_numero: [''],
-      mostrar_redes_sociales: [true],
       acepta_efectivo: [true],
       acepta_tarjeta: [true],
       acepta_nequi: [false],
-      acepta_transferencia: [false],
-      texto_metodos_pago: [''],
-      mostrar_precios_publicos: [true],
-      requiere_confirmacion_email: [false],
-      requiere_confirmacion_telefono: [false],
-      permite_cancelacion_cliente: [true],
-      horas_limite_cancelacion: [24],
-      configuracion_extra: ['']
+      acepta_transferencia: [false]
     });
 
-    // Estilos dinámicos con CSS variables
+    // Estilos dinámicos para fondo y letra branding y formulario
     const setCssVar = (control: string, cssVar: string) => {
       const ctrl = this.brandingForm.get(control);
       if (ctrl) {
-        ctrl.valueChanges.subscribe(color => {
-          document.documentElement.style.setProperty(cssVar, color);
+        ctrl.valueChanges.subscribe(value => {
+          document.documentElement.style.setProperty(cssVar, value);
         });
       }
     };
-    setCssVar('color_primario', '--color-primario');
-    setCssVar('color_secundario', '--color-secundario');
-    setCssVar('color_fondo_izquierdo', '--color-fondo-izquierdo');
-    setCssVar('color_fondo_derecho', '--color-fondo-derecho');
-    setCssVar('color_texto_principal', '--color-texto-principal');
-    setCssVar('color_texto_secundario', '--color-texto-secundario');
+    setCssVar('color_fondo_branding', '--color-fondo-branding');
+    setCssVar('color_letra_branding', '--color-letra-branding');
+    // Aplica también al fondo y letra del formulario
+    setCssVar('color_fondo_branding', '--color-fondo-formulario');
+    setCssVar('color_letra_branding', '--color-letra-formulario');
   }
 
   guardar() {

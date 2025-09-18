@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SinCola - Inicia sesión</title>
+</head>
+<body>
+
+
+
+<header class="header"
+  style="background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+         color: white;
+         padding: 1rem 1.5rem 0.5rem;
+         display: flex;
+         justify-content: space-between;
+         align-items: flex-start;
+         height: 80px;">
+
+  <!-- Título -->
+  <div style="flex: 1; display: flex; align-items: center;">
+    <h1 class="titulo"
+        style="font-size: 1.8rem; font-weight: bold; margin: 0 0 4px 0;">
+      Bienvenido
+    </h1>
+  </div>
+
+  <!-- Formulario -->
+  <form class="login-form"
+        [formGroup]="loginForm"
+        (ngSubmit)="onLogin()"
+        style="display: flex; flex-direction: row; align-items: flex-start;
+               gap: 12px; flex: 2; justify-content: flex-end; margin-top: 5px; position: relative;">
+
+    <!-- Inputs + botón -->
+    <input type="text"
+           formControlName="usuario"
+           placeholder="Usuario"
+           required
+           style="padding: 6px 10px; border-radius: 8px; border: none; min-width: 120px;" />
+
+    <input type="password"
+           formControlName="clave"
+           placeholder="Contraseña"
+           required
+           style="padding: 6px 10px; border-radius: 8px; border: none; min-width: 120px;" />
+
+    <button type="submit"
+       class="boton-redireccion"
+       style="padding: 6px 10px; border-radius: 8px; background: #000000;
+         color: #ffffff; font-weight: bold; border: none; max-width: 110px;">
+      Ingresar
+    </button>
+
+    <!-- Recuérdame + Olvidé contraseña debajo -->
+    <div style="position: absolute;
+                top: 100%;
+                right: 200px; /* Mover a la izquierda */
+                margin-top: 2px;
+                display: flex;
+                gap: 20px;
+                font-size: 13px;">
+      <label class="remember-label" style="color: #fff;">
+        <input type="checkbox" id="remember" style="margin-right: 6px;" />
+        Recuérdame
+      </label>
+      <a href="#" style="color: #fff; text-decoration: underline;  margin-left: 95px;">Olvidé contraseña</a>
+    </div>
+
+  </form>
+</header>
+
+
+
+  <main class="container">
+    <section class="izquierda">
+      <p class="mensaje">
+        Agenda sin estrés. Porque el tiempo de tus clientes vale, <br />
+        transforma la forma en que gestionas tus citas y <br />
+        concéntrate en lo que realmente importa: atender a tus <br />
+        clientes mejor.
+      </p>
+      <img src="assets/iconos/logo.svg" alt="Logo SinCola" class="logo" />
+    </section>
+
+    <section class="derecha">
+      <h2 class="registrate">Registrate</h2>
+      <form class="registro-form" onsubmit="return registrar(event)">
+        <input type="text" placeholder="Nombre" required />
+        <input type="text" placeholder="Apellido" required />
+        <input type="email" placeholder="Email" required />
+        <input type="password" placeholder="Contraseña" required />
+        <input type="tel" placeholder="Teléfono" required />
+         <a [routerLink]="['/registra-negocio']" class="btn-registrar">REGISTRARME</a>
+      </form>
+    </section>
+  </main>
+
+    <footer>
+      <p class="footer">Tu tiempo es oro. No lo pongas en espera</p>
+    </footer>
+</body>
+</html>

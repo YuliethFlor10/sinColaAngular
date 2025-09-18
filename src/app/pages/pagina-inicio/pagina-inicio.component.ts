@@ -10,6 +10,14 @@ export class PaginaInicioComponent implements OnInit {
 
   constructor(private router: Router) { }
 
+  irInicioSesion(): void {
+    this.router.navigate(['/inicio-sesion']);
+  }
+
+  irRegistro(): void {
+    this.router.navigate(['/inicio-sesion']);
+  }
+
   ngOnInit(): void {
     this.addScrollEffect();
   }
@@ -24,7 +32,7 @@ export class PaginaInicioComponent implements OnInit {
   private addScrollEffect(): void {
     // Efecto de scroll para el header
     const header = document.querySelector('.lp-header');
-    
+
     if (header) {
       window.addEventListener('scroll', () => {
         if (window.scrollY > 100) {

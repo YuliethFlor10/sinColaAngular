@@ -1,0 +1,252 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  padding: 10px 10px;
+  color: white;
+  text-align: center;
+}
+
+.titulo {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.login-form {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.login-form input {
+  padding: 0.5rem;
+  border-radius: 5px;
+  border: none;
+  width: 100%;
+  max-width: 200px;
+}
+
+.login-form button {
+    display: flex;
+  flex-direction: column; /* Apila los elementos verticalmente */
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+  max-width: 350px;
+}
+
+.extra {
+    display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  gap: 20px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+
+}
+
+
+.extra a {
+  color: rgb(255, 255, 255);
+  text-decoration: none;
+
+}
+
+.container {
+  display: flex;
+  justify-content: space-between;
+  padding: 3rem 5vw;
+  flex-wrap: wrap;
+}
+
+.izquierda,
+.derecha {
+  flex: 1;
+  min-width: 280px;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 2rem;
+}
+
+.mensaje {
+  font-size: 1.2rem;
+  padding: 0 1rem;
+}
+
+.logo {
+  width: 60%;
+  max-width: 250px;
+  height: auto;
+  margin-top: 20px;
+}
+
+.registrate {
+  font-size: 2rem;
+  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.registro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 20px auto;
+  max-width: 300px;
+  width: 100%;
+}
+
+.registro-form input {
+  padding: 0.75rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.btn-registrar {
+  padding: 0.75rem;
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+}
+
+.iconos img {
+  width: 30px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+.footer {
+  text-align: center;
+  margin: 30px 0;
+  font-style: italic;
+  font-size: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+
+
+.boton-redireccion {
+  background-color: black;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+}
+
+/* ===========================
+   Responsive Mejorado
+   =========================== */
+
+@media (max-width: 500px) {
+  .container {
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 1rem;
+  }
+
+  .izquierda,
+  .derecha {
+    padding: 1rem;
+    width: 100%;
+  }
+
+  .derecha {
+    border-top: 1px solid #eee;
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+
+  .login-form {
+    flex-direction: column;
+    width: 100%;
+    max-width: 350px;
+  }
+}
+
+@media (max-width: 600px) {
+  .header {
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+  }
+
+  .titulo {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .logo {
+    width: 90px;
+    margin: 1rem auto;
+  }
+
+  .iconos img {
+    width: 28px;
+    margin: 0 5px;
+  }
+
+  .footer {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .mensaje {
+    display: none;
+  }
+
+  .footer {
+    display: none;
+  }
+}
+
+.remember-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  gap: 20px;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+}
+
+.remember-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #000; /* Cambia el color del check */
+  cursor: pointer;
+}
+
+.remember-container a {
+  color: black;
+  text-decoration: none;
+}
+
+.remember-container a:hover {
+  text-decoration: underline;
+}

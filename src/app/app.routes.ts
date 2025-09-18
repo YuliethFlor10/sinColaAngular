@@ -6,6 +6,7 @@ import { HorarioComponent } from './pages/admin-web/horario/horario.component';
 import { InformeComponent } from './pages/admin-web/informe/informe.component';
 import { PlanComponent } from './pages/admin-web/plan/plan.component';
 import { InicioSesionComponent } from './pages/inicio-sesion/inicio-sesion.component';
+import { RegistraNegocioComponent } from './pages/registra-negocio.component';
 import { ServiciosComponent } from './pages/admin-web/lista-servicio/lista-servicio.component';
 import { PaginaInicioComponent } from './pages/pagina-inicio/pagina-inicio.component';
 import { AdminWeb } from './pages/admin-web/admin-web';
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'plan', component: PlanComponent },
   { path: 'inicio-sesion', component: InicioSesionComponent },
   { path: 'lista-servicio', component: ServiciosComponent },
+  { path: 'registra-negocio', loadComponent: () => import('./pages/registra-negocio.component').then(m => m.RegistraNegocioComponent) },
 
   // rutas admin web
   {
