@@ -1,13 +1,59 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AdminWeb } from "../admin-web";
 import { UsersService } from '../../../services/users.service';
+import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 
-// Interfaces para tipado fuerte
-interface User {
-  id: string;
+// ========================================
+// INTERFACES PARA TIPADO FUERTE
+// ========================================
+
+/**
+ * Interfaz para la respuesta de la API Laravel
+ * Mapea exactamente los campos que devuelve el backend
+ */
+interface ApiUserResponse {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  email: string;
+  nacimiento?: string;
+  genero?: 'M' | 'F' | 'O';
+  identificacion: string;
+  celular?: string;
+  telefono?: string;
+  direccion?: string;
+  terminos_condiciones?: boolean;
+  creado_en?: string;
+  actualizado_en?: string;
+  // Relaciones cargadas con eager loading
+  status?: {
+    id: number;
+    nombre: string;
+  };
+  role?: {
+    id: number;
+    nombre: string;
+  };
+  business?: {
+    id: number;
+    nombre: string;
+  };
+  identificationType?: {
+    id: number;
+    nombre: string;
+    abreviatura: string;
+  };
+}
+
+/**
+ * Interfaz para los datos del usuario en el frontend
+ * Estructura normalizada para uso en la aplicación
+ */
+export interface User {
+  id: number | string;
   documentType: string;
   documentNumber: string;
   name: string;
@@ -16,10 +62,16 @@ interface User {
   email: string;
   userType: string;
   service?: string;
-  createdAt: Date;
-  status: 'active' | 'inactive';
+  createdAt?: Date;
+  status?: 'active' | 'inactive';
+  address?: string;
+  gender?: 'M' | 'F' | 'O';
 }
 
+/**
+ * Interfaz para los datos del formulario de creación
+ * Mapea a los campos que espera la API Laravel
+ */
 interface UserFormData {
   documentType: string;
   documentNumber: string;
@@ -33,37 +85,66 @@ interface UserFormData {
   service: string;
 }
 
+/**
+ * Interfaz para los datos que se envían a la API
+ * Coincide exactamente con los campos esperados por Laravel
+ */
+interface ApiUserRequest {
+  nombres: string;
+  apellidos: string;
+  email: string;
+  nacimiento?: string | null;
+  genero?: 'M' | 'F' | 'O';
+  clave: string;
+  tipo_identificacion_id: number;
+  identificacion: string;
+  celular?: string | null;
+  telefono?: string | null;
+  direccion?: string | null;
+  terminos_condiciones: boolean;
+  estados_id: number;
+  roles_id: number;
+  negocios_id?: number | null;
+}
+
 @Component({
   selector: 'app-crear-usuario',
   templateUrl: './crear-usuario.component.html',
   styleUrls: ['./crear-usuario.component.css'],
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, AdminWeb]
+  imports: [ReactiveFormsModule, CommonModule, AdminWeb, ContenidoComponent]
 })
 export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
-  // Propiedades del formulario
-  userForm: FormGroup;
-  isLoading = false;
+  // ========================================
+  // PROPIEDADES PRINCIPALES
+  // ========================================
 
-  // Propiedades para la vista activa
+  userForm!: FormGroup;
+  isLoading: boolean = false;
   currentView: 'create-user' | 'list-users' = 'create-user';
 
-  // Propiedades para la lista de usuarios
+  // Datos de usuarios
   users: User[] = [];
   filteredUsers: User[] = [];
-  searchTerm = '';
+  searchTerm: string = '';
 
-  // Propiedades para paginación
-  currentPage = 1;
-  itemsPerPage = 10;
-  totalPages = 1;
+  // Paginación
+  currentPage: number = 1;
+  itemsPerPage: number = 10;
+  totalPages: number = 1;
 
   // Mensajes
-  successMessage = '';
-  errorMessage = '';
+  successMessage: string = '';
+  errorMessage: string = '';
 
-  // Opciones para los selectores
+  // Edición (para futuras funcionalidades)
+  editingUserId: number | string | null = null;
+
+  // ========================================
+  // DATOS MAESTROS PARA LOS FORMULARIOS
+  // ========================================
+
   documentTypes = [
     { value: '', label: 'Seleccione el tipo' },
     { value: 'cedula', label: 'Cédula' },
@@ -92,66 +173,98 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.userForm = this.createUserForm();
   }
 
+  // ========================================
+  // CICLO DE VIDA DEL COMPONENTE
+  // ========================================
+
   ngOnInit(): void {
     this.initializeComponent();
-    this.loadUsers();
+    this.loadAllUsers(); // Cargar usuarios al inicializar
   }
 
-  // Inicialización del componente
-  private initializeComponent(): void {
+  ngAfterViewInit(): void {
+    // Hacer la instancia accesible globalmente para eventos del DOM
+    (window as any).crearUsuarioComponent = this;
+    // Configurar eventos después de que la vista esté renderizada
     setTimeout(() => {
       this.setupDOMEvents();
-    }, 0);
+    }, 100);
   }
 
-  // Configurar eventos del DOM
+  ngOnDestroy(): void {
+    // Limpiar referencia global
+    if ((window as any).crearUsuarioComponent === this) {
+      delete (window as any).crearUsuarioComponent;
+    }
+  }
+
+  // ========================================
+  // INICIALIZACIÓN Y CONFIGURACIÓN
+  // ========================================
+
+  private initializeComponent(): void {
+    this.userForm = this.createUserForm();
+  }
+
+  /**
+   * Configurar eventos del DOM
+   * Maneja la interacción con elementos HTML nativos
+   */
   private setupDOMEvents(): void {
-    // Eventos para alternar vistas
-    const toggleButtons = document.querySelectorAll('.toggle-view-button');
-    toggleButtons.forEach(button => {
-      button.addEventListener('click', (e) => {
-        const target = (e.target as HTMLElement).closest('button')?.getAttribute('data-target-section');
-        if (target) {
-          this.toggleView(target);
-        }
+    try {
+      // Eventos para alternar vistas
+      const toggleButtons = document.querySelectorAll('.toggle-view-button');
+      toggleButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+          const target = (e.target as HTMLElement).closest('button')?.getAttribute('data-target-section');
+          if (target) {
+            this.toggleView(target);
+          }
+        });
       });
-    });
 
-    // Evento para el formulario
-    const form = document.getElementById('userForm') as HTMLFormElement;
-    if (form) {
-      form.addEventListener('submit', (e) => {
-        e.preventDefault();
-        this.onSubmit();
-      });
+      // Evento para el formulario de creación
+      const form = document.getElementById('userForm') as HTMLFormElement;
+      if (form) {
+        form.addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.onSubmit();
+        });
+      }
+
+      // Evento para búsqueda en la lista
+      const searchInput = document.getElementById('userSearch') as HTMLInputElement;
+      if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+          this.searchTerm = (e.target as HTMLInputElement).value;
+          this.filterUsers();
+        });
+      }
+
+      // Eventos para paginación
+      const prevBtn = document.getElementById('prevPage');
+      const nextBtn = document.getElementById('nextPage');
+
+      if (prevBtn) {
+        prevBtn.addEventListener('click', () => this.previousPage());
+      }
+
+      if (nextBtn) {
+        nextBtn.addEventListener('click', () => this.nextPage());
+      }
+
+      // Configurar validación en tiempo real
+      this.setupFormValidation();
+
+      console.log('✅ Eventos del DOM configurados correctamente');
+    } catch (error) {
+      console.warn('⚠️ Error configurando eventos del DOM:', error);
     }
-
-    // Evento para búsqueda
-    const searchInput = document.getElementById('userSearch') as HTMLInputElement;
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        this.searchTerm = (e.target as HTMLInputElement).value;
-        this.filterUsers();
-      });
-    }
-
-    // Eventos para paginación
-    const prevBtn = document.getElementById('prevPage');
-    const nextBtn = document.getElementById('nextPage');
-
-    if (prevBtn) {
-      prevBtn.addEventListener('click', () => this.previousPage());
-    }
-
-    if (nextBtn) {
-      nextBtn.addEventListener('click', () => this.nextPage());
-    }
-
-    // Eventos para validación en tiempo real
-    this.setupFormValidation();
   }
 
-  // Configurar validación del formulario
+  /**
+   * Configurar validación del formulario en tiempo real
+   */
   private setupFormValidation(): void {
     const fields = ['documentType', 'documentNumber', 'name', 'birthDate', 'phoneNumber', 'email', 'userType', 'password', 'confirmPassword'];
 
@@ -159,92 +272,382 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       const element = document.getElementById(fieldName) as HTMLInputElement;
       if (element) {
         element.addEventListener('blur', () => this.validateField(fieldName));
-        element.addEventListener('input', () => this.clearFieldError(fieldName));
+        element.addEventListener('input', () => {
+          const formGroup = element.closest('.form-group');
+          this.clearFieldError(formGroup);
+        });
       }
     });
   }
 
-  // Validar campo individual
-  private validateField(fieldName: string): void {
-    const control = this.userForm.get(fieldName);
-    const element = document.getElementById(fieldName);
-    const formGroup = element?.closest('.form-group');
-    const errorDiv = formGroup?.querySelector('.error-message') as HTMLElement;
+  // ========================================
+  // 1. CONSULTA DE DATOS - GET /api/users
+  // ========================================
 
-    if (control && element) {
-      // Actualizar el valor del control con el valor del DOM
-      // Corrección: Cast el elemento al tipo correcto para acceder a 'value'
-      let elementValue = '';
-      if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement) {
-        elementValue = element.value || '';
-      }
+  /**
+   * Cargar todos los usuarios desde la API
+   * Endpoint: GET /api/users
+   */
+  private loadAllUsers(): void {
+    this.isLoading = true;
 
-      control.setValue(elementValue);
-      control.markAsTouched();
+    this.usersService.getAll().subscribe({
+      next: (response: any) => {
+        try {
+          console.log('📋 Respuesta de la API (usuarios):', response);
 
-      if (control.invalid) {
-        formGroup?.classList.add('error');
-        if (errorDiv) {
-          errorDiv.textContent = this.getFieldErrorMessage(fieldName, control);
+          // Manejar diferentes formatos de respuesta de Laravel
+          let rawUsers: ApiUserResponse[] = [];
+
+          if (Array.isArray(response)) {
+            // Respuesta directa como array
+            rawUsers = response;
+          } else if (response && Array.isArray(response.data)) {
+            // Respuesta con estructura { data: [...] }
+            rawUsers = response.data;
+          } else if (response && response.current_page) {
+            // Respuesta paginada de Laravel
+            rawUsers = response.data || [];
+          }
+
+          console.log('🔍 Usuarios en formato API:', rawUsers);
+
+          // Transformar datos de la API al formato del frontend
+          this.users = rawUsers.map(user => this.transformApiUserToFrontend(user));
+          this.filteredUsers = [...this.users];
+
+          console.log('✅ Usuarios transformados para el frontend:', this.users);
+
+          // Actualizar la vista
+          this.updatePagination();
+          this.renderUsersTable();
+
+        } catch (error) {
+          console.error('❌ Error procesando respuesta de usuarios:', error);
+          this.showErrorMessage('Error al procesar los datos de usuarios');
+        } finally {
+          this.isLoading = false;
         }
-      } else {
-        formGroup?.classList.remove('error');
-        if (errorDiv) {
-          errorDiv.textContent = '';
+      },
+      error: (error: any) => {
+        console.error('❌ Error cargando usuarios:', error);
+        let errorMsg = 'Error al cargar usuarios desde la API';
+
+        if (error.status === 0) {
+          errorMsg = 'No se puede conectar con el servidor. Verifica que Laravel esté ejecutándose.';
+        } else if (error.status === 404) {
+          errorMsg = 'Endpoint de usuarios no encontrado. Verifica la ruta de la API.';
+        } else if (error.error?.message) {
+          errorMsg = error.error.message;
         }
+
+        this.showErrorMessage(errorMsg);
+        this.users = [];
+        this.filteredUsers = [];
+        this.updatePagination();
+        this.renderUsersTable();
+        this.isLoading = false;
       }
+    });
+  }
+
+  /**
+   * Consultar un usuario individual por ID
+   * Endpoint: GET /api/users/{id}
+   */
+  getUserById(id: number | string): void {
+    this.usersService.getById(id).subscribe({
+      next: (response: any) => {
+        try {
+          const user = this.transformApiUserToFrontend(response);
+          console.log('👤 Usuario consultado por ID:', user);
+
+          // Aquí puedes implementar lógica adicional para mostrar el usuario
+          // Por ejemplo, abrir un modal con los detalles
+          this.showUserDetails(user);
+
+        } catch (error) {
+          console.error('❌ Error procesando usuario individual:', error);
+          this.showErrorMessage('Error al procesar los datos del usuario');
+        }
+      },
+      error: (error: any) => {
+        console.error('❌ Error consultando usuario por ID:', error);
+        const errorMsg = error?.error?.message || 'No se pudo consultar el usuario';
+        this.showErrorMessage(errorMsg);
+      }
+    });
+  }
+
+  // ========================================
+  // 2. REGISTRO DE DATOS - POST /api/users
+  // ========================================
+
+  /**
+   * Crear nuevo usuario en el backend
+   * Endpoint: POST /api/users
+   * Incluye validación de errores y actualización de la lista local
+   */
+  private createNewUser(formData: UserFormData): void {
+    console.log('🚀 Iniciando creación de usuario...');
+
+    // Transformar datos del formulario al formato esperado por la API
+    const apiData = this.transformFormDataToApiRequest(formData);
+    console.log('📤 Datos enviados a la API:', apiData);
+
+    this.usersService.create(apiData).subscribe({
+      next: (response: any) => {
+        try {
+          console.log('✅ Usuario creado exitosamente:', response);
+
+          // Transformar la respuesta al formato del frontend y agregar a la lista
+          if (response) {
+            const newUser = this.transformApiUserToFrontend(response);
+
+            // Agregar al inicio de la lista local
+            this.users.unshift(newUser);
+            this.filteredUsers = [...this.users];
+
+            // Actualizar vista
+            this.updatePagination();
+            this.renderUsersTable();
+
+            console.log('📝 Lista actualizada. Total usuarios:', this.users.length);
+          }
+
+          this.showSuccessMessage('Usuario creado exitosamente');
+          this.resetCreateUserForm();
+
+        } catch (error) {
+          console.error('❌ Error procesando respuesta de creación:', error);
+          this.showErrorMessage('Usuario creado pero hubo un error actualizando la lista');
+        } finally {
+          this.isLoading = false;
+          this.updateButtonState(false);
+        }
+      },
+      error: (error: any) => {
+        console.error('❌ Error completo al crear usuario:', error);
+
+        // Manejo detallado de errores
+        let errorMessage = this.parseCreateUserError(error);
+
+        console.error('❌ Mensaje de error final:', errorMessage);
+        this.showErrorMessage(errorMessage);
+        this.isLoading = false;
+        this.updateButtonState(false);
+      }
+    });
+  }
+
+  /**
+   * Analizar y formatear errores de creación de usuario
+   */
+  private parseCreateUserError(error: any): string {
+    if (error.status === 0) {
+      return 'No se puede conectar con el servidor. Verifica que Laravel esté ejecutándose en http://localhost:8000';
     }
 
-    // Validar confirmación de contraseña
-    if (fieldName === 'confirmPassword' || fieldName === 'password') {
-      this.validatePasswordMatch();
+    if (error.status === 404) {
+      return 'Endpoint no encontrado. Verifica la URL: POST /api/users';
+    }
+
+    if (error.status === 422) {
+      // Errores de validación de Laravel
+      if (error.error?.errors) {
+        const validationErrors = Object.entries(error.error.errors).map(([field, messages]) => {
+          return `${field}: ${(messages as string[]).join(', ')}`;
+        });
+        return 'Errores de validación: ' + validationErrors.join(' | ');
+      }
+      return error.error?.message || 'Error de validación de datos';
+    }
+
+    if (error.status === 500) {
+      return 'Error interno del servidor Laravel. Revisa los logs de Laravel.';
+    }
+
+    if (error.error?.message) {
+      return error.error.message;
+    }
+
+    return 'Error desconocido al crear el usuario.';
+  }
+
+  // ========================================
+  // 3. TRANSFORMADORES DE DATOS
+  // ========================================
+
+  /**
+   * Transformar datos de la API Laravel al formato del frontend
+   * Normaliza los campos para uso consistente en la aplicación
+   */
+  private transformApiUserToFrontend(apiUser: ApiUserResponse): User {
+    console.log('🔄 Transformando usuario de API a frontend:', apiUser);
+
+    const transformedUser: User = {
+      id: apiUser.id,
+      name: `${apiUser.nombres || ''} ${apiUser.apellidos || ''}`.trim() || 'Sin nombre',
+      documentType: apiUser.identificationType?.nombre || 'Sin tipo',
+      documentNumber: apiUser.identificacion || 'Sin documento',
+      birthDate: apiUser.nacimiento || '',
+      phoneNumber: apiUser.celular || apiUser.telefono || 'Sin teléfono',
+      email: apiUser.email || 'Sin email',
+      userType: apiUser.role?.nombre || 'Sin rol',
+      service: '', // Campo específico del frontend
+      createdAt: apiUser.creado_en ? new Date(apiUser.creado_en) : new Date(),
+      status: apiUser.status?.nombre === 'Activo' ? 'active' : 'inactive',
+      address: apiUser.direccion || '',
+      gender: apiUser.genero || 'O'
+    };
+
+    console.log('✅ Usuario transformado:', transformedUser);
+    return transformedUser;
+  }
+
+  /**
+   * Transformar datos del formulario al formato esperado por la API Laravel
+   * Mapea campos del frontend a la estructura exacta que espera el backend
+   */
+  private transformFormDataToApiRequest(formData: UserFormData): ApiUserRequest {
+    // Separar nombre completo en nombres y apellidos
+    const nameParts = formData.name.trim().split(' ');
+    const nombres = nameParts[0] || '';
+    const apellidos = nameParts.slice(1).join(' ') || 'Sin apellido';
+
+    // Mapear tipo de documento a ID según la base de datos
+    let tipoIdentificacionId = 1; // Por defecto Cédula de Ciudadanía
+    switch (formData.documentType) {
+      case 'cedula':
+        tipoIdentificacionId = 1; // 'Cédula de Ciudadanía'
+        break;
+      case 'pasaporte':
+        tipoIdentificacionId = 2; // 'Cédula de Extranjería'
+        break;
+      case 'tarjeta':
+        tipoIdentificacionId = 3; // 'Tarjeta de Identidad'
+        break;
+    }
+
+    // Mapear tipo de usuario a ID de rol según la base de datos
+    let rolId = 2; // Por defecto Cliente
+    switch (formData.userType) {
+      case 'Cliente':
+        rolId = 2; // 'Cliente' tiene ID 2
+        break;
+      case 'Administrador':
+        rolId = 1; // 'Admin' tiene ID 1
+        break;
+      case 'Empleado':
+        rolId = 3; // 'Empleado' tiene ID 3
+        break;
+    }
+
+    const apiData: ApiUserRequest = {
+      nombres,
+      apellidos,
+      email: formData.email,
+      nacimiento: formData.birthDate || null,
+      genero: 'O' as 'M' | 'F' | 'O', // Por defecto 'Otro'
+      clave: formData.password,
+      tipo_identificacion_id: tipoIdentificacionId,
+      identificacion: formData.documentNumber,
+      celular: formData.phoneNumber || null,
+      telefono: null,
+      direccion: null,
+      terminos_condiciones: true,
+      estados_id: 1, // 'Activo' tiene ID 1
+      roles_id: rolId,
+      negocios_id: null // NULL para usuarios generales
+    };
+
+    console.log('🔍 Mapeo de formulario a API:');
+    console.log('   - Documento:', formData.documentType, '=>', tipoIdentificacionId);
+    console.log('   - Rol:', formData.userType, '=>', rolId);
+    console.log('   - Datos finales:', apiData);
+
+    return apiData;
+  }
+
+  // ========================================
+  // 4. DIVISIÓN DE VISTAS - GESTIÓN DE COMPONENTES
+  // ========================================
+
+  /**
+   * Alternar entre la vista de crear usuario y listar usuarios
+   * Método principal para la división de vistas
+   */
+  toggleView(targetSection: string): void {
+    const createSection = document.getElementById('create-user-section');
+    const listSection = document.getElementById('list-users-section');
+
+    if (targetSection === 'create-user-section') {
+      this.currentView = 'create-user';
+      createSection?.classList.add('active');
+      listSection?.classList.remove('active');
+
+      console.log('📝 Cambiando a vista de crear usuario');
+
+    } else if (targetSection === 'list-users-section') {
+      this.currentView = 'list-users';
+      createSection?.classList.remove('active');
+      listSection?.classList.add('active');
+
+      console.log('📋 Cambiando a vista de listar usuarios');
+
+      // Refrescar usuarios al cambiar a la vista de lista
+      this.refreshUsersList();
     }
   }
 
-  // Limpiar error de campo
-  private clearFieldError(fieldName: string): void {
-    const element = document.getElementById(fieldName);
-    const formGroup = element?.closest('.form-group');
-    formGroup?.classList.remove('error');
-  }
+  /**
+   * Refrescar lista de usuarios manualmente
+   * Utilizado principalmente en la vista de listado
+   */
+  refreshUsersList(): void {
+    console.log('🔄 Refrescando lista de usuarios...');
+    this.loadAllUsers();
 
-  // Validar coincidencia de contraseñas
-  private validatePasswordMatch(): void {
-    const password = (document.getElementById('password') as HTMLInputElement)?.value;
-    const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value;
-    const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
-    const errorDiv = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
+    // Indicador visual de actualización
+    const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
+    if (refreshBtn) {
+      const originalText = refreshBtn.textContent;
+      refreshBtn.textContent = 'Actualizando...';
+      refreshBtn.disabled = true;
 
-    if (password && confirmPassword && password !== confirmPassword) {
-      confirmPasswordGroup?.classList.add('error');
-      if (errorDiv) {
-        errorDiv.textContent = 'Las contraseñas no coinciden';
-      }
-    } else if (password && confirmPassword && password === confirmPassword) {
-      confirmPasswordGroup?.classList.remove('error');
-      if (errorDiv) {
-        errorDiv.textContent = '';
-      }
+      setTimeout(() => {
+        refreshBtn.textContent = originalText;
+        refreshBtn.disabled = false;
+      }, 2000);
     }
   }
 
-  // Crear formulario reactivo
+  // ========================================
+  // FORMULARIO REACTIVO - VISTA CREAR USUARIO
+  // ========================================
+
+  /**
+   * Crear formulario reactivo con validaciones
+   * Para la vista de crear usuario
+   */
   private createUserForm(): FormGroup {
     return this.formBuilder.group({
-      documentType: ['', Validators.required],
+      documentType: ['cedula', Validators.required],
       documentNumber: ['', [Validators.required, Validators.pattern(/^[0-9]+$/)]],
       name: ['', [Validators.required, Validators.minLength(2)]],
       birthDate: ['', [Validators.required, this.ageValidator]],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]+$/)]],
       email: ['', [Validators.required, Validators.email]],
-      userType: ['Empleado', Validators.required],
+      userType: ['Cliente', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
-      service: ['']
+      service: [''] // Opcional
     });
   }
 
-  // Validador personalizado para edad mínima
+  /**
+   * Validador personalizado para edad mínima (18 años)
+   */
   private ageValidator(control: AbstractControl): {[key: string]: any} | null {
     if (!control.value) return null;
 
@@ -260,25 +663,28 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     return age < 18 ? { 'ageRequired': true } : null;
   }
 
-  // Alternar entre vistas
-  toggleView(targetSection: string): void {
-    const createSection = document.getElementById('create-user-section');
-    const listSection = document.getElementById('list-users-section');
+  /**
+   * Manejar envío del formulario de creación
+   */
+  onSubmit(): void {
+    const formData = this.getFormDataFromDOM();
 
-    if (targetSection === 'create-user-section') {
-      this.currentView = 'create-user';
-      createSection?.classList.add('active');
-      listSection?.classList.remove('active');
-    } else if (targetSection === 'list-users-section') {
-      this.currentView = 'list-users';
-      createSection?.classList.remove('active');
-      listSection?.classList.add('active');
-      this.loadUsers();
+    if (this.validateFormData(formData)) {
+      this.isLoading = true;
+      this.clearMessages();
+      this.updateButtonState(true);
+
+      // Crear usuario con un pequeño delay para UX
+      setTimeout(() => {
+        this.createNewUser(formData);
+      }, 500);
     }
   }
 
-  // Obtener datos del formulario del DOM
-  private getFormData(): UserFormData {
+  /**
+   * Obtener datos del formulario desde el DOM
+   */
+  private getFormDataFromDOM(): UserFormData {
     return {
       documentType: (document.getElementById('documentType') as HTMLSelectElement)?.value || '',
       documentNumber: (document.getElementById('documentNumber') as HTMLInputElement)?.value || '',
@@ -293,13 +699,15 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     };
   }
 
-  // Validar formulario
-  private validateForm(formData: UserFormData): boolean {
+  /**
+   * Validar datos del formulario
+   */
+  private validateFormData(formData: UserFormData): boolean {
     let isValid = true;
 
-    // Validar cada campo
+    // Validar cada campo requerido
     Object.entries(formData).forEach(([key, value]) => {
-      if (key === 'service') return; // El servicio es opcional
+      if (key === 'service') return; // Opcional
 
       const element = document.getElementById(key);
       const formGroup = element?.closest('.form-group');
@@ -307,66 +715,15 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
       if (!value && key !== 'confirmPassword') {
         isValid = false;
-        formGroup?.classList.add('error');
-        if (errorDiv) {
-          errorDiv.textContent = 'Este campo es requerido';
-        }
+        this.showFieldError(formGroup, errorDiv, 'Este campo es requerido');
       } else {
         // Validaciones específicas
-        let fieldError = '';
-
-        switch (key) {
-          case 'documentNumber':
-            if (!/^[0-9]+$/.test(value)) {
-              fieldError = 'Solo se permiten números';
-              isValid = false;
-            }
-            break;
-          case 'name':
-            if (value.length < 2) {
-              fieldError = 'El nombre debe tener al menos 2 caracteres';
-              isValid = false;
-            }
-            break;
-          case 'email':
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-              fieldError = 'Formato de email inválido';
-              isValid = false;
-            }
-            break;
-          case 'phoneNumber':
-            if (!/^[0-9+\-\s()]+$/.test(value)) {
-              fieldError = 'Formato de teléfono inválido';
-              isValid = false;
-            }
-            break;
-          case 'password':
-            if (value.length < 6) {
-              fieldError = 'La contraseña debe tener al menos 6 caracteres';
-              isValid = false;
-            }
-            break;
-          case 'birthDate':
-            const birthDate = new Date(value);
-            const today = new Date();
-            let age = today.getFullYear() - birthDate.getFullYear();
-            if (age < 18) {
-              fieldError = 'Debe ser mayor de 18 años';
-              isValid = false;
-            }
-            break;
-        }
-
+        const fieldError = this.validateSpecificField(key, value);
         if (fieldError) {
-          formGroup?.classList.add('error');
-          if (errorDiv) {
-            errorDiv.textContent = fieldError;
-          }
+          isValid = false;
+          this.showFieldError(formGroup, errorDiv, fieldError);
         } else {
-          formGroup?.classList.remove('error');
-          if (errorDiv) {
-            errorDiv.textContent = '';
-          }
+          this.clearFieldError(formGroup, errorDiv);
         }
       }
     });
@@ -376,127 +733,111 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       isValid = false;
       const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
       const errorDiv = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
-      confirmPasswordGroup?.classList.add('error');
-      if (errorDiv) {
-        errorDiv.textContent = 'Las contraseñas no coinciden';
-      }
+      this.showFieldError(confirmPasswordGroup, errorDiv, 'Las contraseñas no coinciden');
     }
 
     return isValid;
   }
 
-  // Envío del formulario
-  onSubmit(): void {
-    const formData = this.getFormData();
-
-    if (this.validateForm(formData)) {
-      this.isLoading = true;
-      this.clearMessages();
-      this.updateButtonState(true);
-
-      setTimeout(() => {
-        this.createUser(formData);
-      }, 1000);
+  /**
+   * Validar campo específico
+   */
+  private validateSpecificField(key: string, value: string): string {
+    switch (key) {
+      case 'documentNumber':
+        return !/^[0-9]+$/.test(value) ? 'Solo se permiten números' : '';
+      case 'name':
+        return value.length < 2 ? 'El nombre debe tener al menos 2 caracteres' : '';
+      case 'email':
+        return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Formato de email inválido' : '';
+      case 'phoneNumber':
+        return !/^[0-9+\-\s()]+$/.test(value) ? 'Formato de teléfono inválido' : '';
+      case 'password':
+        return value.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : '';
+      case 'birthDate':
+        const birthDate = new Date(value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        return age < 18 ? 'Debe ser mayor de 18 años' : '';
+      default:
+        return '';
     }
   }
 
-  // Actualizar estado del botón
-  private updateButtonState(loading: boolean): void {
-    const submitBtn = document.querySelector('.btn-create') as HTMLButtonElement;
-    if (submitBtn) {
-      if (loading) {
-        submitBtn.disabled = true;
-        submitBtn.classList.add('loading');
-        submitBtn.textContent = 'Creando...';
+  /**
+   * Mostrar error en campo específico
+   */
+  private showFieldError(formGroup: Element | null | undefined, errorDiv: HTMLElement | null, message: string): void {
+    if (formGroup) {
+      formGroup.classList.add('error');
+    }
+    if (errorDiv) {
+      errorDiv.textContent = message;
+    }
+  }
+
+  /**
+   * Limpiar error en campo específico
+   */
+  private clearFieldError(formGroup?: Element | null | undefined, errorDiv?: HTMLElement | null): void {
+    if (formGroup) {
+      formGroup.classList.remove('error');
+    }
+    if (errorDiv) {
+      errorDiv.textContent = '';
+    }
+  }
+
+  /**
+   * Validar campo individual en tiempo real
+   */
+  private validateField(fieldName: string): void {
+    const control = this.userForm.get(fieldName);
+    const element = document.getElementById(fieldName);
+    const formGroup = element?.closest('.form-group');
+    const errorDiv = formGroup?.querySelector('.error-message') as HTMLElement;
+
+    if (control && element) {
+      let elementValue = '';
+      if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement) {
+        elementValue = element.value || '';
+      }
+
+      control.setValue(elementValue);
+      control.markAsTouched();
+
+      if (control.invalid) {
+        this.showFieldError(formGroup, errorDiv, this.getFieldErrorMessage(fieldName, control));
       } else {
-        submitBtn.disabled = false;
-        submitBtn.classList.remove('loading');
-        submitBtn.textContent = 'Crear usuario';
-      }
-    }
-  }
-
-  // Crear nuevo usuario
-  private createUser(formData: UserFormData): void {
-    try {
-      // Verificar si el usuario ya existe
-      const existingUser = this.users.find(user =>
-        user.documentNumber === formData.documentNumber || user.email === formData.email
-      );
-
-      if (existingUser) {
-        this.showErrorMessage('Ya existe un usuario con este documento o email');
-        this.isLoading = false;
-        this.updateButtonState(false);
-        return;
-      }
-
-      // Crear nuevo usuario
-      const newUser: User = {
-        id: this.generateUserId(),
-        documentType: formData.documentType,
-        documentNumber: formData.documentNumber,
-        name: formData.name,
-        birthDate: formData.birthDate,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        userType: formData.userType,
-        service: formData.service || undefined,
-        createdAt: new Date(),
-        status: 'active'
-      };
-
-      // Agregar usuario a la lista
-      this.users.push(newUser);
-
-      // Guardar en localStorage
-      this.saveUsersToStorage();
-
-      // Mostrar mensaje de éxito
-      this.showSuccessMessage('Usuario creado exitosamente');
-
-      // Resetear formulario
-      this.resetForm();
-
-      this.isLoading = false;
-      this.updateButtonState(false);
-
-    } catch (error) {
-      this.showErrorMessage('Error al crear el usuario. Inténtalo de nuevo.');
-      this.isLoading = false;
-      this.updateButtonState(false);
-    }
-  }
-
-  // Resetear formulario
-  private resetForm(): void {
-    const form = document.getElementById('userForm') as HTMLFormElement;
-    if (form) {
-      form.reset();
-      // Restaurar valor por defecto del tipo de usuario
-      const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
-      if (userTypeSelect) {
-        userTypeSelect.value = 'Empleado';
+        this.clearFieldError(formGroup, errorDiv);
       }
     }
 
-    // Limpiar errores visuales
-    const errorGroups = document.querySelectorAll('.form-group.error');
-    errorGroups.forEach(group => {
-      group.classList.remove('error');
-      const errorMsg = group.querySelector('.error-message') as HTMLElement;
-      if (errorMsg) {
-        errorMsg.textContent = '';
-      }
-    });
+    // Validar confirmación de contraseña
+    if (fieldName === 'confirmPassword' || fieldName === 'password') {
+      this.validatePasswordMatch();
+    }
   }
 
-  // Generar ID único
-  private generateUserId(): string {
-    return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  /**
+   * Validar coincidencia de contraseñas
+   */
+  private validatePasswordMatch(): void {
+    const password = (document.getElementById('password') as HTMLInputElement)?.value;
+    const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value;
+    const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
+    const errorDiv = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      this.showFieldError(confirmPasswordGroup, errorDiv, 'Las contraseñas no coinciden');
+    } else if (password && confirmPassword && password === confirmPassword) {
+      this.clearFieldError(confirmPasswordGroup, errorDiv);
+    }
   }
 
-  // Obtener mensaje de error para campos
+  /**
+   * Obtener mensaje de error específico para cada campo
+   */
   private getFieldErrorMessage(fieldName: string, control: AbstractControl): string {
     const errors = control.errors;
     if (!errors) return '';
@@ -537,44 +878,69 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // Cargar usuarios desde la API
-  loadUsers(): void {
-    this.usersService.getAll().subscribe(
-      (data: any) => {
-        // Log the raw response for debugging
-        console.log('Respuesta de la API de usuarios:', data);
-        // Manejar ambos formatos: array directo o { data: array }
-        let usersArray: any[] = [];
-        if (Array.isArray(data)) {
-          usersArray = data;
-        } else if (data && Array.isArray(data.data)) {
-          usersArray = data.data;
-        } else {
-          // Si la respuesta no es válida, mostrar error
-          this.showErrorMessage('Formato de respuesta inesperado de la API de usuarios');
-          this.users = [];
-          this.filteredUsers = [];
-          this.updatePagination();
-          this.renderUsersTable();
-          return;
-        }
-        this.users = usersArray;
-        this.filteredUsers = [...this.users];
-        this.updatePagination();
-        this.renderUsersTable();
-      },
-      (err: any) => {
-        this.showErrorMessage('Error al cargar usuarios desde la API');
-        this.users = [];
-        this.filteredUsers = [];
-        this.updatePagination();
-        this.renderUsersTable();
-        console.error(err);
+  /**
+   * Resetear formulario después de crear usuario
+   */
+  private resetCreateUserForm(): void {
+    const form = document.getElementById('userForm') as HTMLFormElement;
+    if (form) {
+      form.reset();
+
+      // Restaurar valores por defecto válidos
+      const documentTypeSelect = document.getElementById('documentType') as HTMLSelectElement;
+      if (documentTypeSelect) {
+        documentTypeSelect.value = 'cedula';
       }
-    );
+
+      const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
+      if (userTypeSelect) {
+        userTypeSelect.value = 'Cliente';
+      }
+    }
+
+    // Limpiar errores visuales
+    const errorGroups = document.querySelectorAll('.form-group.error');
+    errorGroups.forEach(group => {
+      group.classList.remove('error');
+      const errorMsg = group.querySelector('.error-message') as HTMLElement;
+      if (errorMsg) {
+        errorMsg.textContent = '';
+      }
+    });
+
+    // Resetear formulario reactivo con valores por defecto
+    this.userForm.reset({
+      documentType: 'cedula',
+      userType: 'Cliente'
+    });
   }
 
-  // Filtrar usuarios
+  /**
+   * Actualizar estado del botón de envío
+   */
+  private updateButtonState(loading: boolean): void {
+    const submitBtn = document.querySelector('.btn-create') as HTMLButtonElement;
+    if (submitBtn) {
+      if (loading) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('loading');
+        submitBtn.textContent = 'Creando...';
+      } else {
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('loading');
+        submitBtn.textContent = 'Crear usuario';
+      }
+    }
+  }
+
+  // ========================================
+  // FUNCIONALIDADES DE LA LISTA - VISTA LISTAR USUARIOS
+  // ========================================
+
+  /**
+   * Filtrar usuarios basado en el término de búsqueda
+   * Para la vista de listado
+   */
   filterUsers(): void {
     if (!this.searchTerm.trim()) {
       this.filteredUsers = [...this.users];
@@ -593,46 +959,10 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.renderUsersTable();
   }
 
-  // Actualizar paginación
-  updatePagination(): void {
-    this.totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
-
-    const pageInfo = document.getElementById('pageInfo');
-    const prevBtn = document.getElementById('prevPage') as HTMLButtonElement;
-    const nextBtn = document.getElementById('nextPage') as HTMLButtonElement;
-
-    if (pageInfo) {
-     pageInfo.textContent = `Página ${this.currentPage} de ${this.totalPages}`;
-    }
-
-    if (prevBtn) {
-      prevBtn.disabled = this.currentPage === 1;
-    }
-
-    if (nextBtn) {
-      nextBtn.disabled = this.currentPage === this.totalPages || this.totalPages === 0;
-    }
-  }
-
-  // Página anterior
-  previousPage(): void {
-    if (this.currentPage > 1) {
-      this.currentPage--;
-      this.updatePagination();
-      this.renderUsersTable();
-    }
-  }
-
-  // Página siguiente
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) {
-      this.currentPage++;
-      this.updatePagination();
-      this.renderUsersTable();
-    }
-  }
-
-  // Renderizar tabla
+  /**
+   * Renderizar tabla de usuarios con paginación
+   * Función principal para alimentar la vista de listado
+   */
   renderUsersTable(): void {
     const tbody = document.getElementById('userTableBody');
     if (!tbody) return;
@@ -656,6 +986,10 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     currentUsers.forEach(user => {
       const row = document.createElement('tr');
+      const statusIndicator = user.status === 'active' ?
+        '<span class="status-dot status-active"></span>Activo' :
+        '<span class="status-dot status-inactive"></span>Inactivo';
+
       row.innerHTML = `
         <td>${user.name}</td>
         <td>${user.documentNumber}</td>
@@ -664,6 +998,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
         <td>${user.email}</td>
         <td>
           <div class="actions-buttons">
+            <button class="action-button" onclick="window.crearUsuarioComponent?.viewUser('${user.id}')">
+              Ver
+            </button>
             <button class="action-button" onclick="window.crearUsuarioComponent?.editUser('${user.id}')">
               Editar
             </button>
@@ -675,52 +1012,170 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       `;
       tbody.appendChild(row);
     });
+
+    this.updateUserCounter();
   }
 
-  // Editar usuario
-  editUser(userId: string): void {
-    const user = this.users.find(u => u.id === userId);
+  /**
+   * Actualizar contador de usuarios
+   */
+  private updateUserCounter(): void {
+    const counterElement = document.getElementById('userCounter');
+    if (counterElement) {
+      counterElement.textContent = `Total: ${this.users.length} usuarios`;
+    }
+  }
+
+  // ========================================
+  // PAGINACIÓN - PARA VISTA DE LISTADO
+  // ========================================
+
+  /**
+   * Actualizar información de paginación
+   */
+  updatePagination(): void {
+    this.totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
+
+    const pageInfo = document.getElementById('pageInfo');
+    const prevBtn = document.getElementById('prevPage') as HTMLButtonElement;
+    const nextBtn = document.getElementById('nextPage') as HTMLButtonElement;
+
+    if (pageInfo) {
+      pageInfo.textContent = `Página ${this.currentPage} de ${this.totalPages}`;
+    }
+
+    if (prevBtn) {
+      prevBtn.disabled = this.currentPage === 1;
+    }
+
+    if (nextBtn) {
+      nextBtn.disabled = this.currentPage === this.totalPages || this.totalPages === 0;
+    }
+  }
+
+  /**
+   * Ir a la página anterior
+   */
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePagination();
+      this.renderUsersTable();
+    }
+  }
+
+  /**
+   * Ir a la página siguiente
+   */
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      this.updatePagination();
+      this.renderUsersTable();
+    }
+  }
+
+  // ========================================
+  // ACCIONES DE USUARIO - PARA VISTA DE LISTADO
+  // ========================================
+
+  /**
+   * Ver detalles de un usuario específico
+   * Utiliza la consulta por ID implementada anteriormente
+   */
+  viewUser(userId: string | number): void {
+    console.log('Ver detalles del usuario:', userId);
+    this.getUserById(userId);
+  }
+
+  /**
+   * Mostrar detalles del usuario (implementación básica)
+   */
+  private showUserDetails(user: User): void {
+    const details = `
+      Información del Usuario:
+      - Nombre: ${user.name}
+      - Documento: ${user.documentType} - ${user.documentNumber}
+      - Email: ${user.email}
+      - Teléfono: ${user.phoneNumber}
+      - Tipo: ${user.userType}
+      - Estado: ${user.status === 'active' ? 'Activo' : 'Inactivo'}
+    `;
+
+    alert(details); // Implementación básica - puedes reemplazar con un modal
+  }
+
+  /**
+   * Editar usuario existente (funcionalidad futura)
+   */
+  editUser(userId: string | number): void {
+    console.log('Editando usuario:', userId);
+    this.editingUserId = userId;
+
+    const user = this.users.find(u => u.id.toString() === userId.toString());
     if (user) {
-      console.log('Editar usuario:', user);
-      alert(`Funcionalidad de edición para ${user.name} en desarrollo`);
+      this.showSuccessMessage(`Función de editar usuario "${user.name}" estará disponible próximamente`);
     }
   }
 
-  // Eliminar usuario
-  deleteUser(userId: string): void {
-    const user = this.users.find(u => u.id === userId);
-    if (user && confirm(`¿Estás seguro de que quieres eliminar al usuario ${user.name}?`)) {
-      this.users = this.users.filter(u => u.id !== userId);
-      this.saveUsersToStorage();
-      this.filterUsers();
-      this.showSuccessMessage('Usuario eliminado exitosamente');
+  /**
+   * Eliminar usuario (con confirmación)
+   * Actualiza la lista local inmediatamente
+   */
+  deleteUser(userId: string | number): void {
+    const user = this.users.find(u => u.id.toString() === userId.toString());
+    if (!user) return;
+
+    if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${user.name}"?`)) {
+      this.usersService.delete(userId).subscribe({
+        next: () => {
+          // Actualizar la lista local inmediatamente
+          this.users = this.users.filter(u => u.id.toString() !== userId.toString());
+          this.filteredUsers = this.filteredUsers.filter(u => u.id.toString() !== userId.toString());
+
+          // Actualizar la vista
+          this.updatePagination();
+          this.renderUsersTable();
+
+          console.log('Usuario eliminado. Total usuarios:', this.users.length);
+          this.showSuccessMessage('Usuario eliminado correctamente');
+        },
+        error: (error: any) => {
+          const errorMsg = error?.error?.message || 'Error al eliminar el usuario';
+          this.showErrorMessage(errorMsg);
+        }
+      });
     }
   }
 
-  // Guardar en localStorage
-  private saveUsersToStorage(): void {
-    localStorage.setItem('beauty_salon_users', JSON.stringify(this.users));
-  }
+  // ========================================
+  // GESTIÓN DE MENSAJES - PARA AMBAS VISTAS
+  // ========================================
 
-  // Mostrar mensaje de éxito
+  /**
+   * Mostrar mensaje de éxito
+   */
   private showSuccessMessage(message: string): void {
     this.successMessage = message;
-    this.showMessage(message, 'success');
+    this.displayMessage(message, 'success');
   }
 
-  // Mostrar mensaje de error
+  /**
+   * Mostrar mensaje de error
+   */
   private showErrorMessage(message: string): void {
     this.errorMessage = message;
-    this.showMessage(message, 'error');
+    this.displayMessage(message, 'error');
   }
 
-  // Mostrar mensaje general
-  private showMessage(message: string, type: 'success' | 'error'): void {
-    // Crear elemento de mensaje si no existe
+  /**
+   * Mostrar mensaje en la interfaz
+   */
+  private displayMessage(message: string, type: 'success' | 'error'): void {
     let messageDiv = document.querySelector(`.${type}-message`) as HTMLElement;
     if (!messageDiv) {
       messageDiv = document.createElement('div');
-     messageDiv.className = `${type}-message`;
+      messageDiv.className = `${type}-message`;
       const cardContent = document.querySelector('.card-content');
       if (cardContent) {
         cardContent.insertBefore(messageDiv, cardContent.firstChild);
@@ -730,12 +1185,15 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     messageDiv.textContent = message;
     messageDiv.classList.add('show');
 
+    // Auto-ocultar después de 5 segundos
     setTimeout(() => {
       messageDiv.classList.remove('show');
     }, 5000);
   }
 
-  // Limpiar mensajes
+  /**
+   * Limpiar todos los mensajes
+   */
   private clearMessages(): void {
     this.successMessage = '';
     this.errorMessage = '';
@@ -747,15 +1205,145 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (errorDiv) errorDiv.classList.remove('show');
   }
 
-  ngAfterViewInit(): void {
-    // Hacer la instancia accesible globalmente
-    (window as any).crearUsuarioComponent = this;
+  // ========================================
+  // UTILIDADES Y FUNCIONES AUXILIARES
+  // ========================================
+
+  /**
+   * Exportar lista de usuarios (funcionalidad futura)
+   */
+  exportUsers(): void {
+    console.log('Exportando usuarios...', this.filteredUsers);
+    this.showSuccessMessage('Funcionalidad de exportación estará disponible próximamente');
   }
 
-  ngOnDestroy(): void {
-    // Limpiar referencia global
-    if ((window as any).crearUsuarioComponent === this) {
-      delete (window as any).crearUsuarioComponent;
+  /**
+   * Obtener estadísticas de usuarios
+   */
+  getUserStats(): { total: number, active: number, inactive: number, byRole: Record<string, number> } {
+    const stats = {
+      total: this.users.length,
+      active: this.users.filter(u => u.status === 'active').length,
+      inactive: this.users.filter(u => u.status === 'inactive').length,
+      byRole: {} as Record<string, number>
+    };
+
+    // Contar por rol
+    this.users.forEach(user => {
+      stats.byRole[user.userType] = (stats.byRole[user.userType] || 0) + 1;
+    });
+
+    return stats;
+  }
+
+  /**
+   * Verificar si email ya existe
+   */
+  private checkIfEmailExists(email: string): boolean {
+    return this.users.some(user => user.email.toLowerCase() === email.toLowerCase());
+  }
+
+  /**
+   * Verificar si documento ya existe
+   */
+  private checkIfDocumentExists(documentNumber: string): boolean {
+    return this.users.some(user => user.documentNumber === documentNumber);
+  }
+
+  /**
+   * Formatear fecha para mostrar en la interfaz
+   */
+  private formatDate(date: Date | string): string {
+    if (!date) return '';
+
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+
+  /**
+   * Validar email con regex
+   */
+  private isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  /**
+   * Limpiar y normalizar texto
+   */
+  private sanitizeText(text: string): string {
+    return text.trim().replace(/\s+/g, ' ');
+  }
+
+  /**
+   * Verificar si el usuario es mayor de edad
+   */
+  private isOfAge(birthDate: string): boolean {
+    if (!birthDate) return false;
+
+    const birth = new Date(birthDate);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--;
+    }
+
+    return age >= 18;
+  }
+
+  // ========================================
+  // FUNCIONES DE DEBUGGING Y MONITOREO
+  // ========================================
+
+  /**
+   * Función de debugging para inspeccionar el estado actual
+   */
+  debugCurrentState(): void {
+    console.log('Estado actual del componente:');
+    console.log('   - Vista actual:', this.currentView);
+    console.log('   - Total usuarios:', this.users.length);
+    console.log('   - Usuarios filtrados:', this.filteredUsers.length);
+    console.log('   - Página actual:', this.currentPage);
+    console.log('   - Término de búsqueda:', this.searchTerm);
+    console.log('   - Cargando:', this.isLoading);
+    console.log('   - Lista completa:', this.users);
+  }
+
+  /**
+   * Verificar sincronización con el backend
+   */
+  async verifySyncWithBackend(): Promise<void> {
+    console.log('Verificando sincronización con backend...');
+
+    try {
+      this.usersService.getAll().subscribe({
+        next: (backendUsers: any) => {
+          const backendCount = Array.isArray(backendUsers) ? backendUsers.length : backendUsers?.data?.length || 0;
+          const frontendCount = this.users.length;
+
+          console.log('Comparación de datos:');
+          console.log('   - Backend:', backendCount, 'usuarios');
+          console.log('   - Frontend:', frontendCount, 'usuarios');
+
+          if (backendCount === frontendCount) {
+            console.log('Sincronización correcta');
+          } else {
+            console.log('Desincronización detectada - Recargando datos...');
+            this.loadAllUsers();
+          }
+        },
+        error: (error) => {
+          console.error('Error en verificación:', error);
+        }
+      });
+    } catch (error) {
+      console.error('Error en verificación async:', error);
     }
   }
 }

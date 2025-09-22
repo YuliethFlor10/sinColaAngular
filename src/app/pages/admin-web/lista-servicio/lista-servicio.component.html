@@ -1,13 +1,7 @@
-<app-admin-web></app-admin-web>
-
-<main class="main-content">
-            <div class="content-card">
-                <div class="page-title-section">
-                    <h1 class="main-title">Listado de servicios</h1>
-                </div>
-
-                <!-- Sección responsive de búsqueda -->
-                <div class="search-and-actions-section">
+<div>
+  <app-admin-web></app-admin-web>
+  <app-contenido [title]="'Listado de servicios'">
+<div class="search-and-actions-section">
                     <div class="search-field-container">
                         <label for="searchField" class="search-label">Buscar</label>
                         <input
@@ -51,9 +45,9 @@
                         <!-- Las tarjetas se generan dinámicamente -->
                     </div>
                 </div>
-            </div>
-        </main>
-   
+
+
+
 
     <!-- Botón flotante responsive -->
     <button class="floating-action-button" id="floatingActionBtn" title="Agregar nuevo servicio">
@@ -130,7 +124,7 @@
             </div>
             <div class="modal-body">
                 <div class="delete-confirmation">
-                    <div class="delete-icon"><span class="nav-icon"><img src="/iconos/advertencia.svg" alt="Icono check" class="icon"></span>
+                    <div class="delete-icon"><span class="nav-icon"><img src="/assets/iconos/advertencia.svg" alt="Icono check" class="icon"></span>
 </div>
                     <p class="delete-message" id="deleteMessage">¿Estás seguro de que deseas eliminar este servicio?</p>
                     <p class="delete-warning">Esta acción es permanente y no se puede deshacer. Si deseas que el servicio acceda nuevamente, tendrás que crearlo desde cero.</p>
@@ -142,3 +136,6 @@
             </div>
         </div>
     </div>
+  </app-contenido>
+
+</div>

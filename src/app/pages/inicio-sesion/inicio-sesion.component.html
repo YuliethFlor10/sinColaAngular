@@ -1,0 +1,112 @@
+<header class="header" style="background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%); color: white; padding: 1rem 1.5rem 0.5rem; display: flex; justify-content: space-between; align-items: flex-start; height: 80px;">
+  <!-- Título -->
+  <div style="flex: 1; display: flex; align-items: center;">
+    <h1 class="titulo" style="font-size: 1.8rem; font-weight: bold; margin: 0 0 4px 0;">
+      Bienvenido
+    </h1>
+  </div>
+  <!-- Formulario -->
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLogin()" style="display: flex; flex-direction: row; align-items: flex-start; gap: 12px; flex: 2; justify-content: flex-end; margin-top: 5px; position: relative;">
+    <!-- Inputs + botón -->
+    <input type="email" formControlName="email" placeholder="Correo electrónico" required style="padding: 6px 10px; border-radius: 8px; border: none; min-width: 120px;" />
+    <input type="password" formControlName="clave" placeholder="Contraseña" required style="padding: 6px 10px; border-radius: 8px; border: none; min-width: 120px;" />
+    <button type="submit" class="boton-redireccion" style="padding: 6px 10px; border-radius: 8px; background: #000000; color: #ffffff; font-weight: bold; border: none; max-width: 110px;">
+      Ingresar
+    </button>
+    <!-- Recuérdame + Olvidé contraseña debajo -->
+    <div style="position: absolute; top: 100%; right: 212px; margin-top: 2px; display: flex; gap: 20px; font-size: 13px;">
+      <label class="remember-label" style="color: #fff;">
+        <input type="checkbox" id="remember" style="margin-right: 6px;" />
+        Recuérdame
+      </label>
+      <a href="#" style="color: #fff; text-decoration: underline; margin-left: 90px;">Olvidé contraseña</a>
+    </div>
+  </form>
+</header>
+
+<app-modal [visible]="!!loginError" (close)="loginError = ''">
+  <div style="font-size:22px;color:#ff4d4f;margin-bottom:12px;">
+    <strong>Error de autenticación</strong>
+  </div>
+  <div style="font-size:16px;color:#d32f2f;">{{ loginError }}</div>
+</app-modal>
+
+<main class="container">
+  <section class="izquierda">
+    <p class="mensaje">
+      Agenda sin estrés. Porque el tiempo de tus clientes vale, <br />
+      transforma la forma en que gestionas tus citas y <br />
+      concéntrate en lo que realmente importa: atender a tus <br />
+      clientes mejor.
+    </p>
+    <img src="assets/iconos/logo.svg" alt="Logo SinCola" class="logo" />
+  </section>
+  <section class="derecha">
+    <h2 class="registrate">Registrate</h2>
+  <form class="registro-form" [formGroup]="registroForm" (ngSubmit)="onRegister()">
+  <input type="text" formControlName="nombres" placeholder="Nombre" required />
+  <div *ngIf="registroForm.get('nombres')?.invalid && registroForm.get('nombres')?.touched" style="color:#d32f2f; font-size:0.95rem;">El nombre es obligatorio.</div>
+  <input type="text" formControlName="apellidos" placeholder="Apellido" required />
+  <div *ngIf="registroForm.get('apellidos')?.invalid && registroForm.get('apellidos')?.touched" style="color:#d32f2f; font-size:0.95rem;">El apellido es obligatorio.</div>
+  <input type="email" formControlName="email" placeholder="Email" required />
+  <div *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched" style="color:#d32f2f; font-size:0.95rem;">Ingresa un email válido.</div>
+  <input type="password" formControlName="clave" placeholder="Contraseña" required />
+  <div *ngIf="registroForm.get('clave')?.invalid && registroForm.get('clave')?.touched" style="color:#d32f2f; font-size:0.95rem;">La contraseña debe tener al menos 6 caracteres.</div>
+  <input type="password" formControlName="confirmar_clave" placeholder="Confirmar contraseña" required />
+  <div *ngIf="registroForm.hasError('passwordMismatch') && registroForm.get('confirmar_clave')?.touched" style="color:#d32f2f; font-size:0.95rem;">Las contraseñas no coinciden.</div>
+  <input type="tel" formControlName="celular" placeholder="Celular" required />
+  <div *ngIf="registroForm.get('celular')?.invalid && registroForm.get('celular')?.touched" style="color:#d32f2f; font-size:0.95rem;">El celular es obligatorio.</div>
+  <input type="tel" formControlName="telefono" placeholder="Teléfono" required />
+  <div *ngIf="registroForm.get('telefono')?.invalid && registroForm.get('telefono')?.touched" style="color:#d32f2f; font-size:0.95rem;">El teléfono es obligatorio.</div>
+  <input type="text" formControlName="direccion" placeholder="Dirección" required />
+  <div *ngIf="registroForm.get('direccion')?.invalid && registroForm.get('direccion')?.touched" style="color:#d32f2f; font-size:0.95rem;">La dirección es obligatoria.</div>
+  <input type="text" formControlName="identificacion" placeholder="Identificación" required />
+  <div *ngIf="registroForm.get('identificacion')?.invalid && registroForm.get('identificacion')?.touched" style="color:#d32f2f; font-size:0.95rem;">La identificación es obligatoria.</div>
+      <select formControlName="tipo_identificacion_id" required>
+        <option value="1">CC</option>
+        <option value="2">CE</option>
+        <option value="3">TI</option>
+        <option value="4">NIT</option>
+        <option value="5">RUT</option>
+      </select>
+      <label style="font-size:0.95rem; margin-top:8px;">
+        <input type="checkbox" formControlName="terminos_condiciones" required /> Acepto términos y condiciones
+      </label>
+      <div *ngIf="registroForm.get('terminos_condiciones')?.invalid && registroForm.get('terminos_condiciones')?.touched" style="color:#d32f2f; font-size:0.95rem;">Debes aceptar los términos y condiciones.</div>
+  <button type="submit" class="btn-registrar">REGISTRARME</button>
+  <div *ngIf="registroForm.invalid && registroForm.touched" style="color:#d32f2f; font-size:0.95rem; text-align:center; margin-top:8px;">Todos los campos son obligatorios y deben ser válidos.</div>
+      <div *ngIf="registroError" style="color:#d32f2f; font-size:1.05rem; text-align:center; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:8px;">
+        <img src="assets/iconos/advertencia.svg" alt="Advertencia" style="width:22px; height:22px; vertical-align:middle;" />
+        <span>{{registroError}}</span>
+      </div>
+      <div *ngIf="registroExito" style="color:green; font-size:1.1rem; text-align:center; margin-top:16px; font-weight:bold;">{{registroExito}}</div>
+      </form>
+  <app-modal [visible]="!!registroExito" [canClose]="!!negocioExito" (close)="registroExito = ''">
+        <h2 class="registrate">Registra tu negocio</h2>
+        <form [formGroup]="negocioForm" (ngSubmit)="onNegocioSubmit()" class="registro-form" style="display:flex; flex-direction:column; gap:18px;">
+          <input type="text" formControlName="nombre" placeholder="Nombre del establecimiento" required />
+          <input type="text" formControlName="nit" placeholder="NIT del establecimiento" required />
+          <input type="text" formControlName="direccion" placeholder="Dirección del establecimiento" required />
+          <input type="tel" formControlName="telefono" placeholder="Teléfono" required />
+          <input type="email" formControlName="email" placeholder="Email" required />
+          <select formControlName="tipo_servicio_id" required>
+            <option value="">Tipo de negocio</option>
+            <option value="1">salon de belleza</option>
+            <option value="2">centro de estetica</option>
+            <option value="3">clinica odontologia</option>
+            <option value="4">barberia</option>
+          </select>
+          <!-- Campos ocultos para estados_id y plan_id -->
+          <input type="hidden" formControlName="estados_id" />
+          <input type="hidden" formControlName="plan_id" />
+          <input type="hidden" formControlName="planes_id" />
+          <button type="submit" class="btn-registrar" style="cursor:pointer;">REGISTRAR NEGOCIO</button>
+          <div *ngIf="negocioError" style="color:#d32f2f; font-size:0.95rem; text-align:center; margin-top:8px;">{{negocioError}}</div>
+          <div *ngIf="negocioExito" style="color:green; font-size:1.05rem; text-align:center; margin-top:8px; font-weight:bold;">{{negocioExito}}</div>
+        </form>
+      </app-modal>
+  </section>
+</main>
+<footer>
+  <p class="footer">Tu tiempo es oro. No lo pongas en espera</p>
+</footer>

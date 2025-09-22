@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AdminWeb } from "../admin-web";
+import { ContenidoComponent } from "../../../compartido/components/contenido/contenido.component";
 
 export interface Plan {
   id: number;
@@ -20,7 +21,7 @@ export interface Plan {
 @Component({
   selector: 'app-plan',
   standalone: true,
-  imports: [CommonModule, AdminWeb],
+  imports: [CommonModule, AdminWeb, ContenidoComponent],
   templateUrl: './plan.component.html',
   styleUrls: ['./plan.component.css'],
 

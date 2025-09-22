@@ -1,11 +1,33 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
 import { AdminWeb } from "../admin-web";
 import { ContenidoComponent } from "../../../compartido/components/contenido/contenido.component";
+import { Observable, catchError, throwError } from 'rxjs';
 
 // Importar Chart.js
 declare var Chart: any;
+
+// Interfaz para el usuario
+interface User {
+  id?: number;
+  name: string;
+  email: string;
+  password?: string;
+  password_confirmation?: string;
+  created_at?: string;
+  updated_at?: string;
+  [key: string]: any; // Para campos adicionales
+}
+
+// Interfaz para la respuesta de la API
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  errors?: any;
+}
 
 interface ServiceData {
   name: string;
@@ -24,36 +46,51 @@ interface MostPerformedService {
   styleUrls: ['./informe.component.css'],
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     FormsModule,
-    AdminWeb, 
+    ReactiveFormsModule,
+    HttpClientModule,
+    AdminWeb,
     ContenidoComponent
   ]
 })
-export class InformeComponent implements OnInit, AfterViewInit {
+export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('servicesChart') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
-  // Variables del formulario
+  // Variables del formulario de informes
   startDate: string = '';
   endDate: string = '';
   selectedPerson: string = 'empresa';
   isGenerating: boolean = false;
   showChart: boolean = false;
-  
+
   // Variables del resumen
   mostPerformedServices: MostPerformedService[] = [];
   totalValue: number = 0;
-  
+
+  // Variables para gestión de usuarios
+  users: User[] = [];
+  selectedUser: User | null = null;
+  isLoadingUsers: boolean = false;
+  isCreatingUser: boolean = false;
+  currentView: 'reports' | 'users-list' | 'user-create' = 'reports';
+
+  // Formulario reactivo para crear usuario
+  createUserForm: FormGroup;
+
   // Mensajes de estado
   successMessage: string = '';
   errorMessage: string = '';
   infoMessage: string = '';
   noDataMessage: string = 'Selecciona un rango de fechas y personal para generar el informe.';
-  
+
   // Chart.js instance
   chartInstance: any = null;
-  
-  // Datos de ejemplo para la simulación
+
+  // URL base de la API de Laravel
+  private apiUrl = 'http://localhost:8000/api'; // Ajusta según tu configuración
+
+  // Datos de ejemplo para la simulación de informes
   private sampleData: { [key: string]: ServiceData[] } = {
     empresa: [
       { name: 'Consulta General', count: 45, value: 2250000 },
@@ -82,20 +119,341 @@ export class InformeComponent implements OnInit, AfterViewInit {
     ]
   };
 
-  constructor() {}
+  constructor(
+    private http: HttpClient,
+    private fb: FormBuilder
+  ) {
+    // Inicializar el formulario reactivo para crear usuario
+    this.createUserForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      password_confirmation: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator });
+  }
 
   ngOnInit() {
     this.initializeDates();
+    // Cargar usuarios al inicializar el componente
+    this.loadUsers();
   }
 
   ngAfterViewInit() {
     // El canvas está disponible aquí
   }
 
+  ngOnDestroy() {
+    // Limpiar el gráfico al destruir el componente
+    if (this.chartInstance) {
+      this.chartInstance.destroy();
+    }
+  }
+
+  // ===========================================
+  // SECCIÓN: GESTIÓN DE VISTAS
+  // ===========================================
+
+  /**
+   * Cambia la vista actual del componente
+   * @param view - Vista a mostrar
+   */
+  setCurrentView(view: 'reports' | 'users-list' | 'user-create') {
+    this.currentView = view;
+    this.clearMessages();
+
+    // Si cambia a lista de usuarios, recargar datos
+    if (view === 'users-list') {
+      this.loadUsers();
+    }
+
+    // Si cambia a crear usuario, resetear formulario
+    if (view === 'user-create') {
+      this.resetCreateUserForm();
+    }
+  }
+
+  // ===========================================
+  // SECCIÓN: CONSULTA DE USUARIOS
+  // ===========================================
+
+  /**
+   * Obtiene la lista completa de usuarios desde el backend
+   */
+  loadUsers(): void {
+    this.isLoadingUsers = true;
+    this.clearMessages();
+
+    this.getUsersFromApi().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.users = response.data;
+          this.showSuccessMessage(`Se cargaron ${this.users.length} usuarios correctamente.`);
+        } else {
+          this.users = [];
+          this.showErrorMessage(response.message || 'Error al obtener los usuarios.');
+        }
+        this.isLoadingUsers = false;
+      },
+      error: (error) => {
+        console.error('Error al cargar usuarios:', error);
+        this.showErrorMessage('Error de conexión al cargar usuarios. Verifique su conexión a internet.');
+        this.users = [];
+        this.isLoadingUsers = false;
+      }
+    });
+  }
+
+  /**
+   * Obtiene un usuario específico por su ID
+   * @param userId - ID del usuario a consultar
+   */
+  loadUserById(userId: number): void {
+    this.clearMessages();
+    this.showInfoMessage('Cargando datos del usuario...');
+
+    this.getUserByIdFromApi(userId).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.selectedUser = response.data;
+          this.showSuccessMessage('Usuario cargado correctamente.');
+        } else {
+          this.selectedUser = null;
+          this.showErrorMessage(response.message || 'Usuario no encontrado.');
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar usuario por ID:', error);
+        this.showErrorMessage('Error al cargar los datos del usuario.');
+        this.selectedUser = null;
+      }
+    });
+  }
+
+  /**
+   * Realiza la petición HTTP para obtener todos los usuarios
+   * @returns Observable con la respuesta de la API
+   */
+  private getUsersFromApi(): Observable<ApiResponse<User[]>> {
+    return this.http.get<ApiResponse<User[]>>(`${this.apiUrl}/users`)
+      .pipe(
+        catchError(this.handleError<ApiResponse<User[]>>('getUsersFromApi'))
+      );
+  }
+
+  /**
+   * Realiza la petición HTTP para obtener un usuario por ID
+   * @param userId - ID del usuario
+   * @returns Observable con la respuesta de la API
+   */
+  private getUserByIdFromApi(userId: number): Observable<ApiResponse<User>> {
+    return this.http.get<ApiResponse<User>>(`${this.apiUrl}/users/${userId}`)
+      .pipe(
+        catchError(this.handleError<ApiResponse<User>>('getUserByIdFromApi'))
+      );
+  }
+
+  // ===========================================
+  // SECCIÓN: REGISTRO DE USUARIOS
+  // ===========================================
+
+  /**
+   * Crea un nuevo usuario en el sistema
+   */
+  createUser(): void {
+    // Validar que el formulario sea válido
+    if (this.createUserForm.invalid) {
+      this.markFormGroupTouched(this.createUserForm);
+      this.showErrorMessage('Por favor, completa todos los campos correctamente.');
+      return;
+    }
+
+    this.isCreatingUser = true;
+    this.clearMessages();
+    this.showInfoMessage('Creando usuario...');
+
+    const userData: User = this.createUserForm.value;
+
+    this.createUserInApi(userData).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.showSuccessMessage('Usuario creado exitosamente.');
+          this.resetCreateUserForm();
+          // Actualizar la lista de usuarios si estamos en esa vista
+          if (this.currentView === 'users-list') {
+            this.loadUsers();
+          }
+          // Cambiar a la vista de lista después de crear
+          setTimeout(() => {
+            this.setCurrentView('users-list');
+          }, 2000);
+        } else {
+          this.handleCreateUserErrors(response.errors || {});
+        }
+        this.isCreatingUser = false;
+      },
+      error: (error) => {
+        console.error('Error al crear usuario:', error);
+        this.handleCreateUserErrors(error.error?.errors || {});
+        this.isCreatingUser = false;
+      }
+    });
+  }
+
+  /**
+   * Realiza la petición HTTP para crear un usuario
+   * @param userData - Datos del usuario a crear
+   * @returns Observable con la respuesta de la API
+   */
+  private createUserInApi(userData: User): Observable<ApiResponse<User>> {
+    return this.http.post<ApiResponse<User>>(`${this.apiUrl}/users`, userData)
+      .pipe(
+        catchError(this.handleError<ApiResponse<User>>('createUserInApi'))
+      );
+  }
+
+  /**
+   * Maneja los errores específicos de validación al crear usuario
+   * @param errors - Objeto con los errores de validación
+   */
+  private handleCreateUserErrors(errors: any): void {
+    let errorMessage = 'Error al crear el usuario: ';
+
+    if (errors.email) {
+      errorMessage += errors.email[0] + ' ';
+    }
+    if (errors.name) {
+      errorMessage += errors.name[0] + ' ';
+    }
+    if (errors.password) {
+      errorMessage += errors.password[0] + ' ';
+    }
+
+    if (errorMessage === 'Error al crear el usuario: ') {
+      errorMessage = 'Error desconocido al crear el usuario.';
+    }
+
+    this.showErrorMessage(errorMessage.trim());
+  }
+
+  // ===========================================
+  // SECCIÓN: FORMULARIOS Y VALIDACIONES
+  // ===========================================
+
+  /**
+   * Validador personalizado para confirmar que las contraseñas coincidan
+   * @param formGroup - FormGroup a validar
+   * @returns Objeto con error o null si es válido
+   */
+  private passwordMatchValidator(formGroup: FormGroup) {
+    const password = formGroup.get('password')?.value;
+    const confirmPassword = formGroup.get('password_confirmation')?.value;
+
+    if (password && confirmPassword && password !== confirmPassword) {
+      return { passwordMismatch: true };
+    }
+
+    return null;
+  }
+
+  /**
+   * Marca todos los campos del formulario como tocados para mostrar errores
+   * @param formGroup - FormGroup a marcar
+   */
+  private markFormGroupTouched(formGroup: FormGroup) {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+    });
+  }
+
+  /**
+   * Resetea el formulario de crear usuario
+   */
+  resetCreateUserForm(): void {
+    this.createUserForm.reset();
+    this.clearMessages();
+  }
+
+  /**
+   * Verifica si un campo específico del formulario tiene errores
+   * @param fieldName - Nombre del campo
+   * @returns true si el campo tiene errores y ha sido tocado
+   */
+  hasFieldError(fieldName: string): boolean {
+    const field = this.createUserForm.get(fieldName);
+    return !!(field?.errors && field?.touched);
+  }
+
+  /**
+   * Obtiene el mensaje de error para un campo específico
+   * @param fieldName - Nombre del campo
+   * @returns Mensaje de error o cadena vacía
+   */
+  getFieldError(fieldName: string): string {
+    const field = this.createUserForm.get(fieldName);
+
+    if (field?.errors && field?.touched) {
+      if (field.errors['required']) return `${fieldName} es requerido.`;
+      if (field.errors['email']) return 'El email no es válido.';
+      if (field.errors['minlength']) return `${fieldName} debe tener al menos ${field.errors['minlength'].requiredLength} caracteres.`;
+      if (field.errors['maxlength']) return `${fieldName} no puede exceder ${field.errors['maxlength'].requiredLength} caracteres.`;
+    }
+
+    // Error de confirmación de contraseña
+    if (fieldName === 'password_confirmation' && this.createUserForm.errors?.['passwordMismatch']) {
+      return 'Las contraseñas no coinciden.';
+    }
+
+    return '';
+  }
+
+  // ===========================================
+  // SECCIÓN: MANEJO DE ERRORES HTTP
+  // ===========================================
+
+  /**
+   * Maneja errores HTTP de manera genérica
+   * @param operation - Nombre de la operación que falló
+   * @returns Función que maneja el error
+   */
+  private handleError<T>(operation = 'operation') {
+    return (error: HttpErrorResponse): Observable<T> => {
+      console.error(`${operation} failed:`, error);
+
+      let errorMessage = 'Error desconocido';
+
+      if (error.error instanceof ErrorEvent) {
+        // Error del lado del cliente
+        errorMessage = `Error: ${error.error.message}`;
+      } else {
+        // Error del lado del servidor
+        errorMessage = `Error ${error.status}: ${error.message}`;
+
+        // Manejar errores específicos del servidor
+        if (error.status === 0) {
+          errorMessage = 'No se pudo conectar al servidor. Verifique su conexión a internet.';
+        } else if (error.status === 404) {
+          errorMessage = 'Recurso no encontrado en el servidor.';
+        } else if (error.status === 500) {
+          errorMessage = 'Error interno del servidor.';
+        } else if (error.status === 422) {
+          errorMessage = 'Datos de entrada inválidos.';
+        }
+      }
+
+      // Retornar un observable con un resultado de error
+      return throwError(() => new Error(errorMessage));
+    };
+  }
+
+  // ===========================================
+  // SECCIÓN: FUNCIONES DE INFORMES (ORIGINALES)
+  // ===========================================
+
   private initializeDates() {
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    
+
     this.startDate = this.formatDate(firstDay);
     this.endDate = this.formatDate(today);
   }
@@ -109,12 +467,12 @@ export class InformeComponent implements OnInit, AfterViewInit {
     if (this.startDate && this.endDate) {
       const start = new Date(this.startDate);
       const end = new Date(this.endDate);
-      
+
       if (start > end) {
         this.showErrorMessage('La fecha de inicio no puede ser mayor que la fecha de fin.');
         return;
       }
-      
+
       // Limpiar mensaje si las fechas son válidas
       this.clearMessages();
     }
@@ -152,7 +510,7 @@ export class InformeComponent implements OnInit, AfterViewInit {
   private loadReportData() {
     try {
       const data = this.sampleData[this.selectedPerson] || [];
-      
+
       if (data.length === 0) {
         this.noDataMessage = 'No hay datos disponibles para el período y personal seleccionado.';
         this.isGenerating = false;
@@ -169,12 +527,12 @@ export class InformeComponent implements OnInit, AfterViewInit {
 
       // Crear el gráfico
       this.createChart(data);
-      
+
       this.showChart = true;
       this.isGenerating = false;
-      
+
       this.showSuccessMessage('Informe generado exitosamente.');
-      
+
     } catch (error) {
       console.error('Error al generar el informe:', error);
       this.showErrorMessage('Error al generar el informe. Por favor, inténtalo de nuevo.');
@@ -192,7 +550,7 @@ export class InformeComponent implements OnInit, AfterViewInit {
         }
 
         const ctx = this.chartCanvas.nativeElement.getContext('2d');
-        
+
         if (ctx) {
           this.chartInstance = new Chart(ctx, {
             type: 'doughnut',
@@ -256,14 +614,18 @@ export class InformeComponent implements OnInit, AfterViewInit {
       juanito: 'Juanito',
       pablito: 'Pablito'
     };
-    
+
     return names[this.selectedPerson] || 'Seleccionado';
   }
+
+  // ===========================================
+  // SECCIÓN: MANEJO DE MENSAJES
+  // ===========================================
 
   private showSuccessMessage(message: string) {
     this.successMessage = message;
     this.clearOtherMessages('success');
-    
+
     setTimeout(() => {
       this.successMessage = '';
     }, 5000);
@@ -272,7 +634,7 @@ export class InformeComponent implements OnInit, AfterViewInit {
   private showErrorMessage(message: string) {
     this.errorMessage = message;
     this.clearOtherMessages('error');
-    
+
     setTimeout(() => {
       this.errorMessage = '';
     }, 5000);
@@ -281,7 +643,7 @@ export class InformeComponent implements OnInit, AfterViewInit {
   private showInfoMessage(message: string) {
     this.infoMessage = message;
     this.clearOtherMessages('info');
-    
+
     setTimeout(() => {
       this.infoMessage = '';
     }, 5000);
@@ -297,12 +659,5 @@ export class InformeComponent implements OnInit, AfterViewInit {
     if (except !== 'success') this.successMessage = '';
     if (except !== 'error') this.errorMessage = '';
     if (except !== 'info') this.infoMessage = '';
-  }
-
-  ngOnDestroy() {
-    // Limpiar el gráfico al destruir el componente
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-    }
   }
 }

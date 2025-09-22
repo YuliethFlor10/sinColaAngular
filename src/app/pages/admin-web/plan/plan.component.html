@@ -1,11 +1,7 @@
-<app-admin-web></app-admin-web>
-
-<main class="main-content">
-            <div class="content-card">
-                <div class="card-header">
-                    <h1>Mi Plan</h1>
-                </div>
-                <div class="card-content">
+<div>
+  <app-admin-web></app-admin-web>
+  <app-contenido [title]="'Mi plan'">
+<div class="card-content">
                     <div class="plan-section plan-actual-flex">
                         <h2>Plan actual</h2>
                         <div class="lp-plans-grid">
@@ -60,8 +56,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
-    
+  </app-contenido>
 
-    <div class="overlay" id="overlay"></div>
+</div>

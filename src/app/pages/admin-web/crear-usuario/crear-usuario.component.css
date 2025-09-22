@@ -280,7 +280,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 
 /* Botón para alternar entre vistas (NUEVO) */
 .toggle-view-button {
-    background: #FDC030; /* Color verde azulado */
+  background: #44fee2;
     color: rgb(0, 0, 0);
     border: solid 2px #000000; /* Borde del mismo color */
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
@@ -301,7 +301,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 }
 
 .toggle-view-button:hover {
-    background: #fdbf30c2; /* Verde azulado más oscuro */
+  background: #44fee2;
     transform: translateY(-1px);
 }
 
@@ -409,7 +409,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 .field-input:focus,
 .field-select:focus {
   outline: none;
-  border-color: #fdc030;
+  background: #44fee2;
   box-shadow: 0 0 0 3px rgba(253, 192, 48, 0.1);
 }
 
@@ -447,7 +447,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 
 .btn-save {
   border: none;
-  background: #fdc030;
+  background: #44fee2;
   color: #030b58;
   font-weight: 500;
 }
@@ -505,7 +505,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 
 .btn-delete-confirm {
   border: none;
-  background: #FDC030;
+  background: #44fee2;
   color: rgb(0, 0, 0);
   border: solid 2px #000000;
   font-weight: 600;
@@ -523,7 +523,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 }
 
 .btn-delete-confirm:hover {
-  background: #fad221dc;
+  background: #44fee2;
 }
 /* ========================================
    OVERLAY PARA MÓVIL
@@ -591,7 +591,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 
 /* Botón principal de crear usuario */
 .btn-create {
-  background: #FDC030; /* Color naranja */
+  background: #44fee2;
   color: rgb(0, 0, 0);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   border: solid 2px;
@@ -605,7 +605,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 
 /* Estado hover del botón */
 .btn-create:hover {
-  background: #FDC030; /* Naranja más oscuro */
+  background: #44fee2;
   transform: translateY(-1px);
 }
 
@@ -1170,13 +1170,13 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
   }
 
   .btn-create:hover {
-    background: #fdbf30c2;
+  background: #44fee2;
     transform: translateY(-1px);
   }
   /* El botón .btn-add-user ya no existe, ahora es .toggle-view-button */
   /* .btn-add-user:hover { ... } */
   .toggle-view-button:hover {
-    background: #fdbf30c2;
+  background: #44fee2;
     transform: translateY(-1px);
   }
 }
