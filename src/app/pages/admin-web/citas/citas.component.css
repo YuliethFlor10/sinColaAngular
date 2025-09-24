@@ -926,3 +926,73 @@
   background: transparent;
   z-index: 999;
 }
+/* Botón de recargar */
+.btn-reload {
+  background: #44fee2;
+  color: #000;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  border: solid 2px #000;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.btn-reload:hover {
+  background: #73fce7;
+  transform: translateY(-1px);
+}
+.btn-reload:active {
+  transform: translateY(0);
+}
+
+/* Botones de formulario */
+.btn-save,
+.btn-cancel {
+  background: #44fee2;
+  color: #000;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  border: solid 2px #000;
+  padding: 0.6rem 1.4rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.btn-save:hover,
+.btn-cancel:hover {
+  background: #73fce7;
+  transform: translateY(-1px);
+}
+.btn-save:active,
+.btn-cancel:active {
+  transform: translateY(0);
+}
+/* ========================================
+   ESTILOS ESPECÍFICOS PARA BOTONES DE CITAS
+   ======================================== */
+
+/* Clase reutilizable para botones principales */
+.btn-primary {
+  background: linear-gradient(135deg, #00ffd5, #00e6ff);
+  border: 1px solid #000;
+  border-radius: 8px;
+  padding: 10px 18px;
+  font-weight: bold;
+  color: #000;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Efecto al pasar el mouse */
+.btn-primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}

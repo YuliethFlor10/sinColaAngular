@@ -2,39 +2,8 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
-import { AppointmentsService } from '../../../services/appointments.service';
+import { AppointmentsService, CreateAppointmentData, MappedAppointment } from '../../../services/appointments.service';
 import { AdminWeb } from "../admin-web";
-
-// Interfaces locales para el componente
-export interface CreateAppointmentData {
-  usuarios_id: number;
-  negocios_id: number;
-  servicios_id: number;
-  fecha: string;
-  fecha_fin: string;
-  estados_id: number;
-  nota?: string;
-  tiempo_estimado?: number;
-}
-
-export interface MappedAppointment {
-  id: number;
-  fecha: string;
-  fecha_fin: string;
-  clientName: string;
-  clientEmail: string;
-  serviceName: string;
-  staffName: string;
-  day: number;
-  monthName: string;
-  time: string;
-  status: 'reserved' | 'confirmed' | 'cancelled';
-  usuarios_id: number;
-  negocios_id: number;
-  servicios_id: number;
-  estados_id: number;
-  showMenu?: boolean;
-}
 
 export interface AppointmentForm {
   clientDocType: string;
@@ -84,7 +53,7 @@ export class CitasComponent implements OnInit {
   successMessage: string = '';
   isLoading: boolean = false;
   isEditing: boolean = false;
-
+  
   // trackBy para *ngFor en el HTML
   trackDay(index: number, item: CalendarDay): number { return item.number; }
   trackAppointment(index: number, item: MappedAppointment): string | number { return item.id; }
@@ -127,14 +96,14 @@ export class CitasComponent implements OnInit {
   formCalendarDays: CalendarDay[] = [];
 
   timeSlots: TimeSlot[] = [
-    { time: '9:00', display: '9:00 am', selected: false },
-    { time: '9:30', display: '9:30 am', selected: false },
-    { time: '10:30', display: '10:30 am', selected: false },
-    { time: '11:00', display: '11:00 am', selected: false },
-    { time: '14:30', display: '2:30 pm', selected: false },
-    { time: '15:00', display: '3:00 pm', selected: false },
-    { time: '15:30', display: '3:30 pm', selected: false },
-    { time: '17:30', display: '5:30 pm', selected: false }
+    { time: '9:00', display: '9:00 AM', selected: false },
+    { time: '9:30', display: '9:30 AM', selected: false },
+    { time: '10:30', display: '10:30 AM', selected: false },
+    { time: '11:00', display: '11:00 AM', selected: false },
+    { time: '14:30', display: '2:30 PM', selected: false },
+    { time: '15:00', display: '3:00 PM', selected: false },
+    { time: '15:30', display: '3:30 PM', selected: false },
+    { time: '17:30', display: '5:30 PM', selected: false }
   ];
 
   selectedService: ServiceInfo | null = null;
@@ -170,52 +139,71 @@ export class CitasComponent implements OnInit {
   constructor(private appointmentsService: AppointmentsService) {}
 
   ngOnInit(): void {
-    console.log('CitasComponent iniciado - CRUD completo');
+    console.log('🚀 CitasComponent iniciado - Versión corregida para MySQL');
     this.generateCalendarDays();
     this.generateFormCalendarDays();
     this.loadAppointments();
   }
 
-  // CARGAR CITAS DESDE EL API
+  // CARGAR CITAS DESDE EL API - VERSIÓN MEJORADA
   loadAppointments(): void {
     this.isLoading = true;
     this.errorMessage = '';
-
-    console.log('Cargando citas desde el servicio...');
-
+    this.successMessage = '';
+    
+    console.log('📋 Cargando citas desde MySQL...');
+    
     this.appointmentsService.getAll().subscribe({
-      next: (appointments: any) => {
-        console.log('Citas cargadas exitosamente:', appointments);
-        // Mapear los datos si es necesario
-        this.appointments = this.mapAppointments(appointments);
+      next: (appointments: MappedAppointment[]) => {
+        console.log('✅ Citas cargadas exitosamente desde MySQL:', appointments.length, 'citas');
+        console.log('📋 Detalle de citas:', appointments);
+        
+        this.appointments = appointments;
         this.updateStats();
         this.updateCalendarWithAppointments();
         this.isLoading = false;
+        
+        if (appointments.length === 0) {
+          this.successMessage = 'No hay citas registradas en la base de datos.';
+        } else {
+          this.successMessage = `Se cargaron ${appointments.length} citas exitosamente.`;
+        }
+        
+        // Auto-limpiar mensaje después de 3 segundos
+        setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error: any) => {
-        console.error('Error al cargar citas:', error);
-        this.errorMessage = 'Error al cargar las citas. Verifique la conexión.';
+        console.error('❌ Error al cargar citas desde MySQL:', error);
+        this.errorMessage = `Error al conectar con la base de datos: ${error.message || 'Error desconocido'}`;
         this.isLoading = false;
+        
+        // Mostrar información adicional del error
+        if (error.status) {
+          this.errorMessage += ` (Código: ${error.status})`;
+        }
+        
+        console.log('🔧 Intentando cargar datos de prueba como fallback...');
         this.loadTestData();
       }
     });
   }
 
-  // DATOS DE PRUEBA
+  // DATOS DE PRUEBA MEJORADOS
   loadTestData(): void {
-    console.log('Cargando datos de prueba...');
+    console.log('🧪 Cargando datos de prueba (fallback)...');
+    
     this.appointments = [
       {
-        id: 999,
+        id: 9999,
         fecha: '2025-05-15T10:00:00',
         fecha_fin: '2025-05-15T11:00:00',
-        clientName: 'María García (PRUEBA)',
-        clientEmail: 'maria@test.com',
+        clientName: 'María García (DATOS DE PRUEBA)',
+        clientEmail: 'maria.garcia@test.com',
         serviceName: 'Manicure Clásico',
         staffName: 'Pepita Perez',
         day: 15,
         monthName: 'MAY',
-        time: '10:00 am',
+        time: '10:00 AM',
         status: 'confirmed',
         usuarios_id: 1,
         negocios_id: 1,
@@ -223,264 +211,246 @@ export class CitasComponent implements OnInit {
         estados_id: 2
       },
       {
-        id: 998,
+        id: 9998,
         fecha: '2025-05-16T14:30:00',
         fecha_fin: '2025-05-16T16:00:00',
-        clientName: 'Juan Pérez (PRUEBA)',
-        clientEmail: 'juan@test.com',
+        clientName: 'Juan Pérez (DATOS DE PRUEBA)',
+        clientEmail: 'juan.perez@test.com',
         serviceName: 'Pedicure Spa',
         staffName: 'Luna Lunera',
         day: 16,
         monthName: 'MAY',
-        time: '2:30 pm',
+        time: '2:30 PM',
         status: 'reserved',
-        usuarios_id: 1,
+        usuarios_id: 2,
         negocios_id: 1,
         servicios_id: 2,
         estados_id: 1
+      },
+      {
+        id: 9997,
+        fecha: '2025-05-17T11:00:00',
+        fecha_fin: '2025-05-17T13:00:00',
+        clientName: 'Ana López (DATOS DE PRUEBA)',
+        clientEmail: 'ana.lopez@test.com',
+        serviceName: 'Uñas en Gelish',
+        staffName: 'Sofia Star',
+        day: 17,
+        monthName: 'MAY',
+        time: '11:00 AM',
+        status: 'cancelled',
+        usuarios_id: 3,
+        negocios_id: 1,
+        servicios_id: 3,
+        estados_id: 3
       }
     ];
+    
     this.updateStats();
+    this.updateCalendarWithAppointments();
+    
+    this.errorMessage += ' - Mostrando datos de prueba.';
   }
 
-  // MAPEAR DATOS DE CITAS
-  mapAppointments(rawData: any): MappedAppointment[] {
-    if (!Array.isArray(rawData)) return [];
-
-    return rawData.map((item: any) => ({
-      id: item.id || 0,
-      fecha: item.fecha || '',
-      fecha_fin: item.fecha_fin || '',
-      clientName: item.clientName || item.client_name || 'Cliente',
-      clientEmail: item.clientEmail || item.client_email || '',
-      serviceName: item.serviceName || item.service_name || 'Servicio',
-      staffName: item.staffName || item.staff_name || 'Personal',
-      day: item.day || new Date(item.fecha).getDate(),
-      monthName: item.monthName || 'MAY',
-      time: item.time || new Date(item.fecha).toLocaleTimeString(),
-      status: this.mapStatus(item.estados_id || item.status),
-      usuarios_id: item.usuarios_id || 1,
-      negocios_id: item.negocios_id || 1,
-      servicios_id: item.servicios_id || 1,
-      estados_id: item.estados_id || 1,
-      showMenu: false
-    }));
-  }
-
-  // MAPEAR UNA SOLA CITA
-  mapSingleAppointment(item: any): MappedAppointment {
-    return {
-      id: item.id || 0,
-      fecha: item.fecha || '',
-      fecha_fin: item.fecha_fin || '',
-      clientName: item.clientName || item.client_name || 'Cliente',
-      clientEmail: item.clientEmail || item.client_email || '',
-      serviceName: item.serviceName || item.service_name || 'Servicio',
-      staffName: item.staffName || item.staff_name || 'Personal',
-      day: item.day || new Date(item.fecha).getDate(),
-      monthName: item.monthName || 'MAY',
-      time: item.time || new Date(item.fecha).toLocaleTimeString(),
-      status: this.mapStatus(item.estados_id || item.status),
-      usuarios_id: item.usuarios_id || 1,
-      negocios_id: item.negocios_id || 1,
-      servicios_id: item.servicios_id || 1,
-      estados_id: item.estados_id || 1,
-      showMenu: false
-    };
-  }
-
-  // MAPEAR ESTADO
-  mapStatus(estadoId: number | string): 'reserved' | 'confirmed' | 'cancelled' {
-    if (typeof estadoId === 'string') {
-      return estadoId as 'reserved' | 'confirmed' | 'cancelled';
-    }
-
-    switch (estadoId) {
-      case 1: return 'reserved';
-      case 2: return 'confirmed';
-      case 3: return 'cancelled';
-      default: return 'reserved';
-    }
-  }
+  // OBTENER CITA POR ID - VERSIÓN MEJORADA
   getAppointmentById(id: number | string): void {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-
-    if (isNaN(numericId)) {
-      console.error('ID inválido:', id);
+    
+    if (isNaN(numericId) || numericId <= 0) {
+      console.error('❌ ID inválido:', id);
+      this.errorMessage = 'ID de cita inválido';
       return;
     }
 
+    console.log('🔍 Buscando cita por ID:', numericId);
+    this.isLoading = true;
+
     this.appointmentsService.getById(numericId).subscribe({
-      next: (appointment: any) => {
-        console.log('Cita obtenida por ID:', appointment);
-        this.selectedAppointment = this.mapSingleAppointment(appointment);
+      next: (appointment: MappedAppointment) => {
+        console.log('✅ Cita encontrada:', appointment);
+        this.selectedAppointment = appointment;
+        this.isLoading = false;
       },
       error: (error: any) => {
-        console.error('Error al obtener cita por ID:', error);
-        this.errorMessage = 'Error al cargar la cita seleccionada.';
+        console.error('❌ Error al obtener cita por ID:', error);
+        this.errorMessage = `Error al cargar la cita: ${error.message || 'No encontrada'}`;
+        this.isLoading = false;
       }
     });
   }
 
-  // CREAR/EDITAR CITA
+  // CREAR/EDITAR CITA - VERSIÓN CORREGIDA
   onSubmit(): void {
-    console.log('BOTÓN SUBMIT CLICKEADO');
-    console.log('Datos del formulario:', this.appointmentForm);
-    console.log('Modo edición:', this.isEditing);
-    console.log('Cita seleccionada:', this.selectedAppointment);
-
+    console.log('💾 INICIANDO PROCESO DE GUARDADO');
+    console.log('📝 Datos del formulario:', this.appointmentForm);
+    console.log('✏️ Modo edición:', this.isEditing);
+    console.log('🎯 Cita seleccionada:', this.selectedAppointment);
+    
+    // Validar formulario primero
+    if (!this.validateForm()) {
+      console.log('❌ Validación del formulario falló');
+      return;
+    }
+    
     const selectedDate = this.formCalendarDays.find(day => day.selected);
     const selectedTime = this.timeSlots.find(slot => slot.selected);
-
-    console.log('Fecha seleccionada:', selectedDate);
-    console.log('Hora seleccionada:', selectedTime);
-
+    
+    console.log('📅 Fecha seleccionada:', selectedDate);
+    console.log('🕐 Hora seleccionada:', selectedTime);
+    
     if (!selectedDate || !selectedTime) {
-      console.log('FALTA FECHA U HORA');
-      this.errorMessage = 'Debe seleccionar fecha y hora';
+      console.log('❌ Falta fecha u hora');
+      this.errorMessage = 'Debe seleccionar fecha y hora para la cita';
       return;
     }
 
-    if (!this.validateForm()) {
-      console.log('VALIDACIÓN FALLÓ');
-      return;
-    }
-
+    // Construir datos para enviar
     const appointmentData: CreateAppointmentData = {
-      usuarios_id: 1,
-      negocios_id: 1,
+      usuarios_id: this.isEditing && this.selectedAppointment ? this.selectedAppointment.usuarios_id : 1,
+      negocios_id: this.isEditing && this.selectedAppointment ? this.selectedAppointment.negocios_id : 1,
       servicios_id: this.getServiceId(this.appointmentForm.appointmentService),
       fecha: this.buildDateTime(selectedDate.number, selectedTime.time),
       fecha_fin: this.buildEndDateTime(selectedDate.number, selectedTime.time, this.appointmentForm.appointmentService),
-      estados_id: 1,
-      nota: this.appointmentForm.appointmentObservations,
+      estados_id: this.isEditing && this.selectedAppointment ? this.selectedAppointment.estados_id : 1,
+      nota: this.appointmentForm.appointmentObservations || undefined,
       tiempo_estimado: this.getServiceDuration(this.appointmentForm.appointmentService)
     };
 
-    console.log('Datos a enviar:', appointmentData);
+    console.log('📤 Datos preparados para envío:', appointmentData);
+    
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
 
     if (this.isEditing && this.selectedAppointment) {
       // MODO EDICIÓN
+      console.log('✏️ Ejecutando actualización de cita ID:', this.selectedAppointment.id);
+      
       this.appointmentsService.update(this.selectedAppointment.id, appointmentData).subscribe({
-        next: (updatedAppointment: any) => {
-          console.log('Cita actualizada exitosamente:', updatedAppointment);
-          this.successMessage = 'Cita actualizada exitosamente';
-          this.loadAppointments();
-          this.resetForm();
-          this.switchView('list');
+        next: (updatedAppointment: MappedAppointment) => {
+          console.log('✅ Cita actualizada exitosamente:', updatedAppointment);
+          
+          // Actualizar en la lista local
+          const index = this.appointments.findIndex(apt => apt.id === this.selectedAppointment!.id);
+          if (index !== -1) {
+            this.appointments[index] = updatedAppointment;
+            console.log('📋 Lista local actualizada');
+          }
+          
+          this.updateStats();
+          this.updateCalendarWithAppointments();
+          
+          this.successMessage = `Cita de ${updatedAppointment.clientName} actualizada exitosamente`;
+          this.resetFormAndView();
           this.isLoading = false;
-          this.isEditing = false;
-          this.selectedAppointment = null;
         },
         error: (error: any) => {
-          console.error('Error al actualizar cita:', error);
-          this.errorMessage = 'Error al actualizar la cita: ' + (error.error?.message || error.message);
+          console.error('❌ Error al actualizar cita:', error);
+          this.errorMessage = `Error al actualizar la cita: ${error.error?.message || error.message || 'Error desconocido'}`;
           this.isLoading = false;
         }
       });
+      
     } else {
       // MODO CREACIÓN
+      console.log('➕ Ejecutando creación de nueva cita');
+      
       this.appointmentsService.create(appointmentData).subscribe({
-        next: (newAppointment: any) => {
-          console.log('Cita creada exitosamente:', newAppointment);
-          this.successMessage = 'Cita creada exitosamente';
-          this.loadAppointments();
-          this.resetForm();
-          this.switchView('list');
+        next: (newAppointment: MappedAppointment) => {
+          console.log('✅ Nueva cita creada exitosamente:', newAppointment);
+          
+          // Agregar a la lista local
+          this.appointments.push(newAppointment);
+          this.updateStats();
+          this.updateCalendarWithAppointments();
+          
+          this.successMessage = `Cita creada exitosamente para ${newAppointment.clientName}`;
+          this.resetFormAndView();
           this.isLoading = false;
         },
         error: (error: any) => {
-          console.error('Error al crear cita:', error);
-          this.errorMessage = 'Error al crear la cita. Verifique los datos.';
+          console.error('❌ Error al crear cita:', error);
+          this.errorMessage = `Error al crear la cita: ${error.error?.message || error.message || 'Verifique los datos'}`;
           this.isLoading = false;
         }
       });
     }
   }
 
-  // TOGGLE MENU
+  // TOGGLE MENU - MEJORADO
   toggleMenu(event: Event, appointment: MappedAppointment): void {
-    console.log('Toggle menu para cita:', appointment.id);
+    console.log('🔽 Toggle menu para cita ID:', appointment.id, 'Cliente:', appointment.clientName);
     event.stopPropagation();
-
+    
+    // Cerrar otros menús
     this.appointments.forEach(apt => {
       if (apt.id !== appointment.id) {
         apt.showMenu = false;
       }
     });
-
+    
+    // Toggle el menú actual
     appointment.showMenu = !appointment.showMenu;
-    console.log('Menú estado:', appointment.showMenu);
+    console.log('📋 Estado del menú:', appointment.showMenu ? 'ABIERTO' : 'CERRADO');
   }
 
-  // CONFIRMAR CITA
+  // CONFIRMAR CITA - VERSIÓN MEJORADA
   confirmAppointment(appointment: MappedAppointment): void {
-    console.log('CONFIRMANDO cita ID:', appointment.id);
-
+    console.log('✅ CONFIRMANDO cita ID:', appointment.id, 'para:', appointment.clientName);
+    
     appointment.showMenu = false;
-
+    
     if (appointment.status === 'confirmed') {
-      console.log('La cita ya está confirmada');
-      this.errorMessage = 'La cita ya está confirmada';
+      console.log('⚠️ La cita ya está confirmada');
+      this.errorMessage = `La cita de ${appointment.clientName} ya está confirmada`;
+      setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Crear datos para actualizar solo el estado
-    const updateData: CreateAppointmentData = {
-      usuarios_id: appointment.usuarios_id,
-      negocios_id: appointment.negocios_id,
-      servicios_id: appointment.servicios_id,
-      fecha: appointment.fecha,
-      fecha_fin: appointment.fecha_fin,
-      estados_id: 2, // Estado confirmado
-      nota: '',
-      tiempo_estimado: 60
-    };
-
-    this.appointmentsService.update(appointment.id, updateData).subscribe({
-      next: (updatedAppointment: any) => {
-        console.log('Cita confirmada exitosamente:', updatedAppointment);
-
+    this.appointmentsService.changeStatus(appointment.id, 2).subscribe({
+      next: (updatedAppointment: MappedAppointment) => {
+        console.log('✅ Cita confirmada exitosamente:', updatedAppointment);
+        
+        // Actualizar en la lista local
         const index = this.appointments.findIndex(apt => apt.id === appointment.id);
         if (index !== -1) {
           this.appointments[index].status = 'confirmed';
           this.appointments[index].estados_id = 2;
-          console.log('Status actualizado en la lista local');
+          console.log('📋 Status actualizado localmente');
         }
-
+        
         this.updateStats();
-        this.successMessage = `Cita de ${appointment.clientName} confirmada exitosamente`;
+        this.successMessage = `✅ Cita de ${appointment.clientName} confirmada exitosamente`;
         this.isLoading = false;
-        setTimeout(() => this.successMessage = '', 3000);
+        
+        setTimeout(() => this.successMessage = '', 4000);
       },
       error: (error: any) => {
-        console.error('Error al confirmar cita:', error);
-        this.errorMessage = 'Error al confirmar la cita. Intente nuevamente.';
+        console.error('❌ Error al confirmar cita:', error);
+        this.errorMessage = `Error al confirmar la cita de ${appointment.clientName}: ${error.message || 'Intente nuevamente'}`;
         this.isLoading = false;
       }
     });
   }
 
-  // CANCELAR CITA
+  // CANCELAR CITA - VERSIÓN MEJORADA
   cancelAppointment(appointment: MappedAppointment): void {
-    console.log('CANCELANDO cita ID:', appointment.id);
-
+    console.log('❌ CANCELANDO cita ID:', appointment.id, 'para:', appointment.clientName);
+    
     appointment.showMenu = false;
-
+    
     if (appointment.status === 'cancelled') {
-      console.log('La cita ya está cancelada');
-      this.errorMessage = 'La cita ya está cancelada';
+      console.log('⚠️ La cita ya está cancelada');
+      this.errorMessage = `La cita de ${appointment.clientName} ya está cancelada`;
+      setTimeout(() => this.errorMessage = '', 3000);
       return;
     }
 
-    const reason = prompt('¿Cuál es el motivo de la cancelación? (opcional)');
-
+    const reason = prompt(`¿Cuál es el motivo de la cancelación de la cita de ${appointment.clientName}? (opcional)`);
+    
     if (reason === null) {
       console.log('Cancelación abortada por el usuario');
       return;
@@ -489,37 +459,30 @@ export class CitasComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    // Crear datos para actualizar solo el estado
-    const updateData: CreateAppointmentData = {
-      usuarios_id: appointment.usuarios_id,
-      negocios_id: appointment.negocios_id,
-      servicios_id: appointment.servicios_id,
-      fecha: appointment.fecha,
-      fecha_fin: appointment.fecha_fin,
-      estados_id: 3, // Estado cancelado
-      nota: reason || '',
-      tiempo_estimado: 60
-    };
-
-    this.appointmentsService.update(appointment.id, updateData).subscribe({
-      next: (updatedAppointment: any) => {
-        console.log('Cita cancelada exitosamente:', updatedAppointment);
-
+    this.appointmentsService.changeStatus(appointment.id, 3).subscribe({
+      next: (updatedAppointment: MappedAppointment) => {
+        console.log('✅ Cita cancelada exitosamente:', updatedAppointment);
+        
+        // Actualizar en la lista local
         const index = this.appointments.findIndex(apt => apt.id === appointment.id);
         if (index !== -1) {
           this.appointments[index].status = 'cancelled';
           this.appointments[index].estados_id = 3;
-          console.log('Status actualizado en la lista local');
+          console.log('📋 Status actualizado localmente');
         }
-
+        
         this.updateStats();
-        this.successMessage = `Cita de ${appointment.clientName} cancelada`;
+        this.successMessage = `❌ Cita de ${appointment.clientName} cancelada`;
+        if (reason && reason.trim()) {
+          this.successMessage += ` - Motivo: ${reason}`;
+        }
         this.isLoading = false;
-        setTimeout(() => this.successMessage = '', 3000);
+        
+        setTimeout(() => this.successMessage = '', 4000);
       },
       error: (error: any) => {
-        console.error('Error al cancelar cita:', error);
-        this.errorMessage = 'Error al cancelar la cita. Intente nuevamente.';
+        console.error('❌ Error al cancelar cita:', error);
+        this.errorMessage = `Error al cancelar la cita de ${appointment.clientName}: ${error.message || 'Intente nuevamente'}`;
         this.isLoading = false;
       }
     });
@@ -527,12 +490,12 @@ export class CitasComponent implements OnInit {
 
   // EDITAR CITA
   editAppointment(appointment: MappedAppointment): void {
-    console.log('EDITANDO cita ID:', appointment.id);
-
+    console.log('✏️ EDITANDO cita ID:', appointment.id, 'Cliente:', appointment.clientName);
+    
     appointment.showMenu = false;
     this.selectedAppointment = appointment;
     this.isEditing = true;
-
+    
     // Llenar el formulario con los datos existentes
     this.appointmentForm = {
       clientDocType: '',
@@ -545,7 +508,7 @@ export class CitasComponent implements OnInit {
       appointmentStaff: 'pepita-perez',
       appointmentObservations: ''
     };
-
+    
     // Seleccionar fecha y hora en el formulario
     this.formCalendarDays.forEach(day => day.selected = false);
     const dayToSelect = this.formCalendarDays.find(d => d.number === appointment.day);
@@ -553,24 +516,27 @@ export class CitasComponent implements OnInit {
       dayToSelect.selected = true;
       this.selectedDateText = `${appointment.day} de Mayo, 2025`;
     }
-
+    
     this.timeSlots.forEach(slot => slot.selected = false);
     const timeToSelect = this.timeSlots.find(s => s.display === appointment.time);
     if (timeToSelect) {
       timeToSelect.selected = true;
     }
-
+    
+    // Actualizar servicio seleccionado
+    this.onServiceChange();
+    
     this.currentView = 'create';
-    this.successMessage = 'Formulario cargado para edición. Modifique los datos y guarde.';
+    this.successMessage = `Formulario cargado para edición de ${appointment.clientName}. Modifique los datos y guarde.`;
     setTimeout(() => this.successMessage = '', 5000);
   }
 
   // ELIMINAR CITA
   deleteAppointment(appointment: MappedAppointment): void {
-    console.log('ELIMINANDO cita ID:', appointment.id);
-
+    console.log('🗑️ ELIMINANDO cita ID:', appointment.id, 'Cliente:', appointment.clientName);
+    
     appointment.showMenu = false;
-
+    
     const confirmDelete = confirm(
       `¿Está seguro de eliminar la cita de ${appointment.clientName}?\n\n` +
       `Fecha: ${appointment.day} ${appointment.monthName}\n` +
@@ -578,7 +544,7 @@ export class CitasComponent implements OnInit {
       `Servicio: ${appointment.serviceName}\n\n` +
       `Esta acción no se puede deshacer.`
     );
-
+    
     if (!confirmDelete) {
       console.log('Eliminación cancelada por el usuario');
       return;
@@ -589,19 +555,20 @@ export class CitasComponent implements OnInit {
 
     this.appointmentsService.delete(appointment.id).subscribe({
       next: (response: any) => {
-        console.log('Cita eliminada exitosamente:', response);
-
+        console.log('✅ Cita eliminada exitosamente:', response);
+        
+        // Eliminar de la lista local
         this.appointments = this.appointments.filter(apt => apt.id !== appointment.id);
-
+        
         this.updateStats();
         this.updateCalendarWithAppointments();
-        this.successMessage = `Cita de ${appointment.clientName} eliminada exitosamente`;
+        this.successMessage = `🗑️ Cita de ${appointment.clientName} eliminada exitosamente`;
         this.isLoading = false;
         setTimeout(() => this.successMessage = '', 3000);
       },
       error: (error: any) => {
-        console.error('Error al eliminar cita:', error);
-        this.errorMessage = 'Error al eliminar la cita. Intente nuevamente.';
+        console.error('❌ Error al eliminar cita:', error);
+        this.errorMessage = `Error al eliminar la cita de ${appointment.clientName}: ${error.message || 'Intente nuevamente'}`;
         this.isLoading = false;
       }
     });
@@ -609,10 +576,13 @@ export class CitasComponent implements OnInit {
 
   // CANCELAR EDICIÓN
   cancelEdit(): void {
+    console.log('❌ Cancelando edición');
     this.isEditing = false;
     this.selectedAppointment = null;
     this.resetForm();
     this.switchView('list');
+    this.successMessage = 'Edición cancelada';
+    setTimeout(() => this.successMessage = '', 2000);
   }
 
   // ACTUALIZAR ESTADÍSTICAS
@@ -622,23 +592,25 @@ export class CitasComponent implements OnInit {
       confirmed: this.appointments.filter(apt => apt.status === 'confirmed').length,
       cancelled: this.appointments.filter(apt => apt.status === 'cancelled').length
     };
-    console.log('Stats actualizados:', this.stats);
+    console.log('📊 Stats actualizados:', this.stats);
   }
 
   // ACTUALIZAR CALENDARIO CON CITAS
   updateCalendarWithAppointments(): void {
     const daysWithAppointments = this.appointments.map(apt => apt.day);
-
+    
     this.calendarDays.forEach(day => {
       day.hasAppointments = daysWithAppointments.includes(day.number);
     });
+    
+    console.log('📅 Calendario actualizado con', daysWithAppointments.length, 'días con citas');
   }
 
   // RECARGAR DATOS
   reloadData(): void {
-    console.log('Recargando datos manualmente...');
+    console.log('🔄 Recargando datos manualmente...');
     this.errorMessage = '';
-    this.successMessage = '';
+    this.successMessage = 'Recargando datos...';
     this.loadAppointments();
   }
 
@@ -648,54 +620,63 @@ export class CitasComponent implements OnInit {
       this.errorMessage = 'El nombre del cliente es requerido';
       return false;
     }
-
+    
     if (!this.appointmentForm.clientEmail.trim()) {
       this.errorMessage = 'El email del cliente es requerido';
       return false;
     }
-
+    
+    // Validar formato de email básico
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.appointmentForm.clientEmail.trim())) {
+      this.errorMessage = 'El formato del email no es válido';
+      return false;
+    }
+    
     if (!this.appointmentForm.appointmentService) {
       this.errorMessage = 'Debe seleccionar un servicio';
       return false;
     }
-
+    
     return true;
   }
 
-  // Cerrar menús al hacer clic fuera
-  @HostListener('document:click', ['$event'])
-  closeMenusOnOutsideClick(event: Event): void {
-    this.appointments.forEach(apt => apt.showMenu = false);
-  }
-
-  // MÉTODOS AUXILIARES
-
+  // CAMBIAR VISTA
   switchView(view: 'list' | 'create'): void {
+    console.log('🔄 Cambiando vista a:', view);
     this.currentView = view;
     this.errorMessage = '';
     this.successMessage = '';
-
+    
     // Si cambias a create sin estar editando, resetea el formulario
     if (view === 'create' && !this.isEditing) {
       this.resetForm();
     }
+    
+    // Si cambias a list y estás editando, cancela la edición
+    if (view === 'list' && this.isEditing) {
+      this.cancelEdit();
+    }
   }
 
+  // GENERAR DÍAS DEL CALENDARIO
   generateCalendarDays(): void {
-    const daysInMonth = 31;
+    const daysInMonth = 31; // Mayo 2025
     this.calendarDays = [];
 
     for (let i = 1; i <= daysInMonth; i++) {
       this.calendarDays.push({
         number: i,
-        selected: i === 15,
+        selected: i === 15, // Día 15 seleccionado por defecto
         otherMonth: false
       });
     }
+    console.log('📅 Calendario principal generado:', daysInMonth, 'días');
   }
 
+  // GENERAR DÍAS DEL FORMULARIO
   generateFormCalendarDays(): void {
-    const daysInMonth = 31;
+    const daysInMonth = 31; // Mayo 2025
     this.formCalendarDays = [];
 
     for (let i = 1; i <= daysInMonth; i++) {
@@ -705,25 +686,41 @@ export class CitasComponent implements OnInit {
         otherMonth: false
       });
     }
+    console.log('📅 Calendario del formulario generado:', daysInMonth, 'días');
   }
 
+  // SELECCIONAR FECHA
   selectDate(day: CalendarDay): void {
+    console.log('📅 Seleccionando fecha:', day.number);
     this.formCalendarDays.forEach(d => d.selected = false);
     day.selected = true;
     this.selectedDateText = `${day.number} de Mayo, 2025`;
+    console.log('✅ Fecha seleccionada:', this.selectedDateText);
   }
 
+  // SELECCIONAR HORA
   selectTime(slot: TimeSlot): void {
+    console.log('🕐 Seleccionando hora:', slot.display);
     this.timeSlots.forEach(s => s.selected = false);
     slot.selected = true;
+    console.log('✅ Hora seleccionada:', slot.display);
   }
 
+  // CAMBIO DE SERVICIO
   onServiceChange(): void {
+    console.log('🔧 Cambio de servicio:', this.appointmentForm.appointmentService);
     if (this.appointmentForm.appointmentService) {
       this.selectedService = this.services[this.appointmentForm.appointmentService];
+      console.log('✅ Información del servicio cargada:', this.selectedService);
     } else {
       this.selectedService = null;
     }
+  }
+
+  // CERRAR MENÚS AL HACER CLIC FUERA
+  @HostListener('document:click', ['$event'])
+  closeMenusOnOutsideClick(event: Event): void {
+    this.appointments.forEach(apt => apt.showMenu = false);
   }
 
   // MÉTODOS PRIVADOS DE UTILIDAD
@@ -736,9 +733,13 @@ export class CitasComponent implements OnInit {
 
   private buildEndDateTime(day: number, startTime: string, serviceKey: string): string {
     const durations: { [key: string]: number } = {
-      manicure: 60, pedicure: 90, gelish: 120, acrilicas: 180, pestanas: 150
+      manicure: 60, 
+      pedicure: 90, 
+      gelish: 120, 
+      acrilicas: 180, 
+      pestanas: 150
     };
-
+    
     const [hours, minutes] = startTime.split(':').map(Number);
     const durationMinutes = durations[serviceKey] || 60;
     const endDate = new Date(2025, 4, day, hours, minutes + durationMinutes);
@@ -747,63 +748,65 @@ export class CitasComponent implements OnInit {
 
   private mapServiceNameToKey(serviceName: string | undefined): string {
     if (!serviceName) return '';
-
+    
     const mapping: { [key: string]: string } = {
       'Manicure Clásico': 'manicure',
-      'Pedicure Spa': 'pedicure',
+      'Pedicure Spa': 'pedicure', 
       'Uñas en Gelish': 'gelish',
       'Uñas Acrílicas': 'acrilicas',
       'Pestañas': 'pestanas'
     };
-
+    
     return mapping[serviceName] || 'manicure';
   }
 
   private getServiceId(serviceKey: string): number {
     const serviceIds: { [key: string]: number } = {
-      manicure: 1, pedicure: 2, gelish: 3, acrilicas: 4, pestanas: 5
+      manicure: 1, 
+      pedicure: 2, 
+      gelish: 3, 
+      acrilicas: 4, 
+      pestanas: 5
     };
     return serviceIds[serviceKey] || 1;
   }
 
   private getServiceDuration(serviceKey: string): number {
     const durations: { [key: string]: number } = {
-      manicure: 60, pedicure: 90, gelish: 120, acrilicas: 180, pestanas: 150
+      manicure: 60, 
+      pedicure: 90, 
+      gelish: 120, 
+      acrilicas: 180, 
+      pestanas: 150
     };
     return durations[serviceKey] || 60;
   }
 
-  private calculateEndDate(startTime: string, serviceKey: string): string {
-    const selectedDate = this.formCalendarDays.find(day => day.selected);
-    if (!selectedDate) return '';
-
-    const durationMinutes = this.getServiceDuration(serviceKey);
-    const baseDate = `2025-05-${selectedDate.number.toString().padStart(2, '0')}`;
-
-    const [hours, minutes] = startTime.split(':').map(Number);
-    const startMinutes = hours * 60 + minutes;
-    const endMinutes = startMinutes + durationMinutes;
-
-    const endHours = Math.floor(endMinutes / 60);
-    const endMins = endMinutes % 60;
-
-    return `${baseDate}T${endHours.toString().padStart(2, '0')}:${endMins.toString().padStart(2, '0')}:00`;
-  }
-
   private resetForm(): void {
+    console.log('🔄 Reseteando formulario');
     this.appointmentForm = {
-      clientDocType: '', clientDocNumber: '', clientName: '', clientEmail: '',
-      clientBirthDate: '', clientPhone: '', appointmentService: '',
-      appointmentStaff: '', appointmentObservations: ''
+      clientDocType: '', 
+      clientDocNumber: '', 
+      clientName: '', 
+      clientEmail: '',
+      clientBirthDate: '', 
+      clientPhone: '', 
+      appointmentService: '',
+      appointmentStaff: '', 
+      appointmentObservations: ''
     };
 
     this.formCalendarDays.forEach(day => day.selected = false);
     this.timeSlots.forEach(slot => slot.selected = false);
     this.selectedService = null;
     this.selectedDateText = '';
-    this.errorMessage = '';
-    this.successMessage = '';
     this.isEditing = false;
     this.selectedAppointment = null;
+  }
+
+  private resetFormAndView(): void {
+    console.log('🔄 Reseteando formulario y vista');
+    this.resetForm();
+    this.switchView('list');
   }
 }

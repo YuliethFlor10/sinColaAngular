@@ -48,7 +48,7 @@
               <!-- BOTÓN RECARGAR - AGREGADO -->
               <div class="filter-group">
                 <button type="button" class="reload-btn" (click)="reloadData()" [disabled]="isLoading">
-                  <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i>
+                  <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i> 
                   {{ isLoading ? 'Cargando...' : 'Recargar' }}
                 </button>
               </div>
@@ -124,43 +124,43 @@
                   <div class="appointment-service">{{ appointment.serviceName }}</div>
                   <div class="appointment-staff">Atendido por: {{ appointment.staffName }}</div>
                 </div>
-
+                
                 <!-- ACCIONES CORREGIDAS -->
                 <div class="appointment-actions">
-                  <button class="appointment-menu-btn"
+                  <button class="appointment-menu-btn" 
                           type="button"
                           (click)="toggleMenu($event, appointment)">
                     <i class="fa fa-ellipsis-v"></i>
                   </button>
-
+                  
                   <!-- MENÚ CORREGIDO -->
-                  <div class="appointment-menu"
+                  <div class="appointment-menu" 
                        [class.show]="appointment.showMenu"
                        (click)="$event.stopPropagation()">
-
+                    
                     <!-- Confirmar - solo si está reservada -->
-                    <button *ngIf="appointment.status === 'reserved'"
+                    <button *ngIf="appointment.status === 'reserved'" 
                             type="button"
                             class="menu-action confirm-btn"
                             (click)="confirmAppointment(appointment)">
                       <i class="fa fa-check"></i> Confirmar cita
                     </button>
-
+                    
                     <!-- Editar -->
                     <button type="button"
                             class="menu-action edit-btn"
                             (click)="editAppointment(appointment)">
                       <i class="fa fa-edit"></i> Editar
                     </button>
-
+                    
                     <!-- Cancelar - solo si no está cancelada -->
-                    <button *ngIf="appointment.status !== 'cancelled'"
+                    <button *ngIf="appointment.status !== 'cancelled'" 
                             type="button"
                             class="menu-action cancel-btn"
                             (click)="cancelAppointment(appointment)">
                       <i class="fa fa-times"></i> Cancelar cita
                     </button>
-
+                    
                     <!-- Eliminar -->
                     <button type="button"
                             class="menu-action delete-btn"
@@ -174,7 +174,7 @@
           </div>
         </div>
       </div>
-
+    
 
     <!-- Vista de Crear nueva cita -->
     <div class="content-card sub-view" [class.active]="currentView === 'create'" id="create-appointment-section">
@@ -190,6 +190,7 @@
         </div>
 
         <div *ngIf="successMessage" class="alert alert-success">
+          {{ successMessage }}
           {{ successMessage }}
           <button type="button" (click)="successMessage = ''" class="alert-close">×</button>
         </div>
@@ -350,9 +351,37 @@
           </div>
 
           <div class="form-actions">
-            <button type="submit" class="btn-create" [disabled]="isLoading">
-              {{ isLoading ? 'Creando...' : 'Crear cita' }}
+            <!-- Para crear nueva cita -->
+            <button 
+              *ngIf="!isEditing" 
+              type="button" 
+              class="submit-btn" 
+              (click)="onSubmit()" 
+              [disabled]="isLoading">
+              <span *ngIf="!isLoading">Crear Cita</span>
+              <span *ngIf="isLoading">Creando...</span>
             </button>
+            <!-- Para guardar cambios en edición -->
+            <button 
+              *ngIf="isEditing" 
+              type="button" 
+              class="save-btn" 
+              (click)="onSubmit()" 
+              [disabled]="isLoading">
+              <span *ngIf="!isLoading">Guardar Cambios</span>
+              <span *ngIf="isLoading">Guardando...</span>
+            </button>
+            <!-- Botón cancelar para edición -->
+           <!-- Botón cancelar para edición -->
+<button 
+  *ngIf="isEditing" 
+  type="button" 
+  class="cancel-btn" 
+  (click)="cancelEdit()" 
+  [disabled]="isLoading">
+  Cancelar Edición
+</button>
+
           </div>
         </form>
       </div>
