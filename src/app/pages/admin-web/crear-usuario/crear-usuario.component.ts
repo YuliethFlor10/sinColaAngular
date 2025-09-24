@@ -4,10 +4,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AdminWeb } from "../admin-web";
 import { UsersService } from '../../../services/users.service';
+import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 
-// Interfaces para tipado fuerte
-interface User {
-  id: string;
+// Interfaz para tipado fuerte de usuario
+export interface User {
+  id: number | string;
   documentType: string;
   documentNumber: string;
   name: string;
@@ -16,8 +17,8 @@ interface User {
   email: string;
   userType: string;
   service?: string;
-  createdAt: Date;
-  status: 'active' | 'inactive';
+  createdAt?: Date;
+  status?: 'active' | 'inactive';
 }
 
 interface UserFormData {
@@ -38,7 +39,7 @@ interface UserFormData {
   templateUrl: './crear-usuario.component.html',
   styleUrls: ['./crear-usuario.component.css'],
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule, AdminWeb]
+  imports: [ReactiveFormsModule, CommonModule, AdminWeb, ContenidoComponent]
 })
 export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
@@ -416,56 +417,23 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // Crear nuevo usuario
+  // Crear usuario en backend
   private createUser(formData: UserFormData): void {
-    try {
-      // Verificar si el usuario ya existe
-      const existingUser = this.users.find(user =>
-        user.documentNumber === formData.documentNumber || user.email === formData.email
-      );
-
-      if (existingUser) {
-        this.showErrorMessage('Ya existe un usuario con este documento o email');
+    this.usersService.create(formData).subscribe({
+      next: (response: any) => {
+        this.showSuccessMessage('Usuario creado exitosamente');
+        this.resetForm();
         this.isLoading = false;
         this.updateButtonState(false);
-        return;
+        this.loadUsers(); // Actualiza la lista
+      },
+      error: (error) => {
+        const msg = error?.error?.message || 'Error al crear el usuario. Inténtalo de nuevo.';
+        this.showErrorMessage(msg);
+        this.isLoading = false;
+        this.updateButtonState(false);
       }
-
-      // Crear nuevo usuario
-      const newUser: User = {
-        id: this.generateUserId(),
-        documentType: formData.documentType,
-        documentNumber: formData.documentNumber,
-        name: formData.name,
-        birthDate: formData.birthDate,
-        phoneNumber: formData.phoneNumber,
-        email: formData.email,
-        userType: formData.userType,
-        service: formData.service || undefined,
-        createdAt: new Date(),
-        status: 'active'
-      };
-
-      // Agregar usuario a la lista
-      this.users.push(newUser);
-
-      // Guardar en localStorage
-      this.saveUsersToStorage();
-
-      // Mostrar mensaje de éxito
-      this.showSuccessMessage('Usuario creado exitosamente');
-
-      // Resetear formulario
-      this.resetForm();
-
-      this.isLoading = false;
-      this.updateButtonState(false);
-
-    } catch (error) {
-      this.showErrorMessage('Error al crear el usuario. Inténtalo de nuevo.');
-      this.isLoading = false;
-      this.updateButtonState(false);
-    }
+    });
   }
 
   // Resetear formulario
@@ -537,39 +505,52 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // Cargar usuarios desde la API
+  // Consulta la lista de usuarios desde el backend
   loadUsers(): void {
-    this.usersService.getAll().subscribe(
-      (data: any) => {
-        // Log the raw response for debugging
-        console.log('Respuesta de la API de usuarios:', data);
-        // Manejar ambos formatos: array directo o { data: array }
-        let usersArray: any[] = [];
+    this.usersService.getAll().subscribe({
+      next: (data: any) => {
+        let rawUsers: any[] = [];
         if (Array.isArray(data)) {
-          usersArray = data;
+          rawUsers = data;
         } else if (data && Array.isArray(data.data)) {
-          usersArray = data.data;
-        } else {
-          // Si la respuesta no es válida, mostrar error
-          this.showErrorMessage('Formato de respuesta inesperado de la API de usuarios');
-          this.users = [];
-          this.filteredUsers = [];
-          this.updatePagination();
-          this.renderUsersTable();
-          return;
+          rawUsers = data.data;
         }
-        this.users = usersArray;
+        // Mapeo de campos de la API a la interfaz User
+        this.users = rawUsers.map((u: any) => ({
+          id: u.id,
+          name: (u.nombres ? u.nombres + ' ' : '') + (u.apellidos || ''),
+          documentType: u.identification_type?.nombre || '',
+          documentNumber: u.identificacion || '',
+          birthDate: u.nacimiento || '',
+          phoneNumber: u.celular || '',
+          email: u.email || '',
+          userType: u.role?.nombre || '',
+          service: '',
+          createdAt: u.creado_en ? new Date(u.creado_en) : undefined,
+          status: u.status?.nombre === 'Activo' ? 'active' : 'inactive'
+        }));
         this.filteredUsers = [...this.users];
         this.updatePagination();
         this.renderUsersTable();
       },
-      (err: any) => {
+      error: (err: any) => {
         this.showErrorMessage('Error al cargar usuarios desde la API');
         this.users = [];
         this.filteredUsers = [];
         this.updatePagination();
         this.renderUsersTable();
-        console.error(err);
+      }
+    });
+  }
+  // Consulta individual de usuario por ID
+  getUserById(id: number | string): void {
+    this.usersService.getById(id).subscribe(
+      (user: any) => {
+        // Aquí puedes mostrar los datos en la vista o en un modal
+        console.log('Usuario consultado:', user);
+      },
+      (err: any) => {
+        this.showErrorMessage('No se pudo consultar el usuario');
       }
     );
   }
@@ -602,7 +583,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     const nextBtn = document.getElementById('nextPage') as HTMLButtonElement;
 
     if (pageInfo) {
-     pageInfo.textContent = `Página ${this.currentPage} de ${this.totalPages}`;
+      pageInfo.textContent = `Página ${this.currentPage} de ${this.totalPages}`;
     }
 
     if (prevBtn) {
@@ -677,13 +658,10 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  // Editar usuario
+  // Editar usuario: consulta individual
   editUser(userId: string): void {
-    const user = this.users.find(u => u.id === userId);
-    if (user) {
-      console.log('Editar usuario:', user);
-      alert(`Funcionalidad de edición para ${user.name} en desarrollo`);
-    }
+    this.getUserById(userId);
+    alert("Funcionalidad de edición en desarrollo");
   }
 
   // Eliminar usuario
@@ -720,7 +698,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     let messageDiv = document.querySelector(`.${type}-message`) as HTMLElement;
     if (!messageDiv) {
       messageDiv = document.createElement('div');
-     messageDiv.className = `${type}-message`;
+      messageDiv.className = `${type}-message`;
       const cardContent = document.querySelector('.card-content');
       if (cardContent) {
         cardContent.insertBefore(messageDiv, cardContent.firstChild);
