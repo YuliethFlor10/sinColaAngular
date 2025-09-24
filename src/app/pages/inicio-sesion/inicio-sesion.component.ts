@@ -1,73 +1,16 @@
 // inicio-sesion.component.ts
-import { Component, OnInit, AfterViewInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
-
-// Servicios temporalmente comentados - crear después
-// import { AuthService } from '../../../services/auth.service';
-// import { UserService } from '../../../services/user.service';
-// import { BusinessService } from '../../../services/business.service';
-
-// Componente modal corregido con las propiedades necesarias
-@Component({
-  selector: 'app-modal',
-  template: `
-    <div class="modal" *ngIf="visible">
-      <div class="modal-content">
-        <span class="close" *ngIf="canClose" (click)="closeModal()">&times;</span>
-        <ng-content></ng-content>
-      </div>
-    </div>
-  `,
-  styles: [`
-    .modal {
-      display: flex;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.5);
-      align-items: center;
-      justify-content: center;
-    }
-    .modal-content {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 500px;
-      width: 90%;
-      position: relative;
-    }
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 28px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #aaa;
-    }
-    .close:hover {
-      color: #000;
-    }
-  `],
-  standalone: true,
-  imports: [CommonModule]
-})
-export class ModalComponent {
-  @Input() visible: boolean = false;
-  @Input() canClose: boolean = true;
-  @Output() close = new EventEmitter<void>();
-
-  closeModal() {
-    this.close.emit();
-  }
-}
+import { AuthService } from '../../services/auth.service';
+import { UserService } from '../../services/user.service';
+import { BusinessService } from '../../services/business.service';
+import { ModalComponent } from '../../shared/modal.component';
+// Suponiendo que el header compartido se llama SharedHeaderComponent y está en /compartidos
+// import { SharedHeaderComponent } from '../../compartidos/shared-header.component';
 
 @Component({
   selector: 'app-inicio-sesion',
@@ -76,7 +19,7 @@ export class ModalComponent {
   templateUrl: './inicio-sesion.component.html',
   styleUrls: ['./inicio-sesion.component.css']
 })
-export class InicioSesionComponent implements OnInit, AfterViewInit {
+export class InicioSesionComponent implements OnInit {
   loginForm!: FormGroup;
   registroForm!: FormGroup;
   negocioForm!: FormGroup;
@@ -89,17 +32,13 @@ export class InicioSesionComponent implements OnInit, AfterViewInit {
   loadingRegister = false;
   loadingNegocio = false;
 
-  constructor(
-    private fb: FormBuilder,
-    private router: Router
-  ) {}
+  constructor(private fb: FormBuilder, private auth: AuthService, private userService: UserService, private businessService: BusinessService, private router: Router) {}
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       clave: ['', [Validators.required, Validators.minLength(6)]],
     });
-
     this.registroForm = this.fb.group({
       nombres: ['', [Validators.required, Validators.minLength(3)]],
       apellidos: ['', [Validators.required, Validators.minLength(3)]],
@@ -116,7 +55,6 @@ export class InicioSesionComponent implements OnInit, AfterViewInit {
       roles_id: [2, Validators.required],
       negocios_id: [1, Validators.required]
     }, { validators: this.passwordsMatchValidator });
-
     this.negocioForm = this.fb.group({
       nombre: ['', Validators.required],
       nit: ['', Validators.required],
@@ -124,9 +62,9 @@ export class InicioSesionComponent implements OnInit, AfterViewInit {
       telefono: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       tipo_servicio_id: ['', Validators.required],
-      estados_id: [1, Validators.required],
-      plan_id: [1, Validators.required],
-      planes_id: [1]
+  estados_id: [1, Validators.required],
+  plan_id: [1, Validators.required],
+  planes_id: [1]
     });
   }
 
@@ -150,15 +88,19 @@ export class InicioSesionComponent implements OnInit, AfterViewInit {
 
     this.loadingLogin = true;
     const { email, clave } = this.loginForm.value;
-
-    // Simulación temporal de login
-    setTimeout(() => {
-      this.loadingLogin = false;
-      // Simular login exitoso
-      localStorage.setItem('token', 'fake-jwt-token');
-      this.loginError = '';
-      this.router.navigate(['/admin-web']);
-    }, 1000);
+    this.auth.login(email, clave).subscribe({
+      next: (res) => {
+        this.loadingLogin = false;
+        localStorage.setItem('token', res.access_token);
+        this.loginError = '';
+        this.router.navigate(['/crear-usuario']);
+      },
+      error: (err) => {
+        this.loadingLogin = false;
+        this.loginError = err.error?.message || 'Usuario o contraseña incorrectos.';
+        console.log('loginError:', err.error?.message || 'Usuario o contraseña incorrectos.');
+      }
+    });
   }
 
   onRegister(): void {
@@ -174,15 +116,19 @@ export class InicioSesionComponent implements OnInit, AfterViewInit {
     }
 
     this.loadingRegister = true;
-
-    // Simulación temporal de registro
-    setTimeout(() => {
-      this.loadingRegister = false;
-      this.registroExito = '¡Usuario registrado exitosamente! Ahora registra tu negocio.';
-      setTimeout(() => {
-        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-      }, 200);
-    }, 1000);
+    this.userService.registerUser(this.registroForm.value).subscribe({
+      next: (res) => {
+        this.loadingRegister = false;
+        this.registroExito = '¡Usuario registrado exitosamente! Ahora registra tu negocio.';
+        setTimeout(() => {
+          window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }, 200);
+      },
+      error: (err) => {
+        this.loadingRegister = false;
+        this.registroError = err.error?.message || 'Error al registrar usuario. Verifica los datos o credenciales.';
+      }
+    });
   }
 
   onNegocioSubmit(): void {
@@ -198,13 +144,26 @@ export class InicioSesionComponent implements OnInit, AfterViewInit {
     }
 
     this.loadingNegocio = true;
-
-    // Simulación temporal de registro de negocio
-    setTimeout(() => {
-      this.loadingNegocio = false;
-      this.negocioExito = '¡Negocio registrado exitosamente!';
-      this.negocioForm.reset();
-    }, 1000);
+    this.businessService.registerBusiness(this.negocioForm.value).subscribe({
+      next: (res) => {
+        this.loadingNegocio = false;
+        this.negocioExito = '¡Negocio registrado exitosamente!';
+        this.negocioForm.reset();
+      },
+      error: (err) => {
+        this.loadingNegocio = false;
+        // Mostrar mensaje específico del backend si existe
+        if (err.error && typeof err.error === 'object') {
+          // Si el backend envía errores por campo, los concatenamos
+          const errores = Object.values(err.error).flat().join(' | ');
+          this.negocioError = errores || 'Error al registrar negocio.';
+        } else {
+          this.negocioError = err.error?.message || 'Error al registrar negocio.';
+        }
+        // Log para depuración
+        console.error('Negocio 422 error:', err.error);
+      }
+    });
   }
 
   // Métodos para mostrar errores en el template
@@ -214,11 +173,11 @@ export class InicioSesionComponent implements OnInit, AfterViewInit {
   get registerEmail() { return this.registroForm.get('email'); }
   get registerPassword() { return this.registroForm.get('clave'); }
 
+  // Suponiendo que el header compartido se usa en el HTML
   // Si el usuario ya está logueado, redirige automáticamente
   ngAfterViewInit() {
-    // Función temporal sin servicio de auth
-    if (localStorage.getItem('token')) {
-      this.router.navigate(['/admin-web']);
+    if (this.auth.isLoggedIn()) {
+      this.router.navigate(['/crear-usuario']);
     }
   }
 }

@@ -2,7 +2,7 @@
   <div class="header-left">
     <div class="logo">
       <span>
-        <img src="assets/iconos/logo.svg" alt="Logo" class="icon" />
+        <img src="assets/iconos/logo.svg" alt="Logo" class="icon" style="cursor:pointer" (click)="goToHome()" />
       </span>
     </div>
     <button class="menu-toggle" (click)="toggleSidebarClicked()" id="menuToggle">
@@ -12,8 +12,11 @@
     </button>
   </div>
   <div class="header-right">
-    <div class="user-avatar">
-      <span class="icon">👤</span>
+    <div class="user-avatar" style="position:relative">
+      <span class="icon" style="cursor:pointer" (click)="toggleLogoutMenu()">👤</span>
+      <div *ngIf="showLogoutMenu" class="logout-menu" style="position:absolute;top:40px;right:0;background:#fff;border:1px solid #ccc;padding:10px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.1);z-index:10;">
+        <button (click)="logout()" style="background:#e91e63;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;">Cerrar sesión</button>
+      </div>
     </div>
   </div>
 </header>

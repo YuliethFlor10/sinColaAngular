@@ -1,0 +1,16 @@
+<div>
+  <label>Facebook</label>
+  <input [value]="facebookUrl" (input)="facebookUrlChange.emit($event.target.value)" />
+</div>
+<div>
+  <label>Instagram</label>
+  <input [value]="instagramUrl" (input)="instagramUrlChange.emit($event.target.value)" />
+</div>
+<div>
+  <label>WhatsApp</label>
+  <input [value]="whatsappNumero" (input)="whatsappNumeroChange.emit($event.target.value)" />
+</div>
+<div>
+  <label>Mostrar redes sociales</label>
+  <input type="checkbox" [checked]="mostrarRedes" (change)="mostrarRedesChange.emit($event.target.checked)" />
+</div>
