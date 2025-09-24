@@ -1,0 +1,16 @@
+<div>
+  <label>Efectivo</label>
+  <input type="checkbox" [checked]="aceptaEfectivo" (change)="aceptaEfectivoChange.emit($event.target.checked)" />
+</div>
+<div>
+  <label>Tarjeta</label>
+  <input type="checkbox" [checked]="aceptaTarjeta" (change)="aceptaTarjetaChange.emit($event.target.checked)" />
+</div>
+<div>
+  <label>Nequi</label>
+  <input type="checkbox" [checked]="aceptaNequi" (change)="aceptaNequiChange.emit($event.target.checked)" />
+</div>
+<div>
+  <label>Transferencia</label>
+  <input type="checkbox" [checked]="aceptaTransferencia" (change)="aceptaTransferenciaChange.emit($event.target.checked)" />
+</div>

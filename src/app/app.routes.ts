@@ -1,11 +1,12 @@
-import { Routes } from '@angular/router';
-
 import { CrearUsuarioComponent } from './pages/admin-web/crear-usuario/crear-usuario.component';
 import { CitasComponent } from './pages/admin-web/citas/citas.component';
 import { HorarioComponent } from './pages/admin-web/horario/horario.component';
+import { Routes } from '@angular/router';
+  // Ruta eliminada: registra-negocio
 import { InformeComponent } from './pages/admin-web/informe/informe.component';
 import { PlanComponent } from './pages/admin-web/plan/plan.component';
 import { InicioSesionComponent } from './pages/inicio-sesion/inicio-sesion.component';
+// import eliminado: RegistraNegocioComponent
 import { ServiciosComponent } from './pages/admin-web/lista-servicio/lista-servicio.component';
 import { PaginaInicioComponent } from './pages/pagina-inicio/pagina-inicio.component';
 import { AdminWeb } from './pages/admin-web/admin-web';
@@ -20,6 +21,7 @@ export const routes: Routes = [
   { path: 'plan', component: PlanComponent },
   { path: 'inicio-sesion', component: InicioSesionComponent },
   { path: 'lista-servicio', component: ServiciosComponent },
+  // Ruta eliminada: registra-negocio
 
   // rutas admin web
   {
@@ -36,6 +38,10 @@ export const routes: Routes = [
   ]
   },
 
-  { path: '**', redirectTo: 'pagina-inicio' }
+  {
+    path: 'cliente-final',
+    loadChildren: () => import('./cliente-final/cliente-final-module').then(m => m.ClienteFinalModule)
+  },
+
 ];
 

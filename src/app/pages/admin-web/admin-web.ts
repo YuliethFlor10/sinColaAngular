@@ -19,3 +19,4 @@ import { ContenidoComponent } from '../../compartido/components/contenido/conten
 export class AdminWeb {
 
 }
+

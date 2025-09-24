@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SinCola - Agendamiento de Citas</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+</head>
+<body>
+    <div class="container">
+        <!-- Lado izquierdo con logo y información -->
+        <div class="left-section">
+            <div class="logo-container">
+                <div class="logo-circle">
+                    <div class="logo-text">
+                        <img src="assets/iconos/logo.svg" alt="Logo" class="icon" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <h2>SinCola</h2>
+                <p class="subtitle">Tu tiempo es oro no lo pongas en espera</p>
+                <p class="description">
+                    Gestiona tus citas de forma digital y eficiente. Recibe notificaciones en tiempo real y mantén a tus clientes siempre informados.
+                </p>
+
+                <div class="social-section">
+                    <p>Síguenos en nuestras redes sociales</p>
+                    <div class="social-icons">
+                        <a href="#" class="social-icon whatsapp"><img src="assets/iconos/wspp.svg" alt="Icono check" class="icon"><i class=""></i></a>
+                        <a href="#" class="social-icon instagram"><img src="assets/iconos/ig.svg" alt="Icono check" class="icon"><i class=""></i></a>
+                        <a href="#" class="social-icon facebook"><img src="assets/iconos/fc.svg" alt="Icono check" class="icon"><i class=""></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lado derecho con formulario -->
+        <div class="right-section">
+            <div class="header-logos">
+                <div class="sincola-logo">
+                    <img src="assets/iconos/logo.svg" alt="Logo" class="icon" />
+
+                </div>
+                <div class="sincola-logo">
+                    <img src="assets/iconos/logo.svg" alt="Logo" class="icon" />
+
+                </div>
+            </div>
+
+            <div class="form-container">
+                <h1>¡Agenda SinCola!</h1>
+                <p class="form-subtitle">Por favor ingresa los siguientes datos para realizar tu reserva</p>
+
+                <!-- Paso 1: Datos personales -->
+                <div id="step1" class="step active">
+                    <div class="step-header">
+                        <h3>Paso 1 de 2</h3>
+                        <h4>Datos personales</h4>
+                    </div>
+
+                    <form id="personalForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Tipo de documento</label>
+                                <select id="docType" required>
+                                    <option value="">Seleccione un tipo</option>
+                                    <option value="cedula">Cédula de Ciudadanía</option>
+                                    <option value="tarjeta">Tarjeta de Identidad</option>
+                                    <option value="cedula_ext">Cédula de Extranjería</option>
+                                    <option value="pasaporte">Pasaporte</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Número de documento</label>
+                                <input type="text" id="docNumber" placeholder="Ingrese número" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Nombre</label>
+                                <input type="text" id="fullName" placeholder="Ingrese nombre completo" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Fecha de nacimiento</label>
+                                <input type="date" id="birthDate" placeholder="dd/mm/aa" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="email" placeholder="Value" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Número de teléfono</label>
+                                <input type="tel" id="phone" placeholder="Ingrese su número" required>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="continue-btn">Continuar</button>
+                    </form>
+                </div>
+
+                <!-- Paso 2: Datos de la cita -->
+                <div id="step2" class="step">
+                    <div class="step-header">
+                        <h3>Paso 2 de 2</h3>
+                        <h4>Datos de la cita</h4>
+                    </div>
+
+                    <form id="appointmentForm">
+                        <div class="form-group">
+                            <label>Tipo de cita</label>
+                            <select id="appointmentType" required>
+                                <option value="">Procedimiento a realizar</option>
+                                <option value="manicure">Manicure Clásico</option>
+                                <option value="pedicure">Pedicure Spa</option>
+                                <option value="gelish">Uñas en Gelish</option>
+                                <option value="acrilicas">Uñas Acrílicas</option>
+                                <option value="decoracion">Decoración de Uñas</option>
+                            </select>
+                            <div class="service-info">
+                                <span class="price">Valor: $ 50.000</span>
+                                <span class="duration">Duración: 1 H</span>
+                                <span class="recommendation">Recomendación: para el procedimiento a realizar</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Personal que realiza el servicio</label>
+                            <select id="staff" required>
+                                <option value="">Seleccione al personal de preferencia</option>
+                                <option value="maria">María González</option>
+                                <option value="ana">Ana Rodríguez</option>
+                                <option value="sofia">Sofía Martínez</option>
+                                <option value="cualquiera">Cualquier especialista disponible</option>
+                            </select>
+                        </div>
+
+                        <div class="datetime-section">
+                            <div class="date-section">
+                                <div class="section-header">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Selecciona la fecha</span>
+                                </div>
+                                <div class="selected-date">
+                                    <span class="date-indicator"></span>
+                                    <span id="selectedDateText">Día seleccionado</span>
+                                </div>
+                                <div class="calendar-container">
+                                    <div class="calendar-header">
+                                        <button type="button" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                                        <span id="currentMonth">MAYO 2025</span>
+                                        <button type="button" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                                    </div>
+                                    <div class="calendar-grid">
+                                        <div class="calendar-days-header">
+                                            <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                                        </div>
+                                        <div id="calendarDays" class="calendar-days"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="time-section">
+                                <div class="section-header">
+                                    <i class="fas fa-clock"></i>
+                                    <span>Selecciona la hora</span>
+                                </div>
+                                <div class="time-slots">
+                                    <button type="button" class="time-slot" data-time="9:00">9:00 am</button>
+                                    <button type="button" class="time-slot" data-time="9:30">9:30 am</button>
+                                    <button type="button" class="time-slot" data-time="10:30">10:30 am</button>
+                                    <button type="button" class="time-slot" data-time="11:00">11:00 am</button>
+                                    <button type="button" class="time-slot" data-time="14:30">2:30 pm</button>
+                                    <button type="button" class="time-slot" data-time="15:00">3:00 pm</button>
+                                    <button type="button" class="time-slot" data-time="15:30">3:30 pm</button>
+                                    <button type="button" class="time-slot" data-time="17:30">5:30 pm</button>
+                                </div>
+                                <div class="time-legend">
+                                    <div class="legend-item">
+                                        <span class="legend-color selected"></span>
+                                        <span>Hora seleccionada</span>
+                                    </div>
+                                    <div class="legend-item">
+                                        <span class="legend-color available"></span>
+                                        <span>Hora disponible</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Observaciones o peticiones</label>
+                            <textarea id="observations" placeholder="Comentario opcional" rows="3"></textarea>
+                        </div>
+
+                        <button type="submit" class="reserve-btn">Reservar</button>
+                    </form>
+                </div>
+
+                <!-- Métodos de pago -->
+                <div class="payment-methods">
+                    <h4>Métodos de pago aceptados por MK</h4>
+                    <div class="payment-icons">
+                        <div class="">
+                            <img src="assets/iconos/efectivo.svg" alt="Icono check" class="icon">
+                        </div>
+                        <div class="">
+                            <img src="assets/iconos/datafono.svg" alt="Icono check" class="icon">
+                        </div>
+                        <img src="assets/iconos/nequi.svg" alt="Icono check" class="icon">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div id="confirmationModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeConfirmationModal()">×</button>
+            <div class="success-icon">
+                <i class="fas fa-check"></i>
+            </div>
+            <h2 class="modal-title">Gracias por confiar en nosotros !</h2>
+            <h3 class="modal-subtitle">¡Cita agendada con éxito!</h3>
+            <p class="modal-message">
+                En breve recibirás un correo electrónico o un mensaje<br>
+                con los detalles de tu cita para su confirmación.<br>
+                Por favor, revisa su bandeja de entrada o mensajes.
+            </p>
+            <button class="modal-accept-btn" onclick="closeConfirmationModal()">Aceptar</button>
+        </div>
+    </div>
+</body>
+</html>
