@@ -32,9 +32,9 @@ interface DaySchedule {
   styleUrls: ['./horario.component.css'],
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    AdminWeb, 
+    CommonModule,
+    FormsModule,
+    AdminWeb,
     ContenidoComponent
   ]
 })
@@ -153,7 +153,7 @@ export class HorarioComponent implements OnInit {
 
   onDayToggle(day: DaySchedule) {
     console.log(`${day.name} cambiado a: ${day.isOpen ? 'Abierto' : 'Cerrado'}`);
-    
+
     // Si el día se cierra, deshabilitar segundo turno
     if (!day.isOpen) {
       day.secondShift.enabled = false;
@@ -168,11 +168,11 @@ export class HorarioComponent implements OnInit {
   openTimePicker(dayId: string, shiftType: 'firstShift' | 'secondShift', timeType: 'start' | 'end') {
     // Aquí puedes implementar un modal o selector de tiempo
     console.log(`Abriendo selector de tiempo para: ${dayId} - ${shiftType} - ${timeType}`);
-    
+
     // Por ahora solo un alert de demostración
     const currentTime = this.getCurrentTimeForSlot(dayId, shiftType, timeType);
     const newTime = prompt(`Ingrese la nueva hora (formato: 8:00 AM):`, currentTime);
-    
+
     if (newTime && this.isValidTimeFormat(newTime)) {
       this.updateTimeSlot(dayId, shiftType, timeType, newTime);
     }
@@ -210,7 +210,7 @@ export class HorarioComponent implements OnInit {
       const hour = parseInt(match[1]);
       const minute = parseInt(match[2]);
       const ampm = match[3].toUpperCase() as 'AM' | 'PM';
-      
+
       return {
         hour: ampm === 'PM' && hour !== 12 ? hour + 12 : (ampm === 'AM' && hour === 12 ? 0 : hour),
         minute: minute,
@@ -224,7 +224,7 @@ export class HorarioComponent implements OnInit {
   saveSchedule() {
     console.log('Guardando horarios:', this.weekSchedule);
     console.log('Personal seleccionado:', this.selectedPerson);
-    
+
     // Aquí implementarías la lógica para enviar los datos al servidor
     alert('Horarios guardados exitosamente');
   }

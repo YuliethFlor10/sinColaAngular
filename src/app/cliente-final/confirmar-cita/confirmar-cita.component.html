@@ -1,0 +1,110 @@
+ <div class="container">
+        <div class="header">
+            <div class="sincola-logo">
+                <img src="/assets/iconos/logo.svg" alt="Sincola Logo">
+            </div>
+            <h1>Hola Pepito Perez.</h1>
+            <h2>Bienvenido a MK Nails Salon</h2>
+        </div>
+
+        <div class="content">
+            <div class="left-section">
+                <div class="appointment-info">
+                    <p class="intro-text">
+                        Tu cita para <strong>UÑAS PERMANENTES</strong>, se ha programado exitosamente.<br>
+                        A continuación encontrará toda la información de su cita
+                    </p>
+
+                    <div class="info-item">
+                        <span class="info-label">Nombre del cliente:</span>
+                        <span class="info-value">PEPITO PEREZ</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fecha de la cita:</span>
+                        <span class="info-value">Miércoles 28 de mayo 2025</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Hora de la cita:</span>
+                        <span class="info-value">05:00 PM</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Servicio a realizar:</span>
+                        <span class="info-value">Uñas permanentes</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Duración:</span>
+                        <span class="info-value">1 hora</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Persona a cargo:</span>
+                        <span class="info-value">YULIETH FLOR</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Lugar de atención:</span>
+                        <span class="info-value">Calle 29 # 30-10 MK Nails salon</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Teléfono de contacto:</span>
+                        <span class="info-value">32147823682</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Observaciones:</span>
+                        <span class="info-value"></span>
+                    </div>
+                </div>
+
+                <div class="notes-section">
+                    <p>Una cita es un compromiso mutuo. Si no puedes asistir, te pedimos que nos avises con anticipación. Hay un profesional esperando por ti, y otra persona podría estar necesitando ese espacio.</p>
+                </div>
+
+                <div class="buttons-section">
+                    <p class="button-text">Dale click para confirmar o cancelar cita</p>
+                    <div class="buttons">
+                        <button class="btn btn-confirm" onclick="confirmarCita()">Confirmar</button>
+                        <button class="btn btn-cancel" onclick="cancelarCita()">Cancelar</button>
+                    </div>
+                </div>
+
+                <div class="notes-section">
+                    <p>Sabemos que pueden surgir imprevistos, te pedimos que nos avises con un mínimo de 2 horas de anticipación.</p>
+                    <p>Te recomendamos llegar entre 15 y 20 minutos antes y presentarte directamente en el punto de atención</p>
+                </div>
+            </div>
+
+            <div class="right-section">
+                <div class="logo-circle">
+                    <div class="logo-text">
+                        <div class="logo-mk">MK</div>
+                        <div class="logo-nails">NAILS SALON</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="social-section">
+            <p class="social-title">Síguenos en nuestras redes sociales</p>
+            <div class="social-icons">
+                <a href="#" class="social-icon whatsapp"><img src="/assets/iconos/wspp.svg" alt="WhatsApp"></a>
+                <a href="#" class="social-icon instagram"><img src="/assets/iconos/ig.svg" alt="Instagram"></a>
+                <a href="#" class="social-icon facebook"><img src="/assets/iconos/fc.svg" alt="Facebook"></a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para confirmación -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <h3>¡Cita Confirmada!</h3>
+            <p>Tu cita ha sido confirmada exitosamente. Te esperamos el Miércoles 28 de mayo 2025 a las 05:00 PM.</p>
+            <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Modal para cancelación -->
+    <div id="cancelModal" class="modal">
+        <div class="modal-content">
+            <h3>Cita Cancelada</h3>
+            <p>Tu cita ha sido cancelada exitosamente. Si necesitas más información o deseas reprogramarla, no dudes en contactarnos.</p>
+            <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+        </div>
+    </div>

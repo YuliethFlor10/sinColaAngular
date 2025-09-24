@@ -443,7 +443,57 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * Analizar y formatear errores de creación de usuario
    */
-  private parseCreateUserError(error: any): string {
+
+  /**
+   * Actualizar usuario existente via API
+   */
+  updateExistingUser(userId: string | number, formData: UserFormData): void {
+    console.log('🚀 Iniciando actualización de usuario...', userId);
+    const apiData = this.transformFormDataToApiRequest(formData);
+
+    this.usersService.update(userId, apiData).subscribe({
+      next: (response: any) => {
+        try {
+          console.log('✅ Usuario actualizado:', response);
+
+          // Actualizar la lista local de usuarios
+          const index = this.users.findIndex(u => u.id.toString() === userId.toString());
+          if (index !== -1) {
+            const updatedUser = this.transformApiUserToFrontend(response);
+            this.users[index] = updatedUser;
+            this.filteredUsers = [...this.users];
+            this.updatePagination();
+            this.renderUsersTable();
+            console.log('📝 Lista actualizada tras edición.');
+          }
+
+          this.showSuccessMessage('Usuario actualizado exitosamente');
+          // Reset del formulario y modo edición
+          this.resetCreateUserForm();
+          this.editingUserId = null;
+        } catch (error) {
+          console.error('❌ Error procesando respuesta de actualización:', error);
+          this.showErrorMessage('Usuario actualizado pero hubo un error actualizando la lista');
+        } finally {
+          this.isLoading = false;
+          this.updateButtonState(false);
+        }
+      },
+      error: (error: any) => {
+        console.error('❌ Error al actualizar usuario:', error);
+        let msg = 'Error actualizando el usuario';
+        if (error?.error) {
+          if (typeof error.error === 'string') msg = error.error;
+          else if (error.error.message) msg = error.error.message;
+        }
+        this.showErrorMessage(msg);
+        this.isLoading = false;
+        this.updateButtonState(false);
+      }
+    });
+  }
+
+private parseCreateUserError(error: any): string {
     if (error.status === 0) {
       return 'No se puede conectar con el servidor. Verifica que Laravel esté ejecutándose en http://localhost:8000';
     }
