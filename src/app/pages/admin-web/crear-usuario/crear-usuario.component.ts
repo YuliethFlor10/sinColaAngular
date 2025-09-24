@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -7,13 +7,9 @@ import { UsersService } from '../../../services/users.service';
 import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 
 // ========================================
-// INTERFACES PARA TIPADO FUERTE
+// INTERFACES CORREGIDAS
 // ========================================
 
-/**
- * Interfaz para la respuesta de la API Laravel
- * Mapea exactamente los campos que devuelve el backend
- */
 interface ApiUserResponse {
   id: number;
   nombres: string;
@@ -28,7 +24,7 @@ interface ApiUserResponse {
   terminos_condiciones?: boolean;
   creado_en?: string;
   actualizado_en?: string;
-  // Relaciones cargadas con eager loading
+  // Relaciones
   status?: {
     id: number;
     nombre: string;
@@ -48,10 +44,6 @@ interface ApiUserResponse {
   };
 }
 
-/**
- * Interfaz para los datos del usuario en el frontend
- * Estructura normalizada para uso en la aplicación
- */
 export interface User {
   id: number | string;
   documentType: string;
@@ -68,10 +60,6 @@ export interface User {
   gender?: 'M' | 'F' | 'O';
 }
 
-/**
- * Interfaz para los datos del formulario de creación
- * Mapea a los campos que espera la API Laravel
- */
 interface UserFormData {
   documentType: string;
   documentNumber: string;
@@ -85,10 +73,6 @@ interface UserFormData {
   service: string;
 }
 
-/**
- * Interfaz para los datos que se envían a la API
- * Coincide exactamente con los campos esperados por Laravel
- */
 interface ApiUserRequest {
   nombres: string;
   apellidos: string;
@@ -138,11 +122,12 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   successMessage: string = '';
   errorMessage: string = '';
 
-  // Edición (para futuras funcionalidades)
+  // Edición
   editingUserId: number | string | null = null;
+  isEditMode: boolean = false;
 
   // ========================================
-  // DATOS MAESTROS PARA LOS FORMULARIOS
+  // DATOS MAESTROS
   // ========================================
 
   documentTypes = [
@@ -154,7 +139,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   userTypes = [
     { value: 'Cliente', label: 'Cliente' },
-    { value: 'Administrador', label: 'Administrador' },
+    { value: 'Admin', label: 'Administrador' },
     { value: 'Empleado', label: 'Empleado' }
   ];
 
@@ -174,42 +159,35 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ========================================
-  // CICLO DE VIDA DEL COMPONENTE
+  // CICLO DE VIDA
   // ========================================
 
   ngOnInit(): void {
     this.initializeComponent();
-    this.loadAllUsers(); // Cargar usuarios al inicializar
+    this.loadAllUsers();
   }
 
   ngAfterViewInit(): void {
-    // Hacer la instancia accesible globalmente para eventos del DOM
     (window as any).crearUsuarioComponent = this;
-    // Configurar eventos después de que la vista esté renderizada
     setTimeout(() => {
       this.setupDOMEvents();
     }, 100);
   }
 
   ngOnDestroy(): void {
-    // Limpiar referencia global
     if ((window as any).crearUsuarioComponent === this) {
       delete (window as any).crearUsuarioComponent;
     }
   }
 
   // ========================================
-  // INICIALIZACIÓN Y CONFIGURACIÓN
+  // INICIALIZACIÓN
   // ========================================
 
   private initializeComponent(): void {
     this.userForm = this.createUserForm();
   }
 
-  /**
-   * Configurar eventos del DOM
-   * Maneja la interacción con elementos HTML nativos
-   */
   private setupDOMEvents(): void {
     try {
       // Eventos para alternar vistas
@@ -223,7 +201,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       });
 
-      // Evento para el formulario de creación
+      // Evento para el formulario
       const form = document.getElementById('userForm') as HTMLFormElement;
       if (form) {
         form.addEventListener('submit', (e) => {
@@ -232,7 +210,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
         });
       }
 
-      // Evento para búsqueda en la lista
+      // Evento para búsqueda
       const searchInput = document.getElementById('userSearch') as HTMLInputElement;
       if (searchInput) {
         searchInput.addEventListener('input', (e) => {
@@ -253,90 +231,80 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
         nextBtn.addEventListener('click', () => this.nextPage());
       }
 
-      // Configurar validación en tiempo real
-      this.setupFormValidation();
-
-      console.log('✅ Eventos del DOM configurados correctamente');
+      console.log('Eventos del DOM configurados correctamente');
     } catch (error) {
-      console.warn('⚠️ Error configurando eventos del DOM:', error);
+      console.warn('Error configurando eventos del DOM:', error);
     }
   }
 
-  /**
-   * Configurar validación del formulario en tiempo real
-   */
-  private setupFormValidation(): void {
-    const fields = ['documentType', 'documentNumber', 'name', 'birthDate', 'phoneNumber', 'email', 'userType', 'password', 'confirmPassword'];
-
-    fields.forEach(fieldName => {
-      const element = document.getElementById(fieldName) as HTMLInputElement;
-      if (element) {
-        element.addEventListener('blur', () => this.validateField(fieldName));
-        element.addEventListener('input', () => {
-          const formGroup = element.closest('.form-group');
-          this.clearFieldError(formGroup);
-        });
-      }
-    });
-  }
-
   // ========================================
-  // 1. CONSULTA DE DATOS - GET /api/users
+  // CARGA DE DATOS - PROBLEMA PRINCIPAL CORREGIDO
   // ========================================
 
   /**
-   * Cargar todos los usuarios desde la API
-   * Endpoint: GET /api/users
+   * CORREGIDO: Maneja correctamente la respuesta paginada de Laravel
    */
   private loadAllUsers(): void {
     this.isLoading = true;
+    console.log('🔄 Cargando usuarios desde la API...');
 
     this.usersService.getAll().subscribe({
       next: (response: any) => {
         try {
-          console.log('📋 Respuesta de la API (usuarios):', response);
+          console.log('📡 Respuesta completa de la API:', response);
+          console.log('📊 Tipo de respuesta:', typeof response);
+          console.log('🔍 Es array?', Array.isArray(response));
+          console.log('🔍 Tiene .data?', response?.data ? 'SÍ' : 'NO');
 
-          // Manejar diferentes formatos de respuesta de Laravel
           let rawUsers: ApiUserResponse[] = [];
 
-          if (Array.isArray(response)) {
+          // CORREGIDO: Manejo de respuesta paginada de Laravel
+          if (response && response.data && Array.isArray(response.data)) {
+            // Respuesta paginada: { data: [...], current_page: 1, ... }
+            rawUsers = response.data;
+            console.log('✅ Respuesta paginada detectada. Usuarios extraídos:', rawUsers.length);
+          } else if (Array.isArray(response)) {
             // Respuesta directa como array
             rawUsers = response;
-          } else if (response && Array.isArray(response.data)) {
-            // Respuesta con estructura { data: [...] }
-            rawUsers = response.data;
-          } else if (response && response.current_page) {
-            // Respuesta paginada de Laravel
-            rawUsers = response.data || [];
+            console.log('✅ Respuesta directa como array:', rawUsers.length);
+          } else {
+            console.error('❌ Formato de respuesta no reconocido:', response);
+            console.log('🔧 Intentando extraer de diferentes formatos...');
+
+            // Intentar otros formatos posibles
+            if (response?.users) rawUsers = response.users;
+            else if (response?.items) rawUsers = response.items;
+            else rawUsers = [];
           }
 
-          console.log('🔍 Usuarios en formato API:', rawUsers);
-
-          // Transformar datos de la API al formato del frontend
+          // Transformar y asignar
           this.users = rawUsers.map(user => this.transformApiUserToFrontend(user));
           this.filteredUsers = [...this.users];
 
-          console.log('✅ Usuarios transformados para el frontend:', this.users);
+          console.log('Usuarios transformados correctamente:', this.users.length);
+          console.log('Primera muestra:', this.users.slice(0, 2));
 
-          // Actualizar la vista
+          // Actualizar vista
           this.updatePagination();
           this.renderUsersTable();
 
         } catch (error) {
-          console.error('❌ Error procesando respuesta de usuarios:', error);
+          console.error('Error procesando respuesta:', error);
           this.showErrorMessage('Error al procesar los datos de usuarios');
+          this.users = [];
+          this.filteredUsers = [];
         } finally {
           this.isLoading = false;
         }
       },
       error: (error: any) => {
-        console.error('❌ Error cargando usuarios:', error);
-        let errorMsg = 'Error al cargar usuarios desde la API';
+        console.error('Error cargando usuarios:', error);
 
+        let errorMsg = 'Error al cargar usuarios';
         if (error.status === 0) {
           errorMsg = 'No se puede conectar con el servidor. Verifica que Laravel esté ejecutándose.';
         } else if (error.status === 404) {
-          errorMsg = 'Endpoint de usuarios no encontrado. Verifica la ruta de la API.';
+          errorMsg = 'Endpoint no encontrado. Verifica la ruta de la API.';
         } else if (error.error?.message) {
           errorMsg = error.error.message;
         }
@@ -351,47 +319,13 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  /**
-   * Consultar un usuario individual por ID
-   * Endpoint: GET /api/users/{id}
-   */
-  getUserById(id: number | string): void {
-    this.usersService.getById(id).subscribe({
-      next: (response: any) => {
-        try {
-          const user = this.transformApiUserToFrontend(response);
-          console.log('👤 Usuario consultado por ID:', user);
-
-          // Aquí puedes implementar lógica adicional para mostrar el usuario
-          // Por ejemplo, abrir un modal con los detalles
-          this.showUserDetails(user);
-
-        } catch (error) {
-          console.error('❌ Error procesando usuario individual:', error);
-          this.showErrorMessage('Error al procesar los datos del usuario');
-        }
-      },
-      error: (error: any) => {
-        console.error('❌ Error consultando usuario por ID:', error);
-        const errorMsg = error?.error?.message || 'No se pudo consultar el usuario';
-        this.showErrorMessage(errorMsg);
-      }
-    });
-  }
-
   // ========================================
-  // 2. REGISTRO DE DATOS - POST /api/users
+  // CREACIÓN DE USUARIOS - CORREGIDO
   // ========================================
 
-  /**
-   * Crear nuevo usuario en el backend
-   * Endpoint: POST /api/users
-   * Incluye validación de errores y actualización de la lista local
-   */
   private createNewUser(formData: UserFormData): void {
     console.log('🚀 Iniciando creación de usuario...');
 
-    // Transformar datos del formulario al formato esperado por la API
     const apiData = this.transformFormDataToApiRequest(formData);
     console.log('📤 Datos enviados a la API:', apiData);
 
@@ -400,39 +334,36 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
         try {
           console.log('✅ Usuario creado exitosamente:', response);
 
-          // Transformar la respuesta al formato del frontend y agregar a la lista
-          if (response) {
-            const newUser = this.transformApiUserToFrontend(response);
-
-            // Agregar al inicio de la lista local
-            this.users.unshift(newUser);
-            this.filteredUsers = [...this.users];
-
-            // Actualizar vista
-            this.updatePagination();
-            this.renderUsersTable();
-
-            console.log('📝 Lista actualizada. Total usuarios:', this.users.length);
-          }
-
           this.showSuccessMessage('Usuario creado exitosamente');
           this.resetCreateUserForm();
+
+          // FORZAR RECARGA INMEDIATA - SOLUCION TEMPORAL
+          console.log('🔄 Forzando recarga de usuarios...');
+          setTimeout(() => {
+            this.loadAllUsers();
+
+            // Si estamos en vista de lista, cambiar para forzar actualización visual
+            if (this.currentView === 'list-users') {
+              this.renderUsersTable();
+            }
+          }, 1000);
 
         } catch (error) {
           console.error('❌ Error procesando respuesta de creación:', error);
           this.showErrorMessage('Usuario creado pero hubo un error actualizando la lista');
+
+          // Recargar de todos modos
+          setTimeout(() => {
+            this.loadAllUsers();
+          }, 1000);
         } finally {
           this.isLoading = false;
           this.updateButtonState(false);
         }
       },
       error: (error: any) => {
-        console.error('❌ Error completo al crear usuario:', error);
-
-        // Manejo detallado de errores
-        let errorMessage = this.parseCreateUserError(error);
-
-        console.error('❌ Mensaje de error final:', errorMessage);
+        console.error('Error al crear usuario:', error);
+        const errorMessage = this.parseCreateUserError(error);
         this.showErrorMessage(errorMessage);
         this.isLoading = false;
         this.updateButtonState(false);
@@ -440,47 +371,118 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-  /**
-   * Analizar y formatear errores de creación de usuario
-   */
+  // ========================================
+  // EDICIÓN DE USUARIOS - FUNCIONALIDAD COMPLETA
+  // ========================================
 
   /**
-   * Actualizar usuario existente via API
+   * NUEVO: Cargar datos del usuario para edición
    */
-  updateExistingUser(userId: string | number, formData: UserFormData): void {
-    console.log('🚀 Iniciando actualización de usuario...', userId);
-    const apiData = this.transformFormDataToApiRequest(formData);
+  editUser(userId: string | number): void {
+    console.log('Editando usuario:', userId);
+
+    const user = this.users.find(u => u.id.toString() === userId.toString());
+    if (!user) {
+      this.showErrorMessage('Usuario no encontrado');
+      return;
+    }
+
+    // Cambiar a modo edición
+    this.isEditMode = true;
+    this.editingUserId = userId;
+
+    // Cargar datos en el formulario
+    this.loadUserDataIntoForm(user);
+
+    // Cambiar a vista de creación/edición
+    this.toggleView('create-user-section');
+
+    // Actualizar texto del botón
+    this.updateButtonState(false, 'Actualizar usuario');
+
+    this.showSuccessMessage(`Editando usuario: ${user.name}`);
+  }
+
+  /**
+   * NUEVO: Cargar datos del usuario en el formulario
+   */
+  private loadUserDataIntoForm(user: User): void {
+    // Separar nombre y apellidos
+    const nameParts = user.name.split(' ');
+    const firstName = nameParts[0] || '';
+    const lastName = nameParts.slice(1).join(' ') || '';
+
+    // Mapear tipo de documento
+    let documentType = 'cedula';
+    if (user.documentType.toLowerCase().includes('extranjería')) {
+      documentType = 'pasaporte';
+    } else if (user.documentType.toLowerCase().includes('tarjeta')) {
+      documentType = 'tarjeta';
+    }
+
+    // Llenar formulario DOM
+    const form = document.getElementById('userForm') as HTMLFormElement;
+    if (form) {
+      (document.getElementById('documentType') as HTMLSelectElement).value = documentType;
+      (document.getElementById('documentNumber') as HTMLInputElement).value = user.documentNumber;
+      (document.getElementById('name') as HTMLInputElement).value = user.name;
+      (document.getElementById('birthDate') as HTMLInputElement).value = user.birthDate || '';
+      (document.getElementById('phoneNumber') as HTMLInputElement).value = user.phoneNumber;
+      (document.getElementById('email') as HTMLInputElement).value = user.email;
+      (document.getElementById('userType') as HTMLSelectElement).value = user.userType;
+
+      // Las contraseñas se dejan vacías en edición
+      (document.getElementById('password') as HTMLInputElement).value = '';
+      (document.getElementById('confirmPassword') as HTMLInputElement).value = '';
+    }
+
+    // Actualizar formulario reactivo
+    this.userForm.patchValue({
+      documentType,
+      documentNumber: user.documentNumber,
+      name: user.name,
+      birthDate: user.birthDate || '',
+      phoneNumber: user.phoneNumber,
+      email: user.email,
+      userType: user.userType,
+      password: '',
+      confirmPassword: '',
+      service: ''
+    });
+  }
+
+  /**
+   * NUEVO: Actualizar usuario existente
+   */
+  private updateExistingUser(userId: string | number, formData: UserFormData): void {
+    console.log('Actualizando usuario:', userId);
+
+    // Para edición, la contraseña es opcional
+    const apiData = this.transformFormDataToApiRequest(formData, true);
+    console.log('Datos de actualización:', apiData);
 
     this.usersService.update(userId, apiData).subscribe({
       next: (response: any) => {
         try {
-          console.log('✅ Usuario actualizado:', response);
+          console.log('Usuario actualizado exitosamente:', response);
 
-          // Actualizar la lista local de usuarios
-          const index = this.users.findIndex(u => u.id.toString() === userId.toString());
-          if (index !== -1) {
-            const updatedUser = this.transformApiUserToFrontend(response);
-            this.users[index] = updatedUser;
-            this.filteredUsers = [...this.users];
-            this.updatePagination();
-            this.renderUsersTable();
-            console.log('📝 Lista actualizada tras edición.');
-          }
+          // Recargar todos los usuarios
+          this.loadAllUsers();
 
           this.showSuccessMessage('Usuario actualizado exitosamente');
-          // Reset del formulario y modo edición
-          this.resetCreateUserForm();
-          this.editingUserId = null;
+          this.cancelEdit();
+
         } catch (error) {
-          console.error('❌ Error procesando respuesta de actualización:', error);
+          console.error('Error procesando actualización:', error);
           this.showErrorMessage('Usuario actualizado pero hubo un error actualizando la lista');
+          this.loadAllUsers();
         } finally {
           this.isLoading = false;
           this.updateButtonState(false);
         }
       },
       error: (error: any) => {
-        console.error('❌ Error al actualizar usuario:', error);
+        console.error('Error al actualizar usuario:', error);
         let msg = 'Error actualizando el usuario';
         if (error?.error) {
           if (typeof error.error === 'string') msg = error.error;
@@ -493,48 +495,21 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     });
   }
 
-private parseCreateUserError(error: any): string {
-    if (error.status === 0) {
-      return 'No se puede conectar con el servidor. Verifica que Laravel esté ejecutándose en http://localhost:8000';
-    }
-
-    if (error.status === 404) {
-      return 'Endpoint no encontrado. Verifica la URL: POST /api/users';
-    }
-
-    if (error.status === 422) {
-      // Errores de validación de Laravel
-      if (error.error?.errors) {
-        const validationErrors = Object.entries(error.error.errors).map(([field, messages]) => {
-          return `${field}: ${(messages as string[]).join(', ')}`;
-        });
-        return 'Errores de validación: ' + validationErrors.join(' | ');
-      }
-      return error.error?.message || 'Error de validación de datos';
-    }
-
-    if (error.status === 500) {
-      return 'Error interno del servidor Laravel. Revisa los logs de Laravel.';
-    }
-
-    if (error.error?.message) {
-      return error.error.message;
-    }
-
-    return 'Error desconocido al crear el usuario.';
+  /**
+   * NUEVO: Cancelar edición
+   */
+  cancelEdit(): void {
+    this.isEditMode = false;
+    this.editingUserId = null;
+    this.resetCreateUserForm();
+    this.updateButtonState(false, 'Crear usuario');
   }
 
   // ========================================
-  // 3. TRANSFORMADORES DE DATOS
+  // TRANSFORMADORES DE DATOS - CORREGIDOS
   // ========================================
 
-  /**
-   * Transformar datos de la API Laravel al formato del frontend
-   * Normaliza los campos para uso consistente en la aplicación
-   */
   private transformApiUserToFrontend(apiUser: ApiUserResponse): User {
-    console.log('🔄 Transformando usuario de API a frontend:', apiUser);
-
     const transformedUser: User = {
       id: apiUser.id,
       name: `${apiUser.nombres || ''} ${apiUser.apellidos || ''}`.trim() || 'Sin nombre',
@@ -544,52 +519,50 @@ private parseCreateUserError(error: any): string {
       phoneNumber: apiUser.celular || apiUser.telefono || 'Sin teléfono',
       email: apiUser.email || 'Sin email',
       userType: apiUser.role?.nombre || 'Sin rol',
-      service: '', // Campo específico del frontend
+      service: '',
       createdAt: apiUser.creado_en ? new Date(apiUser.creado_en) : new Date(),
       status: apiUser.status?.nombre === 'Activo' ? 'active' : 'inactive',
       address: apiUser.direccion || '',
       gender: apiUser.genero || 'O'
     };
 
-    console.log('✅ Usuario transformado:', transformedUser);
     return transformedUser;
   }
 
   /**
-   * Transformar datos del formulario al formato esperado por la API Laravel
-   * Mapea campos del frontend a la estructura exacta que espera el backend
+   * CORREGIDO: Soporte para edición
    */
-  private transformFormDataToApiRequest(formData: UserFormData): ApiUserRequest {
-    // Separar nombre completo en nombres y apellidos
+  private transformFormDataToApiRequest(formData: UserFormData, isEdit = false): ApiUserRequest {
+    // Separar nombre completo
     const nameParts = formData.name.trim().split(' ');
     const nombres = nameParts[0] || '';
     const apellidos = nameParts.slice(1).join(' ') || 'Sin apellido';
 
-    // Mapear tipo de documento a ID según la base de datos
-    let tipoIdentificacionId = 1; // Por defecto Cédula de Ciudadanía
+    // Mapear tipo de documento
+    let tipoIdentificacionId = 1;
     switch (formData.documentType) {
       case 'cedula':
-        tipoIdentificacionId = 1; // 'Cédula de Ciudadanía'
+        tipoIdentificacionId = 1;
         break;
       case 'pasaporte':
-        tipoIdentificacionId = 2; // 'Cédula de Extranjería'
+        tipoIdentificacionId = 2;
         break;
       case 'tarjeta':
-        tipoIdentificacionId = 3; // 'Tarjeta de Identidad'
+        tipoIdentificacionId = 3;
         break;
     }
 
-    // Mapear tipo de usuario a ID de rol según la base de datos
-    let rolId = 2; // Por defecto Cliente
+    // Mapear rol - CORREGIDO para coincidir con tu base de datos
+    let rolId = 2;
     switch (formData.userType) {
       case 'Cliente':
-        rolId = 2; // 'Cliente' tiene ID 2
+        rolId = 2;
         break;
-      case 'Administrador':
-        rolId = 1; // 'Admin' tiene ID 1
+      case 'Admin':
+        rolId = 1;
         break;
       case 'Empleado':
-        rolId = 3; // 'Empleado' tiene ID 3
+        rolId = 3;
         break;
     }
 
@@ -598,7 +571,7 @@ private parseCreateUserError(error: any): string {
       apellidos,
       email: formData.email,
       nacimiento: formData.birthDate || null,
-      genero: 'O' as 'M' | 'F' | 'O', // Por defecto 'Otro'
+      genero: 'O' as 'M' | 'F' | 'O',
       clave: formData.password,
       tipo_identificacion_id: tipoIdentificacionId,
       identificacion: formData.documentNumber,
@@ -606,80 +579,50 @@ private parseCreateUserError(error: any): string {
       telefono: null,
       direccion: null,
       terminos_condiciones: true,
-      estados_id: 1, // 'Activo' tiene ID 1
+      estados_id: 1,
       roles_id: rolId,
-      negocios_id: null // NULL para usuarios generales
+      negocios_id: null
     };
 
-    console.log('🔍 Mapeo de formulario a API:');
-    console.log('   - Documento:', formData.documentType, '=>', tipoIdentificacionId);
-    console.log('   - Rol:', formData.userType, '=>', rolId);
-    console.log('   - Datos finales:', apiData);
+    // Si es edición y no hay contraseña, eliminar el campo
+    if (isEdit && !formData.password) {
+      delete (apiData as any).clave;
+    }
 
     return apiData;
   }
 
   // ========================================
-  // 4. DIVISIÓN DE VISTAS - GESTIÓN DE COMPONENTES
+  // MANEJO DE FORMULARIO - CORREGIDO
   // ========================================
 
   /**
-   * Alternar entre la vista de crear usuario y listar usuarios
-   * Método principal para la división de vistas
+   * CORREGIDO: Maneja tanto creación como edición
    */
-  toggleView(targetSection: string): void {
-    const createSection = document.getElementById('create-user-section');
-    const listSection = document.getElementById('list-users-section');
+  onSubmit(): void {
+    const formData = this.getFormDataFromDOM();
 
-    if (targetSection === 'create-user-section') {
-      this.currentView = 'create-user';
-      createSection?.classList.add('active');
-      listSection?.classList.remove('active');
-
-      console.log('📝 Cambiando a vista de crear usuario');
-
-    } else if (targetSection === 'list-users-section') {
-      this.currentView = 'list-users';
-      createSection?.classList.remove('active');
-      listSection?.classList.add('active');
-
-      console.log('📋 Cambiando a vista de listar usuarios');
-
-      // Refrescar usuarios al cambiar a la vista de lista
-      this.refreshUsersList();
+    // Validación especial para edición (contraseña opcional)
+    if (this.isEditMode && !formData.password && !formData.confirmPassword) {
+      formData.password = 'dummy-password'; // Se ignorará en el backend
+      formData.confirmPassword = 'dummy-password';
     }
-  }
 
-  /**
-   * Refrescar lista de usuarios manualmente
-   * Utilizado principalmente en la vista de listado
-   */
-  refreshUsersList(): void {
-    console.log('🔄 Refrescando lista de usuarios...');
-    this.loadAllUsers();
-
-    // Indicador visual de actualización
-    const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
-    if (refreshBtn) {
-      const originalText = refreshBtn.textContent;
-      refreshBtn.textContent = 'Actualizando...';
-      refreshBtn.disabled = true;
+    if (this.validateFormData(formData)) {
+      this.isLoading = true;
+      this.clearMessages();
+      this.updateButtonState(true);
 
       setTimeout(() => {
-        refreshBtn.textContent = originalText;
-        refreshBtn.disabled = false;
-      }, 2000);
+        if (this.isEditMode && this.editingUserId) {
+          this.updateExistingUser(this.editingUserId, formData);
+        } else {
+          this.createNewUser(formData);
+        }
+      }, 500);
     }
   }
 
-  // ========================================
-  // FORMULARIO REACTIVO - VISTA CREAR USUARIO
-  // ========================================
-
-  /**
-   * Crear formulario reactivo con validaciones
-   * Para la vista de crear usuario
-   */
   private createUserForm(): FormGroup {
     return this.formBuilder.group({
       documentType: ['cedula', Validators.required],
@@ -691,13 +634,10 @@ private parseCreateUserError(error: any): string {
       userType: ['Cliente', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required],
-      service: [''] // Opcional
+      service: ['']
     });
   }
 
-  /**
-   * Validador personalizado para edad mínima (18 años)
-   */
   private ageValidator(control: AbstractControl): {[key: string]: any} | null {
     if (!control.value) return null;
 
@@ -713,27 +653,6 @@ private parseCreateUserError(error: any): string {
     return age < 18 ? { 'ageRequired': true } : null;
   }
 
-  /**
-   * Manejar envío del formulario de creación
-   */
-  onSubmit(): void {
-    const formData = this.getFormDataFromDOM();
-
-    if (this.validateFormData(formData)) {
-      this.isLoading = true;
-      this.clearMessages();
-      this.updateButtonState(true);
-
-      // Crear usuario con un pequeño delay para UX
-      setTimeout(() => {
-        this.createNewUser(formData);
-      }, 500);
-    }
-  }
-
-  /**
-   * Obtener datos del formulario desde el DOM
-   */
   private getFormDataFromDOM(): UserFormData {
     return {
       documentType: (document.getElementById('documentType') as HTMLSelectElement)?.value || '',
@@ -750,14 +669,18 @@ private parseCreateUserError(error: any): string {
   }
 
   /**
-   * Validar datos del formulario
+   * CORREGIDO: Validación especial para edición
    */
   private validateFormData(formData: UserFormData): boolean {
     let isValid = true;
 
-    // Validar cada campo requerido
     Object.entries(formData).forEach(([key, value]) => {
       if (key === 'service') return; // Opcional
+
+      // En modo edición, contraseñas son opcionales
+      if (this.isEditMode && (key === 'password' || key === 'confirmPassword')) {
+        return;
+      }
 
       const element = document.getElementById(key);
       const formGroup = element?.closest('.form-group');
@@ -767,7 +690,6 @@ private parseCreateUserError(error: any): string {
         isValid = false;
         this.showFieldError(formGroup, errorDiv, 'Este campo es requerido');
       } else {
-        // Validaciones específicas
         const fieldError = this.validateSpecificField(key, value);
         if (fieldError) {
           isValid = false;
@@ -778,20 +700,19 @@ private parseCreateUserError(error: any): string {
       }
     });
 
-    // Validar confirmación de contraseña
-    if (formData.password !== formData.confirmPassword) {
-      isValid = false;
-      const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
-      const errorDiv = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
-      this.showFieldError(confirmPasswordGroup, errorDiv, 'Las contraseñas no coinciden');
+    // Validar contraseñas solo si se proporcionan
+    if (formData.password || formData.confirmPassword) {
+      if (formData.password !== formData.confirmPassword) {
+        isValid = false;
+        const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
+        const errorDiv = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
+        this.showFieldError(confirmPasswordGroup, errorDiv, 'Las contraseñas no coinciden');
+      }
     }
 
     return isValid;
   }
 
-  /**
-   * Validar campo específico
-   */
   private validateSpecificField(key: string, value: string): string {
     switch (key) {
       case 'documentNumber':
@@ -814,129 +735,11 @@ private parseCreateUserError(error: any): string {
     }
   }
 
-  /**
-   * Mostrar error en campo específico
-   */
-  private showFieldError(formGroup: Element | null | undefined, errorDiv: HTMLElement | null, message: string): void {
-    if (formGroup) {
-      formGroup.classList.add('error');
-    }
-    if (errorDiv) {
-      errorDiv.textContent = message;
-    }
-  }
-
-  /**
-   * Limpiar error en campo específico
-   */
-  private clearFieldError(formGroup?: Element | null | undefined, errorDiv?: HTMLElement | null): void {
-    if (formGroup) {
-      formGroup.classList.remove('error');
-    }
-    if (errorDiv) {
-      errorDiv.textContent = '';
-    }
-  }
-
-  /**
-   * Validar campo individual en tiempo real
-   */
-  private validateField(fieldName: string): void {
-    const control = this.userForm.get(fieldName);
-    const element = document.getElementById(fieldName);
-    const formGroup = element?.closest('.form-group');
-    const errorDiv = formGroup?.querySelector('.error-message') as HTMLElement;
-
-    if (control && element) {
-      let elementValue = '';
-      if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement) {
-        elementValue = element.value || '';
-      }
-
-      control.setValue(elementValue);
-      control.markAsTouched();
-
-      if (control.invalid) {
-        this.showFieldError(formGroup, errorDiv, this.getFieldErrorMessage(fieldName, control));
-      } else {
-        this.clearFieldError(formGroup, errorDiv);
-      }
-    }
-
-    // Validar confirmación de contraseña
-    if (fieldName === 'confirmPassword' || fieldName === 'password') {
-      this.validatePasswordMatch();
-    }
-  }
-
-  /**
-   * Validar coincidencia de contraseñas
-   */
-  private validatePasswordMatch(): void {
-    const password = (document.getElementById('password') as HTMLInputElement)?.value;
-    const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement)?.value;
-    const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
-    const errorDiv = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
-
-    if (password && confirmPassword && password !== confirmPassword) {
-      this.showFieldError(confirmPasswordGroup, errorDiv, 'Las contraseñas no coinciden');
-    } else if (password && confirmPassword && password === confirmPassword) {
-      this.clearFieldError(confirmPasswordGroup, errorDiv);
-    }
-  }
-
-  /**
-   * Obtener mensaje de error específico para cada campo
-   */
-  private getFieldErrorMessage(fieldName: string, control: AbstractControl): string {
-    const errors = control.errors;
-    if (!errors) return '';
-
-    switch (fieldName) {
-      case 'documentType':
-        return errors['required'] ? 'Seleccione un tipo de documento' : '';
-      case 'documentNumber':
-        if (errors['required']) return 'Ingrese el número de documento';
-        if (errors['pattern']) return 'Solo se permiten números';
-        return '';
-      case 'name':
-        if (errors['required']) return 'Ingrese el nombre completo';
-        if (errors['minlength']) return 'El nombre debe tener al menos 2 caracteres';
-        return '';
-      case 'birthDate':
-        if (errors['required']) return 'Seleccione la fecha de nacimiento';
-        if (errors['ageRequired']) return 'Debe ser mayor de 18 años';
-        return '';
-      case 'phoneNumber':
-        if (errors['required']) return 'Ingrese el número de teléfono';
-        if (errors['pattern']) return 'Formato de teléfono inválido';
-        return '';
-      case 'email':
-        if (errors['required']) return 'Ingrese el email';
-        if (errors['email']) return 'Formato de email inválido';
-        return '';
-      case 'userType':
-        return errors['required'] ? 'Seleccione el tipo de usuario' : '';
-      case 'password':
-        if (errors['required']) return 'Ingrese la contraseña';
-        if (errors['minlength']) return 'La contraseña debe tener al menos 6 caracteres';
-        return '';
-      case 'confirmPassword':
-        return errors['required'] ? 'Confirme la contraseña' : '';
-      default:
-        return 'Campo requerido';
-    }
-  }
-
-  /**
-   * Resetear formulario después de crear usuario
-   */
   private resetCreateUserForm(): void {
     const form = document.getElementById('userForm') as HTMLFormElement;
     if (form) {
       form.reset();
 
-      // Restaurar valores por defecto válidos
       const documentTypeSelect = document.getElementById('documentType') as HTMLSelectElement;
       if (documentTypeSelect) {
         documentTypeSelect.value = 'cedula';
@@ -948,7 +751,6 @@ private parseCreateUserError(error: any): string {
       }
     }
 
-    // Limpiar errores visuales
     const errorGroups = document.querySelectorAll('.form-group.error');
     errorGroups.forEach(group => {
       group.classList.remove('error');
@@ -958,39 +760,83 @@ private parseCreateUserError(error: any): string {
       }
     });
 
-    // Resetear formulario reactivo con valores por defecto
     this.userForm.reset({
       documentType: 'cedula',
       userType: 'Cliente'
     });
+
+    // Reset modo edición
+    this.isEditMode = false;
+    this.editingUserId = null;
   }
 
   /**
-   * Actualizar estado del botón de envío
+   * CORREGIDO: Soporte para texto dinámico del botón
    */
-  private updateButtonState(loading: boolean): void {
+  private updateButtonState(loading: boolean, text?: string): void {
     const submitBtn = document.querySelector('.btn-create') as HTMLButtonElement;
     if (submitBtn) {
       if (loading) {
         submitBtn.disabled = true;
         submitBtn.classList.add('loading');
-        submitBtn.textContent = 'Creando...';
+        submitBtn.textContent = this.isEditMode ? 'Actualizando...' : 'Creando...';
       } else {
         submitBtn.disabled = false;
         submitBtn.classList.remove('loading');
-        submitBtn.textContent = 'Crear usuario';
+        submitBtn.textContent = text || (this.isEditMode ? 'Actualizar usuario' : 'Crear usuario');
       }
     }
   }
 
   // ========================================
-  // FUNCIONALIDADES DE LA LISTA - VISTA LISTAR USUARIOS
+  // FUNCIONALIDADES DE VISTA
   // ========================================
 
-  /**
-   * Filtrar usuarios basado en el término de búsqueda
-   * Para la vista de listado
-   */
+  toggleView(targetSection: string): void {
+    const createSection = document.getElementById('create-user-section');
+    const listSection = document.getElementById('list-users-section');
+
+    if (targetSection === 'create-user-section') {
+      this.currentView = 'create-user';
+      createSection?.classList.add('active');
+      listSection?.classList.remove('active');
+
+      // Si no estamos en modo edición, limpiar formulario
+      if (!this.isEditMode) {
+        this.resetCreateUserForm();
+      }
+
+    } else if (targetSection === 'list-users-section') {
+      this.currentView = 'list-users';
+      createSection?.classList.remove('active');
+      listSection?.classList.add('active');
+
+      // Cancelar edición si estaba activa
+      if (this.isEditMode) {
+        this.cancelEdit();
+      }
+
+      this.refreshUsersList();
+    }
+  }
+
+  refreshUsersList(): void {
+    console.log('Refrescando lista de usuarios...');
+    this.loadAllUsers();
+
+    const refreshBtn = document.getElementById('refreshBtn') as HTMLButtonElement;
+    if (refreshBtn) {
+      const originalText = refreshBtn.textContent;
+      refreshBtn.textContent = 'Actualizando...';
+      refreshBtn.disabled = true;
+
+      setTimeout(() => {
+        refreshBtn.textContent = originalText;
+        refreshBtn.disabled = false;
+      }, 2000);
+    }
+  }
+
   filterUsers(): void {
     if (!this.searchTerm.trim()) {
       this.filteredUsers = [...this.users];
@@ -1009,10 +855,6 @@ private parseCreateUserError(error: any): string {
     this.renderUsersTable();
   }
 
-  /**
-   * Renderizar tabla de usuarios con paginación
-   * Función principal para alimentar la vista de listado
-   */
   renderUsersTable(): void {
     const tbody = document.getElementById('userTableBody');
     if (!tbody) return;
@@ -1036,10 +878,6 @@ private parseCreateUserError(error: any): string {
 
     currentUsers.forEach(user => {
       const row = document.createElement('tr');
-      const statusIndicator = user.status === 'active' ?
-        '<span class="status-dot status-active"></span>Activo' :
-        '<span class="status-dot status-inactive"></span>Inactivo';
-
       row.innerHTML = `
         <td>${user.name}</td>
         <td>${user.documentNumber}</td>
@@ -1066,9 +904,6 @@ private parseCreateUserError(error: any): string {
     this.updateUserCounter();
   }
 
-  /**
-   * Actualizar contador de usuarios
-   */
   private updateUserCounter(): void {
     const counterElement = document.getElementById('userCounter');
     if (counterElement) {
@@ -1076,13 +911,6 @@ private parseCreateUserError(error: any): string {
     }
   }
 
-  // ========================================
-  // PAGINACIÓN - PARA VISTA DE LISTADO
-  // ========================================
-
-  /**
-   * Actualizar información de paginación
-   */
   updatePagination(): void {
     this.totalPages = Math.ceil(this.filteredUsers.length / this.itemsPerPage);
 
@@ -1103,9 +931,6 @@ private parseCreateUserError(error: any): string {
     }
   }
 
-  /**
-   * Ir a la página anterior
-   */
   previousPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
@@ -1114,9 +939,6 @@ private parseCreateUserError(error: any): string {
     }
   }
 
-  /**
-   * Ir a la página siguiente
-   */
   nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
@@ -1126,21 +948,24 @@ private parseCreateUserError(error: any): string {
   }
 
   // ========================================
-  // ACCIONES DE USUARIO - PARA VISTA DE LISTADO
+  // ACCIONES DE USUARIO
   // ========================================
 
-  /**
-   * Ver detalles de un usuario específico
-   * Utiliza la consulta por ID implementada anteriormente
-   */
   viewUser(userId: string | number): void {
     console.log('Ver detalles del usuario:', userId);
-    this.getUserById(userId);
+
+    this.usersService.getById(userId).subscribe({
+      next: (response: any) => {
+        const user = this.transformApiUserToFrontend(response);
+        this.showUserDetails(user);
+      },
+      error: (error: any) => {
+        const errorMsg = error?.error?.message || 'No se pudo consultar el usuario';
+        this.showErrorMessage(errorMsg);
+      }
+    });
   }
 
-  /**
-   * Mostrar detalles del usuario (implementación básica)
-   */
   private showUserDetails(user: User): void {
     const details = `
       Información del Usuario:
@@ -1152,26 +977,9 @@ private parseCreateUserError(error: any): string {
       - Estado: ${user.status === 'active' ? 'Activo' : 'Inactivo'}
     `;
 
-    alert(details); // Implementación básica - puedes reemplazar con un modal
+    alert(details); // Puedes reemplazar esto con un modal más elegante
   }
 
-  /**
-   * Editar usuario existente (funcionalidad futura)
-   */
-  editUser(userId: string | number): void {
-    console.log('Editando usuario:', userId);
-    this.editingUserId = userId;
-
-    const user = this.users.find(u => u.id.toString() === userId.toString());
-    if (user) {
-      this.showSuccessMessage(`Función de editar usuario "${user.name}" estará disponible próximamente`);
-    }
-  }
-
-  /**
-   * Eliminar usuario (con confirmación)
-   * Actualiza la lista local inmediatamente
-   */
   deleteUser(userId: string | number): void {
     const user = this.users.find(u => u.id.toString() === userId.toString());
     if (!user) return;
@@ -1179,15 +987,8 @@ private parseCreateUserError(error: any): string {
     if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${user.name}"?`)) {
       this.usersService.delete(userId).subscribe({
         next: () => {
-          // Actualizar la lista local inmediatamente
-          this.users = this.users.filter(u => u.id.toString() !== userId.toString());
-          this.filteredUsers = this.filteredUsers.filter(u => u.id.toString() !== userId.toString());
-
-          // Actualizar la vista
-          this.updatePagination();
-          this.renderUsersTable();
-
-          console.log('Usuario eliminado. Total usuarios:', this.users.length);
+          // Recargar toda la lista después de eliminar
+          this.loadAllUsers();
           this.showSuccessMessage('Usuario eliminado correctamente');
         },
         error: (error: any) => {
@@ -1199,28 +1000,19 @@ private parseCreateUserError(error: any): string {
   }
 
   // ========================================
-  // GESTIÓN DE MENSAJES - PARA AMBAS VISTAS
+  // GESTIÓN DE MENSAJES
   // ========================================
 
-  /**
-   * Mostrar mensaje de éxito
-   */
   private showSuccessMessage(message: string): void {
     this.successMessage = message;
     this.displayMessage(message, 'success');
   }
 
-  /**
-   * Mostrar mensaje de error
-   */
   private showErrorMessage(message: string): void {
     this.errorMessage = message;
     this.displayMessage(message, 'error');
   }
 
-  /**
-   * Mostrar mensaje en la interfaz
-   */
   private displayMessage(message: string, type: 'success' | 'error'): void {
     let messageDiv = document.querySelector(`.${type}-message`) as HTMLElement;
     if (!messageDiv) {
@@ -1235,15 +1027,11 @@ private parseCreateUserError(error: any): string {
     messageDiv.textContent = message;
     messageDiv.classList.add('show');
 
-    // Auto-ocultar después de 5 segundos
     setTimeout(() => {
       messageDiv.classList.remove('show');
     }, 5000);
   }
 
-  /**
-   * Limpiar todos los mensajes
-   */
   private clearMessages(): void {
     this.successMessage = '';
     this.errorMessage = '';
@@ -1256,144 +1044,70 @@ private parseCreateUserError(error: any): string {
   }
 
   // ========================================
-  // UTILIDADES Y FUNCIONES AUXILIARES
+  // UTILIDADES
   // ========================================
 
-  /**
-   * Exportar lista de usuarios (funcionalidad futura)
-   */
-  exportUsers(): void {
-    console.log('Exportando usuarios...', this.filteredUsers);
-    this.showSuccessMessage('Funcionalidad de exportación estará disponible próximamente');
-  }
-
-  /**
-   * Obtener estadísticas de usuarios
-   */
-  getUserStats(): { total: number, active: number, inactive: number, byRole: Record<string, number> } {
-    const stats = {
-      total: this.users.length,
-      active: this.users.filter(u => u.status === 'active').length,
-      inactive: this.users.filter(u => u.status === 'inactive').length,
-      byRole: {} as Record<string, number>
-    };
-
-    // Contar por rol
-    this.users.forEach(user => {
-      stats.byRole[user.userType] = (stats.byRole[user.userType] || 0) + 1;
-    });
-
-    return stats;
-  }
-
-  /**
-   * Verificar si email ya existe
-   */
-  private checkIfEmailExists(email: string): boolean {
-    return this.users.some(user => user.email.toLowerCase() === email.toLowerCase());
-  }
-
-  /**
-   * Verificar si documento ya existe
-   */
-  private checkIfDocumentExists(documentNumber: string): boolean {
-    return this.users.some(user => user.documentNumber === documentNumber);
-  }
-
-  /**
-   * Formatear fecha para mostrar en la interfaz
-   */
-  private formatDate(date: Date | string): string {
-    if (!date) return '';
-
-    const dateObj = typeof date === 'string' ? new Date(date) : date;
-    return dateObj.toLocaleDateString('es-CO', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
-
-  /**
-   * Validar email con regex
-   */
-  private isValidEmail(email: string): boolean {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  }
-
-  /**
-   * Limpiar y normalizar texto
-   */
-  private sanitizeText(text: string): string {
-    return text.trim().replace(/\s+/g, ' ');
-  }
-
-  /**
-   * Verificar si el usuario es mayor de edad
-   */
-  private isOfAge(birthDate: string): boolean {
-    if (!birthDate) return false;
-
-    const birth = new Date(birthDate);
-    const today = new Date();
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
+  private parseCreateUserError(error: any): string {
+    if (error.status === 0) {
+      return 'No se puede conectar con el servidor. Verifica que Laravel esté ejecutándose en http://localhost:8000';
     }
 
-    return age >= 18;
+    if (error.status === 404) {
+      return 'Endpoint no encontrado. Verifica la URL: POST /api/users';
+    }
+
+    if (error.status === 422) {
+      if (error.error?.errors) {
+        const validationErrors = Object.entries(error.error.errors).map(([field, messages]) => {
+          return `${field}: ${(messages as string[]).join(', ')}`;
+        });
+        return 'Errores de validación: ' + validationErrors.join(' | ');
+      }
+      return error.error?.message || 'Error de validación de datos';
+    }
+
+    if (error.status === 500) {
+      return 'Error interno del servidor Laravel. Revisa los logs de Laravel.';
+    }
+
+    if (error.error?.message) {
+      return error.error.message;
+    }
+
+    return 'Error desconocido al crear el usuario.';
+  }
+
+  private showFieldError(formGroup: Element | null | undefined, errorDiv: HTMLElement | null, message: string): void {
+    if (formGroup) {
+      formGroup.classList.add('error');
+    }
+    if (errorDiv) {
+      errorDiv.textContent = message;
+    }
+  }
+
+  private clearFieldError(formGroup?: Element | null | undefined, errorDiv?: HTMLElement | null): void {
+    if (formGroup) {
+      formGroup.classList.remove('error');
+    }
+    if (errorDiv) {
+      errorDiv.textContent = '';
+    }
   }
 
   // ========================================
-  // FUNCIONES DE DEBUGGING Y MONITOREO
+  // FUNCIONES DE DEPURACIÓN
   // ========================================
 
-  /**
-   * Función de debugging para inspeccionar el estado actual
-   */
   debugCurrentState(): void {
     console.log('Estado actual del componente:');
     console.log('   - Vista actual:', this.currentView);
+    console.log('   - Modo edición:', this.isEditMode);
+    console.log('   - Usuario editando:', this.editingUserId);
     console.log('   - Total usuarios:', this.users.length);
     console.log('   - Usuarios filtrados:', this.filteredUsers.length);
     console.log('   - Página actual:', this.currentPage);
     console.log('   - Término de búsqueda:', this.searchTerm);
     console.log('   - Cargando:', this.isLoading);
-    console.log('   - Lista completa:', this.users);
-  }
-
-  /**
-   * Verificar sincronización con el backend
-   */
-  async verifySyncWithBackend(): Promise<void> {
-    console.log('Verificando sincronización con backend...');
-
-    try {
-      this.usersService.getAll().subscribe({
-        next: (backendUsers: any) => {
-          const backendCount = Array.isArray(backendUsers) ? backendUsers.length : backendUsers?.data?.length || 0;
-          const frontendCount = this.users.length;
-
-          console.log('Comparación de datos:');
-          console.log('   - Backend:', backendCount, 'usuarios');
-          console.log('   - Frontend:', frontendCount, 'usuarios');
-
-          if (backendCount === frontendCount) {
-            console.log('Sincronización correcta');
-          } else {
-            console.log('Desincronización detectada - Recargando datos...');
-            this.loadAllUsers();
-          }
-        },
-        error: (error) => {
-          console.error('Error en verificación:', error);
-        }
-      });
-    } catch (error) {
-      console.error('Error en verificación async:', error);
-    }
   }
 }
