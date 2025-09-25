@@ -174,10 +174,10 @@ export class InicioSesionComponent implements OnInit {
   get registerPassword() { return this.registroForm.get('clave'); }
 
   // Suponiendo que el header compartido se usa en el HTML
-  // Si el usuario ya está logueado, redirige automáticamente
+  // Comentado: redirección automática que causaba problemas
   ngAfterViewInit() {
-    if (this.auth.isLoggedIn()) {
-      this.router.navigate(['/crear-usuario']);
-    }
+    // if (this.auth.isLoggedIn()) {
+    //   this.router.navigate(['/crear-usuario']);
+    // }
   }
 }

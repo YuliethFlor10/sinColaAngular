@@ -4,6 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { AdminWeb } from "../admin-web";
 import { UsersService } from '../../../services/users.service';
+import { AutoLoginService } from '../../../services/auto-login.service';
 import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 
 // ========================================
@@ -153,7 +154,8 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private formBuilder: FormBuilder,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private autoLoginService: AutoLoginService
   ) {
     this.userForm = this.createUserForm();
   }
