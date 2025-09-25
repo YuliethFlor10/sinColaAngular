@@ -24,6 +24,8 @@ interface CalendarDay {
   hasAppointments?: boolean;
 }
 
+
+
 interface TimeSlot {
   time: string;
   display: string;
@@ -53,7 +55,7 @@ export class CitasComponent implements OnInit {
   successMessage: string = '';
   isLoading: boolean = false;
   isEditing: boolean = false;
-  
+
   // trackBy para *ngFor en el HTML
   trackDay(index: number, item: CalendarDay): number { return item.number; }
   trackAppointment(index: number, item: MappedAppointment): string | number { return item.id; }
@@ -150,25 +152,25 @@ export class CitasComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
-    
+
     console.log('📋 Cargando citas desde MySQL...');
-    
+
     this.appointmentsService.getAll().subscribe({
       next: (appointments: MappedAppointment[]) => {
         console.log('✅ Citas cargadas exitosamente desde MySQL:', appointments.length, 'citas');
         console.log('📋 Detalle de citas:', appointments);
-        
+
         this.appointments = appointments;
         this.updateStats();
         this.updateCalendarWithAppointments();
         this.isLoading = false;
-        
+
         if (appointments.length === 0) {
           this.successMessage = 'No hay citas registradas en la base de datos.';
         } else {
           this.successMessage = `Se cargaron ${appointments.length} citas exitosamente.`;
         }
-        
+
         // Auto-limpiar mensaje después de 3 segundos
         setTimeout(() => this.successMessage = '', 3000);
       },
@@ -176,12 +178,12 @@ export class CitasComponent implements OnInit {
         console.error('❌ Error al cargar citas desde MySQL:', error);
         this.errorMessage = `Error al conectar con la base de datos: ${error.message || 'Error desconocido'}`;
         this.isLoading = false;
-        
+
         // Mostrar información adicional del error
         if (error.status) {
           this.errorMessage += ` (Código: ${error.status})`;
         }
-        
+
         console.log('🔧 Intentando cargar datos de prueba como fallback...');
         this.loadTestData();
       }
@@ -191,7 +193,7 @@ export class CitasComponent implements OnInit {
   // DATOS DE PRUEBA MEJORADOS
   loadTestData(): void {
     console.log('🧪 Cargando datos de prueba (fallback)...');
-    
+
     this.appointments = [
       {
         id: 9999,
@@ -245,17 +247,17 @@ export class CitasComponent implements OnInit {
         estados_id: 3
       }
     ];
-    
+
     this.updateStats();
     this.updateCalendarWithAppointments();
-    
+
     this.errorMessage += ' - Mostrando datos de prueba.';
   }
 
   // OBTENER CITA POR ID - VERSIÓN MEJORADA
   getAppointmentById(id: number | string): void {
     const numericId = typeof id === 'string' ? parseInt(id, 10) : id;
-    
+
     if (isNaN(numericId) || numericId <= 0) {
       console.error('❌ ID inválido:', id);
       this.errorMessage = 'ID de cita inválido';
@@ -285,19 +287,19 @@ export class CitasComponent implements OnInit {
     console.log('📝 Datos del formulario:', this.appointmentForm);
     console.log('✏️ Modo edición:', this.isEditing);
     console.log('🎯 Cita seleccionada:', this.selectedAppointment);
-    
+
     // Validar formulario primero
     if (!this.validateForm()) {
       console.log('❌ Validación del formulario falló');
       return;
     }
-    
+
     const selectedDate = this.formCalendarDays.find(day => day.selected);
     const selectedTime = this.timeSlots.find(slot => slot.selected);
-    
+
     console.log('📅 Fecha seleccionada:', selectedDate);
     console.log('🕐 Hora seleccionada:', selectedTime);
-    
+
     if (!selectedDate || !selectedTime) {
       console.log('❌ Falta fecha u hora');
       this.errorMessage = 'Debe seleccionar fecha y hora para la cita';
@@ -317,7 +319,7 @@ export class CitasComponent implements OnInit {
     };
 
     console.log('📤 Datos preparados para envío:', appointmentData);
-    
+
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
@@ -325,21 +327,21 @@ export class CitasComponent implements OnInit {
     if (this.isEditing && this.selectedAppointment) {
       // MODO EDICIÓN
       console.log('✏️ Ejecutando actualización de cita ID:', this.selectedAppointment.id);
-      
+
       this.appointmentsService.update(this.selectedAppointment.id, appointmentData).subscribe({
         next: (updatedAppointment: MappedAppointment) => {
           console.log('✅ Cita actualizada exitosamente:', updatedAppointment);
-          
+
           // Actualizar en la lista local
           const index = this.appointments.findIndex(apt => apt.id === this.selectedAppointment!.id);
           if (index !== -1) {
             this.appointments[index] = updatedAppointment;
             console.log('📋 Lista local actualizada');
           }
-          
+
           this.updateStats();
           this.updateCalendarWithAppointments();
-          
+
           this.successMessage = `Cita de ${updatedAppointment.clientName} actualizada exitosamente`;
           this.resetFormAndView();
           this.isLoading = false;
@@ -350,20 +352,20 @@ export class CitasComponent implements OnInit {
           this.isLoading = false;
         }
       });
-      
+
     } else {
       // MODO CREACIÓN
       console.log('➕ Ejecutando creación de nueva cita');
-      
+
       this.appointmentsService.create(appointmentData).subscribe({
         next: (newAppointment: MappedAppointment) => {
           console.log('✅ Nueva cita creada exitosamente:', newAppointment);
-          
+
           // Agregar a la lista local
           this.appointments.push(newAppointment);
           this.updateStats();
           this.updateCalendarWithAppointments();
-          
+
           this.successMessage = `Cita creada exitosamente para ${newAppointment.clientName}`;
           this.resetFormAndView();
           this.isLoading = false;
@@ -381,14 +383,14 @@ export class CitasComponent implements OnInit {
   toggleMenu(event: Event, appointment: MappedAppointment): void {
     console.log('🔽 Toggle menu para cita ID:', appointment.id, 'Cliente:', appointment.clientName);
     event.stopPropagation();
-    
+
     // Cerrar otros menús
     this.appointments.forEach(apt => {
       if (apt.id !== appointment.id) {
         apt.showMenu = false;
       }
     });
-    
+
     // Toggle el menú actual
     appointment.showMenu = !appointment.showMenu;
     console.log('📋 Estado del menú:', appointment.showMenu ? 'ABIERTO' : 'CERRADO');
@@ -397,9 +399,9 @@ export class CitasComponent implements OnInit {
   // CONFIRMAR CITA - VERSIÓN MEJORADA
   confirmAppointment(appointment: MappedAppointment): void {
     console.log('✅ CONFIRMANDO cita ID:', appointment.id, 'para:', appointment.clientName);
-    
+
     appointment.showMenu = false;
-    
+
     if (appointment.status === 'confirmed') {
       console.log('⚠️ La cita ya está confirmada');
       this.errorMessage = `La cita de ${appointment.clientName} ya está confirmada`;
@@ -413,7 +415,7 @@ export class CitasComponent implements OnInit {
     this.appointmentsService.changeStatus(appointment.id, 2).subscribe({
       next: (updatedAppointment: MappedAppointment) => {
         console.log('✅ Cita confirmada exitosamente:', updatedAppointment);
-        
+
         // Actualizar en la lista local
         const index = this.appointments.findIndex(apt => apt.id === appointment.id);
         if (index !== -1) {
@@ -421,11 +423,11 @@ export class CitasComponent implements OnInit {
           this.appointments[index].estados_id = 2;
           console.log('📋 Status actualizado localmente');
         }
-        
+
         this.updateStats();
         this.successMessage = `✅ Cita de ${appointment.clientName} confirmada exitosamente`;
         this.isLoading = false;
-        
+
         setTimeout(() => this.successMessage = '', 4000);
       },
       error: (error: any) => {
@@ -439,9 +441,9 @@ export class CitasComponent implements OnInit {
   // CANCELAR CITA - VERSIÓN MEJORADA
   cancelAppointment(appointment: MappedAppointment): void {
     console.log('❌ CANCELANDO cita ID:', appointment.id, 'para:', appointment.clientName);
-    
+
     appointment.showMenu = false;
-    
+
     if (appointment.status === 'cancelled') {
       console.log('⚠️ La cita ya está cancelada');
       this.errorMessage = `La cita de ${appointment.clientName} ya está cancelada`;
@@ -450,7 +452,7 @@ export class CitasComponent implements OnInit {
     }
 
     const reason = prompt(`¿Cuál es el motivo de la cancelación de la cita de ${appointment.clientName}? (opcional)`);
-    
+
     if (reason === null) {
       console.log('Cancelación abortada por el usuario');
       return;
@@ -462,7 +464,7 @@ export class CitasComponent implements OnInit {
     this.appointmentsService.changeStatus(appointment.id, 3).subscribe({
       next: (updatedAppointment: MappedAppointment) => {
         console.log('✅ Cita cancelada exitosamente:', updatedAppointment);
-        
+
         // Actualizar en la lista local
         const index = this.appointments.findIndex(apt => apt.id === appointment.id);
         if (index !== -1) {
@@ -470,14 +472,14 @@ export class CitasComponent implements OnInit {
           this.appointments[index].estados_id = 3;
           console.log('📋 Status actualizado localmente');
         }
-        
+
         this.updateStats();
         this.successMessage = `❌ Cita de ${appointment.clientName} cancelada`;
         if (reason && reason.trim()) {
           this.successMessage += ` - Motivo: ${reason}`;
         }
         this.isLoading = false;
-        
+
         setTimeout(() => this.successMessage = '', 4000);
       },
       error: (error: any) => {
@@ -491,11 +493,11 @@ export class CitasComponent implements OnInit {
   // EDITAR CITA
   editAppointment(appointment: MappedAppointment): void {
     console.log('✏️ EDITANDO cita ID:', appointment.id, 'Cliente:', appointment.clientName);
-    
+
     appointment.showMenu = false;
     this.selectedAppointment = appointment;
     this.isEditing = true;
-    
+
     // Llenar el formulario con los datos existentes
     this.appointmentForm = {
       clientDocType: '',
@@ -508,7 +510,7 @@ export class CitasComponent implements OnInit {
       appointmentStaff: 'pepita-perez',
       appointmentObservations: ''
     };
-    
+
     // Seleccionar fecha y hora en el formulario
     this.formCalendarDays.forEach(day => day.selected = false);
     const dayToSelect = this.formCalendarDays.find(d => d.number === appointment.day);
@@ -516,16 +518,16 @@ export class CitasComponent implements OnInit {
       dayToSelect.selected = true;
       this.selectedDateText = `${appointment.day} de Mayo, 2025`;
     }
-    
+
     this.timeSlots.forEach(slot => slot.selected = false);
     const timeToSelect = this.timeSlots.find(s => s.display === appointment.time);
     if (timeToSelect) {
       timeToSelect.selected = true;
     }
-    
+
     // Actualizar servicio seleccionado
     this.onServiceChange();
-    
+
     this.currentView = 'create';
     this.successMessage = `Formulario cargado para edición de ${appointment.clientName}. Modifique los datos y guarde.`;
     setTimeout(() => this.successMessage = '', 5000);
@@ -534,9 +536,9 @@ export class CitasComponent implements OnInit {
   // ELIMINAR CITA
   deleteAppointment(appointment: MappedAppointment): void {
     console.log('🗑️ ELIMINANDO cita ID:', appointment.id, 'Cliente:', appointment.clientName);
-    
+
     appointment.showMenu = false;
-    
+
     const confirmDelete = confirm(
       `¿Está seguro de eliminar la cita de ${appointment.clientName}?\n\n` +
       `Fecha: ${appointment.day} ${appointment.monthName}\n` +
@@ -544,7 +546,7 @@ export class CitasComponent implements OnInit {
       `Servicio: ${appointment.serviceName}\n\n` +
       `Esta acción no se puede deshacer.`
     );
-    
+
     if (!confirmDelete) {
       console.log('Eliminación cancelada por el usuario');
       return;
@@ -556,10 +558,10 @@ export class CitasComponent implements OnInit {
     this.appointmentsService.delete(appointment.id).subscribe({
       next: (response: any) => {
         console.log('✅ Cita eliminada exitosamente:', response);
-        
+
         // Eliminar de la lista local
         this.appointments = this.appointments.filter(apt => apt.id !== appointment.id);
-        
+
         this.updateStats();
         this.updateCalendarWithAppointments();
         this.successMessage = `🗑️ Cita de ${appointment.clientName} eliminada exitosamente`;
@@ -598,11 +600,11 @@ export class CitasComponent implements OnInit {
   // ACTUALIZAR CALENDARIO CON CITAS
   updateCalendarWithAppointments(): void {
     const daysWithAppointments = this.appointments.map(apt => apt.day);
-    
+
     this.calendarDays.forEach(day => {
       day.hasAppointments = daysWithAppointments.includes(day.number);
     });
-    
+
     console.log('📅 Calendario actualizado con', daysWithAppointments.length, 'días con citas');
   }
 
@@ -620,24 +622,24 @@ export class CitasComponent implements OnInit {
       this.errorMessage = 'El nombre del cliente es requerido';
       return false;
     }
-    
+
     if (!this.appointmentForm.clientEmail.trim()) {
       this.errorMessage = 'El email del cliente es requerido';
       return false;
     }
-    
+
     // Validar formato de email básico
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(this.appointmentForm.clientEmail.trim())) {
       this.errorMessage = 'El formato del email no es válido';
       return false;
     }
-    
+
     if (!this.appointmentForm.appointmentService) {
       this.errorMessage = 'Debe seleccionar un servicio';
       return false;
     }
-    
+
     return true;
   }
 
@@ -647,12 +649,12 @@ export class CitasComponent implements OnInit {
     this.currentView = view;
     this.errorMessage = '';
     this.successMessage = '';
-    
+
     // Si cambias a create sin estar editando, resetea el formulario
     if (view === 'create' && !this.isEditing) {
       this.resetForm();
     }
-    
+
     // Si cambias a list y estás editando, cancela la edición
     if (view === 'list' && this.isEditing) {
       this.cancelEdit();
@@ -733,13 +735,13 @@ export class CitasComponent implements OnInit {
 
   private buildEndDateTime(day: number, startTime: string, serviceKey: string): string {
     const durations: { [key: string]: number } = {
-      manicure: 60, 
-      pedicure: 90, 
-      gelish: 120, 
-      acrilicas: 180, 
+      manicure: 60,
+      pedicure: 90,
+      gelish: 120,
+      acrilicas: 180,
       pestanas: 150
     };
-    
+
     const [hours, minutes] = startTime.split(':').map(Number);
     const durationMinutes = durations[serviceKey] || 60;
     const endDate = new Date(2025, 4, day, hours, minutes + durationMinutes);
@@ -748,24 +750,24 @@ export class CitasComponent implements OnInit {
 
   private mapServiceNameToKey(serviceName: string | undefined): string {
     if (!serviceName) return '';
-    
+
     const mapping: { [key: string]: string } = {
       'Manicure Clásico': 'manicure',
-      'Pedicure Spa': 'pedicure', 
+      'Pedicure Spa': 'pedicure',
       'Uñas en Gelish': 'gelish',
       'Uñas Acrílicas': 'acrilicas',
       'Pestañas': 'pestanas'
     };
-    
+
     return mapping[serviceName] || 'manicure';
   }
 
   private getServiceId(serviceKey: string): number {
     const serviceIds: { [key: string]: number } = {
-      manicure: 1, 
-      pedicure: 2, 
-      gelish: 3, 
-      acrilicas: 4, 
+      manicure: 1,
+      pedicure: 2,
+      gelish: 3,
+      acrilicas: 4,
       pestanas: 5
     };
     return serviceIds[serviceKey] || 1;
@@ -773,10 +775,10 @@ export class CitasComponent implements OnInit {
 
   private getServiceDuration(serviceKey: string): number {
     const durations: { [key: string]: number } = {
-      manicure: 60, 
-      pedicure: 90, 
-      gelish: 120, 
-      acrilicas: 180, 
+      manicure: 60,
+      pedicure: 90,
+      gelish: 120,
+      acrilicas: 180,
       pestanas: 150
     };
     return durations[serviceKey] || 60;
@@ -785,14 +787,14 @@ export class CitasComponent implements OnInit {
   private resetForm(): void {
     console.log('🔄 Reseteando formulario');
     this.appointmentForm = {
-      clientDocType: '', 
-      clientDocNumber: '', 
-      clientName: '', 
+      clientDocType: '',
+      clientDocNumber: '',
+      clientName: '',
       clientEmail: '',
-      clientBirthDate: '', 
-      clientPhone: '', 
+      clientBirthDate: '',
+      clientPhone: '',
       appointmentService: '',
-      appointmentStaff: '', 
+      appointmentStaff: '',
       appointmentObservations: ''
     };
 
