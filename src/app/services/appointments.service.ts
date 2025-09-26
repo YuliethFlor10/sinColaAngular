@@ -1,13 +1,43 @@
+// appointments.service.ts - ADAPTADO A TU API LARAVEL
 import { Injectable } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { ApiService } from './api.service';
+import { Observable, map, catchError } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { of } from 'rxjs';
 
-// Forma UI usada por componentes Angular
+// Interfaz que coincide con tu estructura Laravel
+export interface LaravelAppointment {
+  id?: number;
+  created_at?: string;
+  updated_at?: string;
+  tipo_documento: string;
+  numero_documento: string;
+  nombre: string;
+  email: string;
+  fecha_nacimiento: string;
+  numero_telefono: string;
+  tipo_cita: string;
+  personal_servicio: string;
+  fecha_cita: string;
+  hora_cita: string;
+  fecha_hora_completa?: string;
+  negocios_id?: number;
+  nota?: string;
+  tiempo_estimado?: number;
+  descripcion_cancel?: string;
+  fecha_fin?: string;
+  user?: any;
+  staff?: any;
+  business?: any;
+  status?: any;
+  service?: any;
+}
+
+// Interfaz para el componente Angular (mantiene compatibilidad con tu template actual)
 export interface Appointment {
   id?: number;
   clientName: string;
   serviceName: string;
-  day: number | string;
+  day: number;
   monthName: string;
   time: string;
   status: string;
@@ -17,159 +47,169 @@ export interface Appointment {
   created_at?: string;
   updated_at?: string;
   showMenu?: boolean;
-}
-
-// Forma esperada por Laravel
-interface BackendAppointment {
-  id?: number;
-  usuarios_id: number;
-  negocios_id: number;
-  servicios_id: number;
-  estados_id: number;
-  nota?: string | null;
-  fecha: string;     // ISO 8601
-  fecha_fin: string; // ISO 8601
-  tiempo_estimado?: number | null;
-  descripcion_cancel?: string | null;
-  user?: { id: number; name?: string; nombre?: string } | null;
-  business?: any;
-  service?: { id: number; name?: string; nombre?: string } | null;
-  status?: { id: number; name?: string; nombre?: string } | null;
-}
-
-// Ajusta según tus IDs reales o trae estos catálogos desde API si prefieres
-const DEFAULT_USER_ID = 1;
-const DEFAULT_BUSINESS_ID = 1;
-const SERVICE_NAME_TO_ID: Record<string, number> = {
-  manicure: 1,
-  pedicure: 2,
-  gelish: 3,
-  acrilicas: 4,
-  pestanas: 5
-};
-const STATUS_NAME_TO_ID: Record<string, number> = {
-  reserved: 1,
-  confirmed: 2,
-  cancelled: 3
-};
-const ID_TO_STATUS_NAME: Record<number, string> = {
-  1: 'reserved',
-  2: 'confirmed',
-  3: 'cancelled'
-};
-
-function monthNameToNumber(monthName: string): number {
-  const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  const idx = months.indexOf(monthName.toUpperCase());
-  return idx >= 0 ? idx + 1 : new Date().getMonth() + 1;
-}
-
-function composeDateISO(day: number | string, monthName: string, time: string): string {
-  const year = new Date().getFullYear();
-  const month = monthNameToNumber(monthName);
-  const dd = String(day).padStart(2, '0');
-  const mm = String(month).padStart(2, '0');
-  const [hh, min] = time.split(':');
-  const hh2 = String(parseInt(hh as string, 10)).padStart(2, '0');
-  return `${year}-${mm}-${dd}T${hh2}:${min}:00`;
-}
-
-function addMinutesToISO(iso: string, minutes: number): string {
-  const d = new Date(iso);
-  d.setMinutes(d.getMinutes() + minutes);
-  const pad = (v: number) => String(v).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
-}
-
-function mapUiToBackend(ui: Appointment): BackendAppointment {
-  const fecha = composeDateISO(ui.day, ui.monthName, ui.time);
-  const fecha_fin = addMinutesToISO(fecha, 60);
-  const servicios_id = SERVICE_NAME_TO_ID[ui.serviceName] || SERVICE_NAME_TO_ID['manicure'] || 1;
-  const estados_id = STATUS_NAME_TO_ID[ui.status] || STATUS_NAME_TO_ID['reserved'] || 1;
-  return {
-    id: ui.id,
-    usuarios_id: DEFAULT_USER_ID,
-    negocios_id: DEFAULT_BUSINESS_ID,
-    servicios_id,
-    estados_id,
-    nota: ui.nota || null,
-    fecha,
-    fecha_fin,
-    tiempo_estimado: 60,
-    descripcion_cancel: null
-  };
-}
-
-function mapBackendToUi(b: BackendAppointment): Appointment {
-  const date = new Date(b.fecha);
-  const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  const monthName = months[date.getMonth()];
-  const day = date.getDate();
-  const hh = String(date.getHours()).padStart(2, '0');
-  const mm = String(date.getMinutes()).padStart(2, '0');
-  const status = b.status?.nombre ? b.status.nombre.toLowerCase() : ID_TO_STATUS_NAME[b.estados_id] || 'reserved';
-  const userFullName = (b.user && ('nombres' in (b.user as any) || 'apellidos' in (b.user as any)))
-    ? `${(b.user as any).nombres ?? ''} ${(b.user as any).apellidos ?? ''}`.trim()
-    : (b.user?.name || (b.user as any)?.nombre || '');
-  const clientName = userFullName || 'Cliente';
-  const serviceName = (b.service?.nombre || b.service?.name || String(b.servicios_id));
-  return {
-    id: b.id,
-    clientName,
-    serviceName,
-    day,
-    monthName,
-    time: `${hh}:${mm}`,
-    status,
-    nota: b.nota || undefined,
-    clientEmail: (b.user as any)?.email || undefined
-  };
+  
+  // Campos adicionales de Laravel
+  tipo_documento?: string;
+  numero_documento?: string;
+  fecha_nacimiento?: string;
+  numero_telefono?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentsService {
-  private readonly resource = 'appointments';
+  private readonly apiUrl = 'http://localhost:8000/api/appointments'; // Ajusta tu URL
 
-  constructor(private api: ApiService) {}
+  constructor(private http: HttpClient) {}
+
+  private getHeaders(): HttpHeaders {
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
+  }
+
+  // Convierte datos de Laravel al formato que usa tu componente Angular
+  private mapToUI(laravel: LaravelAppointment): Appointment {
+    const date = new Date(laravel.fecha_cita);
+    const months = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
+                   'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+    
+    // Determinar estado basado en fechas o campo status si existe
+    let status = 'reserved'; // por defecto
+    if (laravel.status?.nombre) {
+      status = laravel.status.nombre.toLowerCase();
+    }
+    
+    return {
+      id: laravel.id,
+      clientName: laravel.nombre,
+      serviceName: laravel.tipo_cita,
+      day: date.getDate(),
+      monthName: months[date.getMonth()],
+      time: laravel.hora_cita,
+      status: status,
+      nota: laravel.nota,
+      clientEmail: laravel.email,
+      staffName: laravel.personal_servicio,
+      created_at: laravel.created_at,
+      updated_at: laravel.updated_at,
+      
+      // Campos adicionales
+      tipo_documento: laravel.tipo_documento,
+      numero_documento: laravel.numero_documento,
+      fecha_nacimiento: laravel.fecha_nacimiento,
+      numero_telefono: laravel.numero_telefono
+    };
+  }
+
+  // Convierte datos del componente Angular al formato Laravel
+  private mapToLaravel(ui: Partial<Appointment>): Partial<LaravelAppointment> {
+    let fechaCita = '';
+    
+    if (ui.day && ui.monthName) {
+      const year = new Date().getFullYear();
+      const months = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
+                     'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
+      const month = months.indexOf(ui.monthName) + 1;
+      fechaCita = `${year}-${month.toString().padStart(2, '0')}-${ui.day.toString().padStart(2, '0')}`;
+    }
+
+    return {
+      nombre: ui.clientName,
+      email: ui.clientEmail || '',
+      tipo_cita: ui.serviceName,
+      personal_servicio: ui.staffName || 'Por asignar',
+      fecha_cita: fechaCita,
+      hora_cita: ui.time,
+      nota: ui.nota,
+      tipo_documento: ui.tipo_documento || 'CC',
+      numero_documento: ui.numero_documento || '',
+      fecha_nacimiento: ui.fecha_nacimiento || '',
+      numero_telefono: ui.numero_telefono || '',
+      negocios_id: 1 // Ajusta según tu lógica de negocio
+    };
+  }
 
   getAll(): Observable<Appointment[]> {
-    return this.api.getAll(this.resource).pipe(
-      map((res: any) => {
-        const list = Array.isArray(res) ? res : [];
-        return list.map((b: BackendAppointment) => mapBackendToUi(b));
+    return this.http.get<LaravelAppointment[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        console.log('Datos recibidos de Laravel:', response);
+        // Laravel puede devolver { data: [...] } o directamente [...]
+        const appointments = (response as any).data || response;
+        return appointments.map((apt: LaravelAppointment) => this.mapToUI(apt));
+      }),
+      catchError(error => {
+        console.error('Error al obtener citas:', error);
+        return of([]);
       })
     );
   }
 
   getById(id: number | string): Observable<Appointment> {
-    return this.api.getById(this.resource, id).pipe(
-      map((b: any) => mapBackendToUi(b as BackendAppointment))
+    return this.http.get<LaravelAppointment>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        const appointment = (response as any).data || response;
+        return this.mapToUI(appointment);
+      })
     );
   }
 
-  create(payload: Appointment): Observable<Appointment> {
-    const body = mapUiToBackend(payload);
-    return this.api.create(this.resource, body).pipe(
-      map((b: any) => mapBackendToUi(b as BackendAppointment))
+  create(appointment: Partial<Appointment>): Observable<Appointment> {
+    const payload = this.mapToLaravel(appointment);
+    console.log('Enviando a Laravel:', payload);
+    
+    return this.http.post<LaravelAppointment>(this.apiUrl, payload, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        const created = (response as any).data || response;
+        return this.mapToUI(created);
+      }),
+      catchError(error => {
+        console.error('Error al crear cita:', error);
+        throw error;
+      })
     );
   }
 
-  update(id: number | string, payload: Partial<Appointment>): Observable<Appointment> {
-    const merged = { id: Number(id), ...payload } as Appointment;
-    const body = mapUiToBackend(merged);
-    return this.api.update(this.resource, id, body).pipe(
-      map((b: any) => mapBackendToUi(b as BackendAppointment))
+  update(id: number | string, appointment: Partial<Appointment>): Observable<Appointment> {
+    const payload = this.mapToLaravel(appointment);
+    console.log('Actualizando cita:', id, payload);
+    
+    return this.http.put<LaravelAppointment>(`${this.apiUrl}/${id}`, payload, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        const updated = (response as any).data || response;
+        return this.mapToUI(updated);
+      }),
+      catchError(error => {
+        console.error('Error al actualizar cita:', error);
+        throw error;
+      })
     );
   }
 
   delete(id: number | string): Observable<void> {
-    return this.api.delete(this.resource, id) as unknown as Observable<void>;
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
+      catchError(error => {
+        console.error('Error al eliminar cita:', error);
+        throw error;
+      })
+    );
   }
 
   changeStatus(id: number | string, status: string): Observable<Appointment> {
-    const estados_id = STATUS_NAME_TO_ID[status] || STATUS_NAME_TO_ID['reserved'];
-    return this.api.update(this.resource, id, { estados_id }).pipe(
-      map((b: any) => mapBackendToUi(b as BackendAppointment))
+    // Como no veo un campo específico de estado en tu API, 
+    // podrías crear un endpoint específico o usar update
+    const payload = { status: status };
+    
+    return this.http.patch<LaravelAppointment>(`${this.apiUrl}/${id}`, payload, { headers: this.getHeaders() }).pipe(
+      map(response => {
+        const updated = (response as any).data || response;
+        return this.mapToUI(updated);
+      }),
+      catchError(error => {
+        console.error('Error al cambiar estado:', error);
+        // Si falla, intenta con update normal
+        return this.update(id, { status });
+      })
     );
   }
 }
