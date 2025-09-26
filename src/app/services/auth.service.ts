@@ -1,45 +1,79 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = '/api';
+  private baseUrl = 'http://127.0.0.1:8000/api';
 
   constructor(private http: HttpClient) {}
 
-  login(email: string, clave: string): Observable<{access_token: string, user: any}> {
-    return this.http.post<{access_token: string, user: any}>(
-      'http://localhost:8000/api/login',
-      { email, password: clave }
-    ).pipe(
-      tap((res) => {
-        if (res.access_token) {
-          localStorage.setItem('token', res.access_token);
-        }
-      }),
-      catchError(this.handleError)
-    );
+  /**
+   * Login básico para obtener token
+   * Ajusta estos datos según tu API de Laravel
+   */
+  login(email: string, password: string): Observable<any> {
+    const loginData = {
+      email: email,
+      password: password
+    };
+
+    return this.http.post(`${this.baseUrl}/login`, loginData);
   }
 
-  register(data: { name: string; email: string; password: string; password_confirmation: string }): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, data).pipe(
-      tap((res: any) => {
-        if (res.token) {
-          localStorage.setItem('auth_token', res.token);
-        }
-      }),
-      catchError(this.handleError)
-    );
+  /**
+   * Login con credenciales por defecto para testing
+   * Usa estas credenciales o las que tengas en tu base de datos
+   */
+  loginWithDefaultCredentials(): Observable<any> {
+    // Cambia estos valores por los de tu usuario admin en Laravel
+    return this.login('admin@example.com', 'password');
   }
 
+  /**
+   * Guardar token en localStorage
+   */
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+  }
+
+  /**
+   * Obtener token del localStorage
+   */
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  /**
+   * Verificar si hay token guardado
+   */
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  }
+
+  /**
+   * Alias para isAuthenticated (compatibilidad)
+   */
   isLoggedIn(): boolean {
-    return !!localStorage.getItem('auth_token');
+    return this.isAuthenticated();
   }
 
-  private handleError(error: HttpErrorResponse) {
-    // Devuelve el error completo para que el componente pueda acceder a error.error.message
-    return throwError(() => error);
+  /**
+   * Logout - remover token
+   */
+  logout(): void {
+    localStorage.removeItem('token');
+  }
+
+  /**
+   * Obtener headers con autenticación
+   */
+  getAuthHeaders(): HttpHeaders {
+    const token = this.getToken();
+    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return headers;
   }
 }

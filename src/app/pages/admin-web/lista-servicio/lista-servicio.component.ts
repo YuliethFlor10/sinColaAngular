@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { AdminWeb } from "../admin-web";
 import { ContenidoComponent } from "../../../compartido/components/contenido/contenido.component";
 import { ServicesService } from '../../../services/services.service';
+import { AutoLoginService } from '../../../services/auto-login.service';
 
 // ========================================
 // INTERFACES PARA TIPADO FUERTE
@@ -95,7 +96,8 @@ export class ServiciosComponent implements OnInit, AfterViewInit, OnDestroy {
 
   constructor(
     private formBuilder: FormBuilder,
-    private servicesService: ServicesService
+    private servicesService: ServicesService,
+    private autoLoginService: AutoLoginService
   ) {
     this.serviceForm = this.createServiceForm();
   }
