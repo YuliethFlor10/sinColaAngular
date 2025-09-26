@@ -16,20 +16,20 @@ export class UsersService {
     return headers;
   }
 
-  getAll(params?: any) { 
+  getAll(params?: any) {
     const url = params ? `${this.baseUrl}?${new URLSearchParams(params).toString()}` : this.baseUrl;
-    return this.http.get(url, { headers: this.getHeaders() }); 
+    return this.http.get(url, { headers: this.getHeaders() });
   }
-  getById(id: number | string) { 
-    return this.http.get(`${this.baseUrl}/${id}`, { headers: this.getHeaders() }); 
+  getById(id: number | string) {
+    return this.http.get(`${this.baseUrl}/${id}`, { headers: this.getHeaders() });
   }
-  create(data: any) { 
-    return this.http.post(this.baseUrl, data, { headers: this.getHeaders() }); 
+  create(data: any) {
+    return this.http.post(this.baseUrl, data, { headers: this.getHeaders() });
   }
-  update(id: number | string, data: any) { 
-    return this.http.put(`${this.baseUrl}/${id}`, data, { headers: this.getHeaders() }); 
+  update(id: number | string, data: any) {
+    return this.http.put(`${this.baseUrl}/${id}`, data, { headers: this.getHeaders() });
   }
-  delete(id: number | string) { 
-    return this.http.delete(`${this.baseUrl}/${id}`, { headers: this.getHeaders() }); 
+  delete(id: number | string) {
+    return this.http.delete(`${this.baseUrl}/${id}`, { headers: this.getHeaders() });
   }
 }
