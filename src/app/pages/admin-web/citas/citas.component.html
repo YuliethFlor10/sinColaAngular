@@ -97,7 +97,7 @@
               </div>
             </div>
 
-            <!-- LISTA DE CITAS CORREGIDA -->
+            <!-- LISTA DE CITAS CORREGIDA CON CAMPOS REALES -->
             <div class="appointments-list" id="appointmentsList">
               <!-- INDICADOR DE CARGA -->
               <div *ngIf="isLoading" class="loading">
@@ -109,13 +109,13 @@
                 <p>No hay citas programadas</p>
               </div>
 
-              <!-- LISTA DE CITAS -->
+              <!-- LISTA DE CITAS CON CAMPOS ORIGINALES -->
               <div *ngFor="let appointment of appointments; trackBy: trackAppointment"
                    class="appointment-item"
                    [class]="'status-' + appointment.status">
                 <div class="appointment-date">
-                  <span class="appointment-month">{{ appointment.monthName }}</span>
                   <span class="appointment-day">{{ appointment.day }}</span>
+                  <span class="appointment-month">{{ appointment.monthName }}</span>
                   <span class="appointment-time">{{ appointment.time }}</span>
                 </div>
                 <div class="appointment-details">
@@ -124,14 +124,16 @@
                   <div class="appointment-service">{{ appointment.serviceName }}</div>
                   <div class="appointment-staff">Atendido por: {{ appointment.staffName }}</div>
                 </div>
-                
-                <!-- ACCIONES CORREGIDAS -->
-                <div class="appointment-actions">
-                  <button class="appointment-menu-btn" 
-                          type="button"
-                          (click)="toggleMenu($event, appointment)">
-                    <i class="fa fa-ellipsis-v"></i>
-                  </button>
+               
+                  <!-- Botón del menú -->
+<button class="appointment-menu-btn" 
+type="button"
+(click)="toggleMenu($event, appointment)">
+<img src="assets/iconos/menu_puntos.svg" 
+alt="Menú"
+class="menu-icon">
+</button>
+
                   
                   <!-- MENÚ CORREGIDO -->
                   <div class="appointment-menu" 
@@ -168,7 +170,7 @@
                       <i class="fa fa-trash"></i> Eliminar
                     </button>
                   </div>
-                </div>
+                
               </div>
             </div>
           </div>
@@ -190,7 +192,6 @@
         </div>
 
         <div *ngIf="successMessage" class="alert alert-success">
-          {{ successMessage }}
           {{ successMessage }}
           <button type="button" (click)="successMessage = ''" class="alert-close">×</button>
         </div>
@@ -372,16 +373,14 @@
               <span *ngIf="isLoading">Guardando...</span>
             </button>
             <!-- Botón cancelar para edición -->
-           <!-- Botón cancelar para edición -->
-<button 
-  *ngIf="isEditing" 
-  type="button" 
-  class="cancel-btn" 
-  (click)="cancelEdit()" 
-  [disabled]="isLoading">
-  Cancelar Edición
-</button>
-
+            <button 
+              *ngIf="isEditing" 
+              type="button" 
+              class="cancel-btn" 
+              (click)="cancelEdit()" 
+              [disabled]="isLoading">
+              Cancelar Edición
+            </button>
           </div>
         </form>
       </div>
