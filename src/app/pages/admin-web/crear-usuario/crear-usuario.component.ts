@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -116,7 +116,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Paginación
   currentPage: number = 1;
-  itemsPerPage: number = 10;
+  itemsPerPage: number = 50; // Aumentado para mostrar más usuarios
   totalPages: number = 1;
 
   // Mensajes
@@ -155,7 +155,8 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   constructor(
     private formBuilder: FormBuilder,
     private usersService: UsersService,
-    private autoLoginService: AutoLoginService
+    private autoLoginService: AutoLoginService,
+    private cdr: ChangeDetectorRef
   ) {
     this.userForm = this.createUserForm();
   }
@@ -167,6 +168,11 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit(): void {
     this.initializeComponent();
     this.loadAllUsers();
+
+    // Inicializar formulario con valores por defecto
+    setTimeout(() => {
+      this.initializeFormDefaults();
+    }, 100);
   }
 
   ngAfterViewInit(): void {
@@ -174,6 +180,14 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     setTimeout(() => {
       this.setupDOMEvents();
     }, 100);
+
+    // Agregar evento global para cerrar menús al hacer clic fuera
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-menu-container')) {
+        this.closeAllUserMenus();
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -190,53 +204,37 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.userForm = this.createUserForm();
   }
 
+  private initializeFormDefaults(): void {
+    const documentTypeSelect = document.getElementById('documentType') as HTMLSelectElement;
+    const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
+
+    if (documentTypeSelect && !documentTypeSelect.value) {
+      documentTypeSelect.value = 'cedula';
+    }
+
+    if (userTypeSelect && !userTypeSelect.value) {
+      userTypeSelect.value = 'Cliente';
+    }
+
+    console.log('✅ Valores por defecto del formulario inicializados');
+  }
+
   private setupDOMEvents(): void {
     try {
-      // Eventos para alternar vistas
-      const toggleButtons = document.querySelectorAll('.toggle-view-button');
-      toggleButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-          const target = (e.target as HTMLElement).closest('button')?.getAttribute('data-target-section');
-          if (target) {
-            this.toggleView(target);
-          }
-        });
-      });
-
-      // Evento para el formulario
-      const form = document.getElementById('userForm') as HTMLFormElement;
-      if (form) {
-        form.addEventListener('submit', (e) => {
-          e.preventDefault();
-          this.onSubmit();
-        });
-      }
-
-      // Evento para búsqueda
-      const searchInput = document.getElementById('userSearch') as HTMLInputElement;
-      if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-          this.searchTerm = (e.target as HTMLInputElement).value;
-          this.filterUsers();
-        });
-      }
-
-      // Eventos para paginación
-      const prevBtn = document.getElementById('prevPage');
-      const nextBtn = document.getElementById('nextPage');
-
-      if (prevBtn) {
-        prevBtn.addEventListener('click', () => this.previousPage());
-      }
-
-      if (nextBtn) {
-        nextBtn.addEventListener('click', () => this.nextPage());
-      }
-
+      // Solo configurar eventos que no se pueden manejar con Angular
       console.log('Eventos del DOM configurados correctamente');
     } catch (error) {
       console.warn('Error configurando eventos del DOM:', error);
     }
+  }
+
+  /**
+   * NUEVO: Manejar input de búsqueda con Angular
+   */
+  onSearchInput(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    this.searchTerm = target.value;
+    this.filterUsers();
   }
 
   // ========================================
@@ -244,13 +242,20 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   // ========================================
 
   /**
-   * CORREGIDO: Maneja correctamente la respuesta paginada de Laravel
+   * CORREGIDO: Maneja correctamente la respuesta paginada de Laravel y carga TODOS los usuarios
    */
   private loadAllUsers(): void {
     this.isLoading = true;
-    console.log('🔄 Cargando usuarios desde la API...');
+    console.log('🔄 Cargando TODOS los usuarios desde la API...');
+    console.log('🔍 Token actual:', localStorage.getItem('token'));
 
-    this.usersService.getAll().subscribe({
+    // Intentar cargar todos los usuarios con parámetros de paginación amplios
+    const params = {
+      'per_page': '1000', // Solicitar hasta 1000 usuarios por página
+      'page': '1'
+    };
+
+    this.usersService.getAll(params).subscribe({
       next: (response: any) => {
         try {
           console.log('📡 Respuesta completa de la API:', response);
@@ -260,18 +265,25 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
           let rawUsers: ApiUserResponse[] = [];
 
-          // CORREGIDO: Manejo de respuesta paginada de Laravel
+          // CORREGIDO: Manejo mejorado de respuesta paginada de Laravel
           if (response && response.data && Array.isArray(response.data)) {
             // Respuesta paginada: { data: [...], current_page: 1, ... }
             rawUsers = response.data;
             console.log('✅ Respuesta paginada detectada. Usuarios extraídos:', rawUsers.length);
+
+            // Si hay más páginas, intentar cargar todas las páginas
+            if (response.last_page && response.last_page > 1) {
+              console.log('🔄 Detectadas múltiples páginas. Cargando todas las páginas...');
+              this.loadAllPages(response.last_page, rawUsers);
+              return;
+            }
           } else if (Array.isArray(response)) {
             // Respuesta directa como array
             rawUsers = response;
             console.log('✅ Respuesta directa como array:', rawUsers.length);
           } else {
             console.error('❌ Formato de respuesta no reconocido:', response);
-            console.log('🔧 Intentando extraer de diferentes formatos...');
+            console.log('🔧 Intentando extraar de diferentes formatos...');
 
             // Intentar otros formatos posibles
             if (response?.users) rawUsers = response.users;
@@ -283,8 +295,8 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
           this.users = rawUsers.map(user => this.transformApiUserToFrontend(user));
           this.filteredUsers = [...this.users];
 
-          console.log('Usuarios transformados correctamente:', this.users.length);
-          console.log('Primera muestra:', this.users.slice(0, 2));
+          console.log('✅ Usuarios transformados correctamente:', this.users.length);
+          console.log('📋 Primera muestra:', this.users.slice(0, 2));
 
           // Actualizar vista
           this.updatePagination();
@@ -319,6 +331,58 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.isLoading = false;
       }
     });
+  }
+
+  /**
+   * NUEVO: Cargar todas las páginas de usuarios
+   */
+  private loadAllPages(totalPages: number, initialUsers: ApiUserResponse[]): void {
+    const allUsers = [...initialUsers];
+    let completedRequests = 1;
+
+    for (let page = 2; page <= totalPages; page++) {
+      // Crear parámetros para cada página
+      const pageParams = {
+        'per_page': '1000',
+        'page': page.toString()
+      };
+
+      this.usersService.getAll(pageParams).subscribe({
+        next: (response: any) => {
+          if (response && response.data && Array.isArray(response.data)) {
+            allUsers.push(...response.data);
+          }
+
+          completedRequests++;
+
+          // Cuando todas las páginas estén cargadas
+          if (completedRequests === totalPages) {
+            this.users = allUsers.map(user => this.transformApiUserToFrontend(user));
+            this.filteredUsers = [...this.users];
+
+            console.log('✅ Todos los usuarios cargados:', this.users.length);
+
+            this.updatePagination();
+            this.renderUsersTable();
+            this.isLoading = false;
+          }
+        },
+        error: (error: any) => {
+          console.error(`Error cargando página ${page}:`, error);
+          completedRequests++;
+
+          if (completedRequests === totalPages) {
+            // Usar los usuarios que se pudieron cargar
+            this.users = allUsers.map(user => this.transformApiUserToFrontend(user));
+            this.filteredUsers = [...this.users];
+
+            this.updatePagination();
+            this.renderUsersTable();
+            this.isLoading = false;
+          }
+        }
+      });
+    }
   }
 
   // ========================================
@@ -378,30 +442,39 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   // ========================================
 
   /**
-   * NUEVO: Cargar datos del usuario para edición
+   * Cargar datos del usuario para edición
    */
   editUser(userId: string | number): void {
-    console.log('Editando usuario:', userId);
+    console.log('🔄 Iniciando edición de usuario:', userId);
+
+    // Cerrar el menú desplegable
+    this.closeAllUserMenus();
 
     const user = this.users.find(u => u.id.toString() === userId.toString());
     if (!user) {
+      console.error('❌ Usuario no encontrado:', userId);
       this.showErrorMessage('Usuario no encontrado');
       return;
     }
+
+    console.log('✅ Usuario encontrado:', user);
 
     // Cambiar a modo edición
     this.isEditMode = true;
     this.editingUserId = userId;
 
-    // Cargar datos en el formulario
-    this.loadUserDataIntoForm(user);
-
     // Cambiar a vista de creación/edición
-    this.toggleView('create-user-section');
+    this.currentView = 'create-user';
+    console.log('🔄 Vista cambiada a:', this.currentView);
 
-    // Actualizar texto del botón
-    this.updateButtonState(false, 'Actualizar usuario');
+    // Cargar datos en el formulario después de cambiar la vista
+    setTimeout(() => {
+      this.loadUserDataIntoForm(user);
+      this.updateButtonState(false, 'Actualizar usuario');
+      this.cdr.detectChanges();
+    }, 200);
 
+    console.log('✅ Modo edición activado para:', user.name);
     this.showSuccessMessage(`Editando usuario: ${user.name}`);
   }
 
@@ -409,6 +482,8 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
    * NUEVO: Cargar datos del usuario en el formulario
    */
   private loadUserDataIntoForm(user: User): void {
+    console.log('📝 Cargando datos del usuario en el formulario:', user);
+
     // Separar nombre y apellidos
     const nameParts = user.name.split(' ');
     const firstName = nameParts[0] || '';
@@ -422,21 +497,17 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       documentType = 'tarjeta';
     }
 
-    // Llenar formulario DOM
-    const form = document.getElementById('userForm') as HTMLFormElement;
-    if (form) {
-      (document.getElementById('documentType') as HTMLSelectElement).value = documentType;
-      (document.getElementById('documentNumber') as HTMLInputElement).value = user.documentNumber;
-      (document.getElementById('name') as HTMLInputElement).value = user.name;
-      (document.getElementById('birthDate') as HTMLInputElement).value = user.birthDate || '';
-      (document.getElementById('phoneNumber') as HTMLInputElement).value = user.phoneNumber;
-      (document.getElementById('email') as HTMLInputElement).value = user.email;
-      (document.getElementById('userType') as HTMLSelectElement).value = user.userType;
+    console.log('📋 Datos mapeados:', {
+      documentType,
+      documentNumber: user.documentNumber,
+      name: user.name,
+      userType: user.userType
+    });
 
-      // Las contraseñas se dejan vacías en edición
-      (document.getElementById('password') as HTMLInputElement).value = '';
-      (document.getElementById('confirmPassword') as HTMLInputElement).value = '';
-    }
+    // Llenar formulario DOM con delay para asegurar que la vista esté renderizada
+    setTimeout(() => {
+      this.updateFormDOM(user, documentType);
+    }, 200);
 
     // Actualizar formulario reactivo
     this.userForm.patchValue({
@@ -451,45 +522,81 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       confirmPassword: '',
       service: ''
     });
+
+    console.log('✅ Formulario reactivo actualizado');
+  }
+
+  private updateFormDOM(user: User, documentType: string): void {
+    const form = document.getElementById('userForm') as HTMLFormElement;
+    if (form) {
+      const documentTypeSelect = document.getElementById('documentType') as HTMLSelectElement;
+      const documentNumberInput = document.getElementById('documentNumber') as HTMLInputElement;
+      const nameInput = document.getElementById('name') as HTMLInputElement;
+      const birthDateInput = document.getElementById('birthDate') as HTMLInputElement;
+      const phoneNumberInput = document.getElementById('phoneNumber') as HTMLInputElement;
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
+      const passwordInput = document.getElementById('password') as HTMLInputElement;
+      const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
+
+      if (documentTypeSelect) documentTypeSelect.value = documentType;
+      if (documentNumberInput) documentNumberInput.value = user.documentNumber;
+      if (nameInput) nameInput.value = user.name;
+      if (birthDateInput) birthDateInput.value = user.birthDate || '';
+      if (phoneNumberInput) phoneNumberInput.value = user.phoneNumber;
+      if (emailInput) emailInput.value = user.email;
+      if (userTypeSelect) userTypeSelect.value = user.userType;
+
+      // Las contraseñas se dejan vacías en edición
+      if (passwordInput) passwordInput.value = '';
+      if (confirmPasswordInput) confirmPasswordInput.value = '';
+
+      console.log('✅ Formulario DOM actualizado');
+    } else {
+      console.error('❌ No se encontró el formulario DOM');
+    }
   }
 
   /**
-   * NUEVO: Actualizar usuario existente
+   * Actualizar usuario existente
    */
   private updateExistingUser(userId: string | number, formData: UserFormData): void {
-    console.log('Actualizando usuario:', userId);
+    console.log('🔄 updateExistingUser llamado con ID:', userId);
+    console.log('📋 Datos del formulario recibidos:', formData);
 
     // Para edición, la contraseña es opcional
     const apiData = this.transformFormDataToApiRequest(formData, true);
-    console.log('Datos de actualización:', apiData);
+    console.log('📤 Datos para enviar a la API:', apiData);
 
     this.usersService.update(userId, apiData).subscribe({
       next: (response: any) => {
-        try {
-          console.log('Usuario actualizado exitosamente:', response);
+        console.log('✅ Respuesta exitosa de la API:', response);
 
-          // Recargar todos los usuarios
+        this.showSuccessMessage('Usuario actualizado exitosamente');
+        this.cancelEdit();
+
+        // Recargar todos los usuarios después de un breve delay
+        setTimeout(() => {
           this.loadAllUsers();
+        }, 500);
 
-          this.showSuccessMessage('Usuario actualizado exitosamente');
-          this.cancelEdit();
-
-        } catch (error) {
-          console.error('Error procesando actualización:', error);
-          this.showErrorMessage('Usuario actualizado pero hubo un error actualizando la lista');
-          this.loadAllUsers();
-        } finally {
-          this.isLoading = false;
-          this.updateButtonState(false);
-        }
+        this.isLoading = false;
+        this.updateButtonState(false);
       },
       error: (error: any) => {
-        console.error('Error al actualizar usuario:', error);
+        console.error('❌ Error de la API:', error);
+
         let msg = 'Error actualizando el usuario';
         if (error?.error) {
-          if (typeof error.error === 'string') msg = error.error;
-          else if (error.error.message) msg = error.error.message;
+          if (typeof error.error === 'string') {
+            msg = error.error;
+          } else if (error.error.message) {
+            msg = error.error.message;
+          } else if (error.error.errors) {
+            msg = 'Errores de validación: ' + JSON.stringify(error.error.errors);
+          }
         }
+
         this.showErrorMessage(msg);
         this.isLoading = false;
         this.updateButtonState(false);
@@ -505,6 +612,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     this.editingUserId = null;
     this.resetCreateUserForm();
     this.updateButtonState(false, 'Crear usuario');
+    console.log('✅ Edición cancelada, volviendo a modo crear usuario');
   }
 
   // ========================================
@@ -601,27 +709,43 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * CORREGIDO: Maneja tanto creación como edición
    */
-  onSubmit(): void {
+  onSubmit(event?: Event): void {
+    console.log('🔄 onSubmit llamado');
+    console.log('📊 Modo edición:', this.isEditMode);
+    console.log('📊 ID usuario editando:', this.editingUserId);
+
+    // SIEMPRE prevenir el comportamiento por defecto del formulario
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
     const formData = this.getFormDataFromDOM();
+    console.log('📋 Datos del formulario:', formData);
 
     // Validación especial para edición (contraseña opcional)
     if (this.isEditMode && !formData.password && !formData.confirmPassword) {
       formData.password = 'dummy-password'; // Se ignorará en el backend
       formData.confirmPassword = 'dummy-password';
+      console.log('🔐 Contraseñas dummy agregadas para edición');
     }
 
     if (this.validateFormData(formData)) {
+      console.log('✅ Validación exitosa');
       this.isLoading = true;
       this.clearMessages();
       this.updateButtonState(true);
 
-      setTimeout(() => {
-        if (this.isEditMode && this.editingUserId) {
-          this.updateExistingUser(this.editingUserId, formData);
-        } else {
-          this.createNewUser(formData);
-        }
-      }, 500);
+      if (this.isEditMode && this.editingUserId) {
+        console.log('🔄 Modo edición: actualizando usuario existente');
+        this.updateExistingUser(this.editingUserId, formData);
+      } else {
+        console.log('🔄 Modo creación: creando nuevo usuario');
+        this.createNewUser(formData);
+      }
+    } else {
+      console.log('❌ Validación falló');
+      this.showErrorMessage('Por favor completa todos los campos requeridos');
     }
   }
 
@@ -656,7 +780,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getFormDataFromDOM(): UserFormData {
-    return {
+    const formData = {
       documentType: (document.getElementById('documentType') as HTMLSelectElement)?.value || '',
       documentNumber: (document.getElementById('documentNumber') as HTMLInputElement)?.value || '',
       name: (document.getElementById('name') as HTMLInputElement)?.value || '',
@@ -668,6 +792,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       confirmPassword: (document.getElementById('confirmPassword') as HTMLInputElement)?.value || '',
       service: (document.getElementById('service') as HTMLSelectElement)?.value || ''
     };
+
+    console.log('📋 Datos obtenidos del DOM:', formData);
+    return formData;
   }
 
   /**
@@ -742,15 +869,18 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (form) {
       form.reset();
 
-      const documentTypeSelect = document.getElementById('documentType') as HTMLSelectElement;
-      if (documentTypeSelect) {
-        documentTypeSelect.value = 'cedula';
-      }
+      // Establecer valores por defecto después del reset
+      setTimeout(() => {
+        const documentTypeSelect = document.getElementById('documentType') as HTMLSelectElement;
+        if (documentTypeSelect) {
+          documentTypeSelect.value = 'cedula';
+        }
 
-      const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
-      if (userTypeSelect) {
-        userTypeSelect.value = 'Cliente';
-      }
+        const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
+        if (userTypeSelect) {
+          userTypeSelect.value = 'Cliente';
+        }
+      }, 10);
     }
 
     const errorGroups = document.querySelectorAll('.form-group.error');
@@ -770,6 +900,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     // Reset modo edición
     this.isEditMode = false;
     this.editingUserId = null;
+
+    // Actualizar texto del botón
+    this.updateButtonState(false, 'Crear usuario');
   }
 
   /**
@@ -795,31 +928,36 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   // ========================================
 
   toggleView(targetSection: string): void {
-    const createSection = document.getElementById('create-user-section');
-    const listSection = document.getElementById('list-users-section');
+    console.log('🔄 Cambiando vista a:', targetSection);
+    console.log('📊 Vista actual ANTES:', this.currentView);
 
     if (targetSection === 'create-user-section') {
       this.currentView = 'create-user';
-      createSection?.classList.add('active');
-      listSection?.classList.remove('active');
+      console.log('✅ Vista cambiada a: Crear Usuario');
 
-      // Si no estamos en modo edición, limpiar formulario
-      if (!this.isEditMode) {
+      // Cancelar edición si estaba activa
+      if (this.isEditMode) {
+        this.cancelEdit();
+      } else {
+        // Solo limpiar formulario si no estamos en modo edición
         this.resetCreateUserForm();
       }
 
     } else if (targetSection === 'list-users-section') {
       this.currentView = 'list-users';
-      createSection?.classList.remove('active');
-      listSection?.classList.add('active');
+      console.log('✅ Vista cambiada a: Lista de Usuarios');
 
       // Cancelar edición si estaba activa
       if (this.isEditMode) {
         this.cancelEdit();
       }
 
+      // Cargar usuarios cuando se cambie a la vista de lista
       this.refreshUsersList();
     }
+
+    console.log('📊 Vista actual DESPUÉS:', this.currentView);
+    console.log('🔍 ¿Es list-users?', this.currentView === 'list-users');
   }
 
   refreshUsersList(): void {
@@ -859,11 +997,18 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   renderUsersTable(): void {
     const tbody = document.getElementById('userTableBody');
-    if (!tbody) return;
+    if (!tbody) {
+      console.error('❌ No se encontró el elemento tbody con ID userTableBody');
+      return;
+    }
 
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
     const currentUsers = this.filteredUsers.slice(startIndex, endIndex);
+
+    console.log('📋 Renderizando tabla con usuarios:', currentUsers.length);
+    console.log('📊 Usuarios filtrados totales:', this.filteredUsers.length);
+    console.log('📊 Usuarios totales:', this.users.length);
 
     tbody.innerHTML = '';
 
@@ -878,31 +1023,40 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    currentUsers.forEach(user => {
+    currentUsers.forEach((user, index) => {
       const row = document.createElement('tr');
+
+      // Formatear el documento como en la imagen: "Tipo - Número"
+      const documentDisplay = `${user.documentType} - ${user.documentNumber}`;
+
       row.innerHTML = `
         <td>${user.name}</td>
-        <td>${user.documentNumber}</td>
+        <td>${documentDisplay}</td>
         <td>${user.userType}</td>
         <td>${user.phoneNumber}</td>
         <td>${user.email}</td>
         <td>
-          <div class="actions-buttons">
-            <button class="action-button" onclick="window.crearUsuarioComponent?.viewUser('${user.id}')">
-              Ver
+          <div class="user-menu-container">
+            <button class="menu-dots-button" onclick="window.crearUsuarioComponent?.toggleUserMenu('${user.id}')">
+              ⋮
             </button>
-            <button class="action-button" onclick="window.crearUsuarioComponent?.editUser('${user.id}')">
-              Editar
-            </button>
-            <button class="action-button" onclick="window.crearUsuarioComponent?.deleteUser('${user.id}')">
-              Eliminar
-            </button>
+            <div class="user-menu-dropdown" id="menu-${user.id}" style="display: none;">
+              <button class="menu-item" onclick="window.crearUsuarioComponent?.editUser('${user.id}')">
+                Editar usuario
+              </button>
+              <button class="menu-item" onclick="window.crearUsuarioComponent?.deleteUser('${user.id}')">
+                Eliminar usuario
+              </button>
+            </div>
           </div>
         </td>
       `;
       tbody.appendChild(row);
+
+      console.log(`✅ Usuario ${index + 1} renderizado:`, user.name);
     });
 
+    console.log('📋 Tabla renderizada con', currentUsers.length, 'usuarios');
     this.updateUserCounter();
   }
 
@@ -950,6 +1104,46 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ========================================
+  // MENÚ DE USUARIO
+  // ========================================
+
+  /**
+   * NUEVO: Alternar menú desplegable de usuario (toggle)
+   */
+  toggleUserMenu(userId: string | number): void {
+    console.log('🔄 Toggle menú para usuario:', userId);
+
+    const menuElement = document.getElementById(`menu-${userId}`) as HTMLElement;
+    console.log('🔍 Elemento del menú encontrado:', menuElement);
+
+    if (menuElement) {
+      // Si el menú está visible, cerrarlo
+      if (menuElement.style.display === 'block') {
+        menuElement.style.display = 'none';
+        console.log('📋 Menú cerrado para usuario:', userId);
+      } else {
+        // Cerrar todos los otros menús primero
+        this.closeAllUserMenus();
+        // Abrir este menú
+        menuElement.style.display = 'block';
+        console.log('📋 Menú abierto para usuario:', userId);
+      }
+    } else {
+      console.error('❌ No se encontró el elemento del menú para usuario:', userId);
+    }
+  }
+
+  /**
+   * NUEVO: Cerrar todos los menús de usuario
+   */
+  private closeAllUserMenus(): void {
+    const allMenus = document.querySelectorAll('.user-menu-dropdown');
+    allMenus.forEach(menu => {
+      (menu as HTMLElement).style.display = 'none';
+    });
+  }
+
+  // ========================================
   // ACCIONES DE USUARIO
   // ========================================
 
@@ -983,17 +1177,31 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   deleteUser(userId: string | number): void {
+    // Cerrar el menú desplegable
+    this.closeAllUserMenus();
+
     const user = this.users.find(u => u.id.toString() === userId.toString());
-    if (!user) return;
+    if (!user) {
+      console.error('❌ Usuario no encontrado para eliminar:', userId);
+      this.showErrorMessage('Usuario no encontrado');
+      return;
+    }
 
     if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${user.name}"?`)) {
+      console.log('🔄 Eliminando usuario:', user.name);
+
       this.usersService.delete(userId).subscribe({
-        next: () => {
-          // Recargar toda la lista después de eliminar
-          this.loadAllUsers();
+        next: (response: any) => {
+          console.log('✅ Usuario eliminado exitosamente:', response);
           this.showSuccessMessage('Usuario eliminado correctamente');
+
+          // Recargar toda la lista después de eliminar
+          setTimeout(() => {
+            this.loadAllUsers();
+          }, 500);
         },
         error: (error: any) => {
+          console.error('❌ Error eliminando usuario:', error);
           const errorMsg = error?.error?.message || 'Error al eliminar el usuario';
           this.showErrorMessage(errorMsg);
         }
@@ -1112,4 +1320,5 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     console.log('   - Término de búsqueda:', this.searchTerm);
     console.log('   - Cargando:', this.isLoading);
   }
+
 }

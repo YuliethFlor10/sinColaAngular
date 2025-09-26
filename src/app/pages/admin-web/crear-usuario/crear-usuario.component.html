@@ -1,216 +1,161 @@
 <div>
   <app-admin-web></app-admin-web>
-  <app-contenido [title]="'Crear nuevo usuario'">
-    <button class="toggle-view-button" data-target-section="list-users-section">
-      <i class="fa fa-list"></i> Ver Lista de usuarios
-    </button>
+
+  <!-- Vista de Crear Usuario -->
+  <app-contenido [title]="isEditMode ? 'Editar usuario' : 'Crear nuevo usuario'" *ngIf="currentView === 'create-user'">
+    <div class="view-controls">
+      <button class="toggle-view-button" (click)="toggleView('list-users-section')">
+        <i class="fa fa-list"></i> Ver Lista de usuarios
+      </button>
+    </div>
+
     <div class="card-content">
-      <form id="userForm" class="user-form">
+      <form [formGroup]="userForm" (ngSubmit)="onSubmit($event)" class="user-form">
         <div class="form-section">
           <h3>Datos personales</h3>
           <div class="form-row">
             <div class="form-group">
               <label for="documentType">Tipo de documento</label>
-              <select id="documentType" name="documentType" required>
+              <select id="documentType" formControlName="documentType" required>
                 <option value="">Seleccione el tipo</option>
                 <option value="cedula">Cédula</option>
                 <option value="pasaporte">Pasaporte</option>
                 <option value="tarjeta">Tarjeta de identidad</option>
               </select>
-              <div class="error-message"></div>
             </div>
             <div class="form-group">
               <label for="documentNumber">Número de documento</label>
-              <input type="text" id="documentNumber" name="documentNumber" placeholder="Ingrese el número" required>
-              <div class="error-message"></div>
+              <input type="text" id="documentNumber" formControlName="documentNumber" placeholder="Ingrese el número">
             </div>
             <div class="form-group">
               <label for="name">Nombre</label>
-              <input type="text" id="name" name="name" placeholder="Nombre completo" required>
-              <div class="error-message"></div>
+              <input type="text" id="name" formControlName="name" placeholder="Nombre completo">
             </div>
           </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="birthDate">Fecha de nacimiento</label>
-              <input type="date" id="birthDate" name="birthDate" required>
-              <div class="error-message"></div>
+              <input type="date" id="birthDate" formControlName="birthDate">
             </div>
             <div class="form-group">
               <label for="phoneNumber">Número de teléfono</label>
-              <input type="tel" id="phoneNumber" name="phoneNumber" placeholder="Ingrese su número" required>
-              <div class="error-message"></div>
+              <input type="tel" id="phoneNumber" formControlName="phoneNumber" placeholder="Ingrese su número">
             </div>
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="email" id="email" name="email" placeholder="ejemplo@gmail.com" required>
-              <div class="error-message"></div>
+              <input type="email" id="email" formControlName="email" placeholder="ejemplo@gmail.com">
             </div>
           </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="userType">Tipo de usuario</label>
-              <select id="userType" name="userType" required>
+              <select id="userType" formControlName="userType">
                 <option value="Cliente">Cliente</option>
-                <option value="Administrador">Administrador</option>
-                <option value="Empleado" selected>Empleado</option>
+                <option value="Admin">Administrador</option>
+                <option value="Empleado">Empleado</option>
               </select>
-              <div class="error-message"></div>
             </div>
             <div class="form-group">
-              <label for="password">Crear contraseña</label>
-              <input type="password" id="password" name="password" placeholder="Contraseña" required>
-              <div class="error-message"></div>
+              <label for="password">{{ isEditMode ? 'Nueva contraseña (opcional)' : 'Crear contraseña' }}</label>
+              <input type="password" id="password" formControlName="password"
+                     [placeholder]="isEditMode ? 'Dejar vacío para mantener la actual' : 'Contraseña'">
             </div>
             <div class="form-group">
-              <label for="confirmPassword">Confirmar contraseña</label>
-              <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirmar contraseña"
-                required>
-              <div class="error-message"></div>
+              <label for="confirmPassword">{{ isEditMode ? 'Confirmar nueva contraseña' : 'Confirmar contraseña' }}</label>
+              <input type="password" id="confirmPassword" formControlName="confirmPassword"
+                     [placeholder]="isEditMode ? 'Confirmar nueva contraseña' : 'Confirmar contraseña'">
             </div>
           </div>
+
           <div class="form-row">
             <div class="form-group">
               <label for="service">Servicios que atiende</label>
-              <select id="service" name="service">
+              <select id="service" formControlName="service">
                 <option value="">Seleccione los servicios</option>
                 <option value="unas-semi">Uñas semi</option>
                 <option value="unas-permanentes">Uñas permanentes</option>
                 <option value="unas-tradicionales">Uñas tradicionales</option>
                 <option value="pestanas">Pestañas</option>
               </select>
-              <div class="error-message"></div>
             </div>
           </div>
         </div>
+
         <div class="form-actions">
-          <button type="submit" class="btn-create">Crear usuario</button>
+          <button type="submit" class="btn-create">
+            {{ isEditMode ? 'Actualizar usuario' : 'Crear usuario' }}
+          </button>
+          <button type="button" class="btn-cancel" *ngIf="isEditMode" (click)="cancelEdit()">Cancelar</button>
         </div>
       </form>
     </div>
-
-
-  <!-- Vista de lista usuario  -->
-    <div class="content-card sub-view" id="list-users-section">
-      <div class="card-header">
-        <h1>Lista de usuarios</h1>
-       
-      </div>
-      <div class="card-content">
-        <div class="toolbar">
-          <div class="search-bar">
-            <input type="text" id="userSearch" placeholder="Buscar usuario...">
-            <button class="search-button"><i class="fa fa-search"></i></button>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table class="user-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Documento</th>
-                <th>Tipo de Usuario</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-            </tbody>
-          </table>
-        </div>
-
-        <div class="pagination">
-          <button id="prevPage" class="pagination-button" disabled>Anterior</button>
-          <span id="pageInfo">Página 1 de 1</span>
-          <button id="nextPage" class="pagination-button" disabled>Siguiente</button>
-        </div>
-      </div>
-    </div>
-    <!-- ========================================
-         MODAL DE CONFIRMACIÓN DE ELIMINACIÓN
-         ======================================== -->
-    <div class="modal-backdrop" id="deleteModal">
-      <div class="modal-container delete-modal">
-        <div class="modal-header">
-          <h2 class="modal-title">Confirmar eliminación</h2>
-          <button class="modal-close-btn" id="deleteModalCloseBtn">×</button>
-        </div>
-        <div class="modal-body">
-          <div class="delete-confirmation">
-            <div class="delete-icon"><span class="nav-icon"><img src="/assets/iconos/advertencia.svg" alt="Icono check"
-                  class="icon"></span>
-            </div>
-            <p class="delete-message" id="deleteMessage">¿Estás seguro de que deseas eliminar este servicio?</p>
-            <p class="delete-warning">Esta acción es permanente y no se puede deshacer. Si deseas que el servicio acceda
-              nuevamente, tendrás que crearlo desde cero.</p>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="btn-cancel" id="deleteModalCancelBtn">Cancelar</button>
-            <button type="button" class="btn-delete-confirm" id="confirmDeleteBtn">Confirmar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="content-view" id="appointments-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Citas</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Citas...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="services-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Servicios</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Servicios...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="schedule-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Horario de atención</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Horario de atención...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="plan-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Mi plan actual</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Mi plan actual...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="reports-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Informe</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Informe...</p>
-        </div>
-      </div>
-    </div>
-
-
-
-
   </app-contenido>
 
+  <!-- Vista de Lista de Usuarios -->
+  <app-contenido [title]="'Lista de usuarios'" *ngIf="currentView === 'list-users'">
+    <div class="view-controls">
+      <button class="toggle-view-button" (click)="toggleView('create-user-section')">
+        <i class="fa fa-plus"></i> Crear nuevo usuario
+      </button>
+    </div>
+
+    <div class="card-content">
+      <div class="toolbar">
+        <div class="search-bar">
+          <input type="text" id="userSearch" placeholder="Buscar usuario..." (input)="onSearchInput($event)">
+          <button class="search-button"><i class="fa fa-search"></i></button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>NOMBRE</th>
+              <th>DOCUMENTO</th>
+              <th>TIPO DE USUARIO</th>
+              <th>TELÉFONO</th>
+              <th>EMAIL</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination">
+        <button class="pagination-button" [disabled]="currentPage === 1" (click)="previousPage()">Anterior</button>
+        <span>{{ 'Página ' + currentPage + ' de ' + totalPages }}</span>
+        <button class="pagination-button" [disabled]="currentPage === totalPages || totalPages === 0" (click)="nextPage()">Siguiente</button>
+      </div>
+    </div>
+  </app-contenido>
+
+  <!-- Modal de Confirmación de Eliminación -->
+  <div class="modal-backdrop" id="deleteModal">
+    <div class="modal-container delete-modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Confirmar eliminación</h2>
+        <button class="modal-close-btn" id="deleteModalCloseBtn">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="delete-confirmation">
+          <div class="delete-icon">
+            <span class="nav-icon">
+              <img src="/assets/iconos/advertencia.svg" alt="Icono advertencia" class="icon">
+            </span>
+          </div>
+          <p class="delete-message" id="deleteMessage">¿Estás seguro de que deseas eliminar este servicio?</p>
+          <p class="delete-warning">Esta acción es permanente y no se puede deshacer. Si deseas que el servicio acceda nuevamente, tendrás que crearlo desde cero.</p>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-cancel" id="deleteModalCancelBtn">Cancelar</button>
+          <button type="button" class="btn-delete-confirm" id="confirmDeleteBtn">Confirmar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
