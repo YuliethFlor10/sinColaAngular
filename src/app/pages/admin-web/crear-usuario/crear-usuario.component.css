@@ -278,31 +278,47 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
     opacity: 1; /* Mostrar */
 }
 
-/* Botón para alternar entre vistas (NUEVO) */
+/* ========================================
+   CONTROLES DE VISTA - SEPARACIÓN CLARA
+   ======================================== */
+.view-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 0 0.5rem;
+}
+
 .toggle-view-button {
   background: #44fee2;
-    color: rgb(0, 0, 0);
-    border: solid 2px #000000; /* Borde del mismo color */
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-    padding: 0.75rem 1.25rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background-color 0.2s, transform 0.1s;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap; /* Evita que el texto se rompa */
+  color: rgb(0, 0, 0);
+  border: solid 2px #000000;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-view-button i {
-    font-size: 1.1em;
+  font-size: 1.1em;
 }
 
 .toggle-view-button:hover {
-  background: #44fee2;
-    transform: translateY(-1px);
+  background: #3dd1c7;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.toggle-view-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* ========================================
@@ -615,38 +631,41 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 }
 
 /* ========================================
-   ESTILOS DE LA LISTA DE USUARIOS (Parte existente, se mantiene)
+   ESTILOS DE LA LISTA DE USUARIOS - DISEÑO MODERNO COMO LA IMAGEN
    ======================================== */
 .toolbar {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     margin-bottom: 1.5rem;
-    gap: 1rem; /* Espacio entre elementos del toolbar */
-    flex-wrap: wrap; /* Para que los elementos se envuelvan en pantallas pequeñas */
+    gap: 1rem;
+    flex-wrap: wrap;
 }
 
 .search-bar {
     display: flex;
-    flex-grow: 1; /* Para que ocupe el espacio disponible */
-    max-width: 400px; /* Ancho máximo para la barra de búsqueda */
+    flex-grow: 1;
+    max-width: 400px;
     position: relative;
 }
 
 .search-bar input {
     flex-grow: 1;
     padding: 0.75rem 1rem;
-    padding-right: 3rem; /* Espacio para el icono de búsqueda */
-    border: 1px solid #d1d5db;
+    padding-right: 3rem;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
     font-size: 0.95rem;
     transition: border-color 0.2s, box-shadow 0.2s;
+    background: #f9fafb;
+    color: #374151;
 }
 
 .search-bar input:focus {
     outline: none;
-    border-color: #f97316;
-    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    background: white;
 }
 
 .search-button {
@@ -661,55 +680,70 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
     cursor: pointer;
 }
 
-/* El botón .btn-add-user se eliminó de HTML y ya no es necesario su estilo aquí */
-/* .btn-add-user { ... } */
-
 .table-responsive {
-    overflow-x: auto; /* Permite desplazamiento horizontal en pantallas pequeñas */
+    overflow-x: auto;
     margin-bottom: 1.5rem;
     width: 100%;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
 }
 
 .user-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px; /* Ancho mínimo para la tabla si es muy compacta */
+    min-width: 600px;
+    background: white;
 }
 
 .user-table th,
 .user-table td {
-    padding: 0.75rem 0.5rem;
-  text-align: left;
-  white-space: nowrap;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 1rem 0.75rem;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 1px solid #f3f4f6;
+    font-size: 0.9rem;
 }
 
 .user-table th {
-    background-color: #f9fafb; /* Fondo ligero para el encabezado */
+    background-color: #f9fafb;
     font-weight: 600;
-    color: #4b5563;
+    color: #374151;
     text-transform: uppercase;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.user-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.user-table tbody tr:nth-child(even) {
+    background-color: #f9fafb;
+}
+
+.user-table tbody tr:nth-child(odd) {
+    background-color: white;
 }
 
 .user-table tbody tr:hover {
-    background-color: #f3f4f6; /* Resaltar fila al pasar el mouse */
+    background-color: #f3f4f6;
 }
 
 .user-table .status-dot {
     display: inline-block;
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     margin-right: 0.5rem;
 }
 
 .user-table .status-active {
-    background-color: #10b981; /* Verde para activo */
+    background-color: #10b981;
 }
 
 .user-table .status-inactive {
-    background-color: #ef4444; /* Rojo para inactivo */
+    background-color: #ef4444;
 }
 
 .user-table .actions-buttons {
@@ -718,18 +752,156 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 }
 
 .user-table .action-button {
-    background: none;
+    background: white;
     border: 1px solid #d1d5db;
-    padding: 0.4rem 0.7rem;
+    padding: 0.5rem 0.75rem;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 0.85rem;
-    transition: background-color 0.2s, border-color 0.2s;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    color: #374151;
 }
 
 .user-table .action-button:hover {
-    background-color: #e5e7eb;
+    background-color: #f3f4f6;
     border-color: #9ca3af;
+    transform: translateY(-1px);
+}
+
+.user-table .action-button:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   MENÚ DE TRES PUNTOS PARA USUARIOS
+   ======================================== */
+.user-menu-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.menu-dots-button {
+  background: #f0f0f0 !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 3px !important;
+  cursor: pointer !important;
+  color: #333333 !important;
+  font-size: 14px !important;
+  transition: all 0.2s ease !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 24px !important;
+  height: 24px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  font-family: Arial, sans-serif !important;
+  box-shadow: none !important;
+  outline: none !important;
+  text-decoration: none !important;
+}
+
+/* Estilo más específico para asegurar que se aplique */
+.user-table .menu-dots-button {
+  background: #f0f0f0 !important;
+  border: none !important;
+  padding: 0 !important;
+  border-radius: 3px !important;
+  cursor: pointer !important;
+  color: #333333 !important;
+  font-size: 14px !important;
+  width: 24px !important;
+  height: 24px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  font-family: Arial, sans-serif !important;
+}
+
+.menu-dots-button:hover {
+  background-color: #e5e5e5;
+}
+
+.menu-dots-button:active {
+  background-color: #d5d5d5;
+}
+
+.user-menu-dropdown {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  background: white;
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  min-width: 140px;
+  overflow: hidden;
+  margin-bottom: 4px;
+  padding: 4px 0;
+}
+
+.menu-item {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  color: #000000;
+  transition: background-color 0.1s ease;
+  font-family: Arial, sans-serif;
+  line-height: 1.2;
+  font-weight: 400;
+  display: block;
+}
+
+.menu-item:hover {
+  background-color: #f8f8f8;
+}
+
+.menu-item:active {
+  background-color: #f0f0f0;
+}
+
+/* ========================================
+   RESPONSIVE PARA EL MENÚ
+   ======================================== */
+@media (max-width: 768px) {
+  .menu-dots-button {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 16px !important;
+  }
+  
+  .user-menu-dropdown {
+    min-width: 120px;
+    right: -10px;
+  }
+  
+  .menu-item {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-dots-button {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 18px !important;
+  }
+  
+  .user-menu-dropdown {
+    min-width: 140px;
+    right: -20px;
+  }
 }
 
 /* Paginación */
@@ -905,8 +1077,15 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
   /* El botón de agregar nuevo se eliminó del toolbar, ahora es toggle-view-button */
   /* .btn-add-user { width: 100%; } */
 
+  .view-controls {
+    justify-content: center;
+    margin-bottom: 1rem;
+  }
+
   .toggle-view-button {
-      width: 100%; /* El botón de alternancia ocupa todo el ancho */
+    width: 100%;
+    max-width: 300px;
+    justify-content: center;
   }
 
 
@@ -1019,6 +1198,23 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
   .user-table .action-button {
       font-size: 0.75rem;
       padding: 0.3rem 0.5rem;
+  }
+
+  /* Menú de tres puntos en móvil */
+  .menu-dots-button {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+
+  .user-menu-dropdown {
+    min-width: 140px;
+    right: -5px;
+  }
+
+  .menu-item {
+    padding: 10px 14px;
+    font-size: 13px;
   }
 }
 

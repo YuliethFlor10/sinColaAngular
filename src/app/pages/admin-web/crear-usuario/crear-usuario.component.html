@@ -1,11 +1,16 @@
 <div>
   <app-admin-web></app-admin-web>
-  <app-contenido [title]="'Crear nuevo usuario'">
-    <button class="toggle-view-button" data-target-section="list-users-section">
-      <i class="fa fa-list"></i> Ver Lista de usuarios
-    </button>
+  
+  <!-- Vista de Crear Usuario -->
+  <app-contenido [title]="isEditMode ? 'Editar usuario' : 'Crear nuevo usuario'" *ngIf="currentView === 'create-user'">
+    <div class="view-controls">
+      <button class="toggle-view-button" (click)="toggleView('list-users-section')">
+        <i class="fa fa-list"></i> Ver Lista de usuarios
+      </button>
+    </div>
+    
     <div class="card-content">
-      <form id="userForm" class="user-form">
+      <form id="userForm" class="user-form" (ngSubmit)="onSubmit($event)">
         <div class="form-section">
           <h3>Datos personales</h3>
           <div class="form-row">
@@ -13,7 +18,7 @@
               <label for="documentType">Tipo de documento</label>
               <select id="documentType" name="documentType" required>
                 <option value="">Seleccione el tipo</option>
-                <option value="cedula">Cédula</option>
+                <option value="cedula" selected>Cédula</option>
                 <option value="pasaporte">Pasaporte</option>
                 <option value="tarjeta">Tarjeta de identidad</option>
               </select>
@@ -51,21 +56,20 @@
             <div class="form-group">
               <label for="userType">Tipo de usuario</label>
               <select id="userType" name="userType" required>
-                <option value="Cliente">Cliente</option>
-                <option value="Administrador">Administrador</option>
-                <option value="Empleado" selected>Empleado</option>
+                <option value="Cliente" selected>Cliente</option>
+                <option value="Admin">Administrador</option>
+                <option value="Empleado">Empleado</option>
               </select>
               <div class="error-message"></div>
             </div>
             <div class="form-group">
-              <label for="password">Crear contraseña</label>
-              <input type="password" id="password" name="password" placeholder="Contraseña" required>
+              <label for="password">{{ isEditMode ? 'Nueva contraseña (opcional)' : 'Crear contraseña' }}</label>
+              <input type="password" id="password" name="password" placeholder="{{ isEditMode ? 'Dejar vacío para mantener la actual' : 'Contraseña' }}" [required]="!isEditMode">
               <div class="error-message"></div>
             </div>
             <div class="form-group">
-              <label for="confirmPassword">Confirmar contraseña</label>
-              <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirmar contraseña"
-                required>
+              <label for="confirmPassword">{{ isEditMode ? 'Confirmar nueva contraseña' : 'Confirmar contraseña' }}</label>
+              <input type="password" id="confirmPassword" name="confirmPassword" placeholder="{{ isEditMode ? 'Confirmar nueva contraseña' : 'Confirmar contraseña' }}" [required]="!isEditMode">
               <div class="error-message"></div>
             </div>
           </div>
@@ -84,50 +88,53 @@
           </div>
         </div>
         <div class="form-actions">
-          <button type="submit" class="btn-create">Crear usuario</button>
+          <button type="submit" class="btn-create">{{ isEditMode ? 'Actualizar usuario' : 'Crear usuario' }}</button>
+          <button type="button" class="btn-cancel" *ngIf="isEditMode" (click)="cancelEdit()">Cancelar</button>
         </div>
       </form>
     </div>
+  </app-contenido>
 
-
-  <!-- Vista de lista usuario  -->
-    <div class="content-card sub-view" id="list-users-section">
-      <div class="card-header">
-        <h1>Lista de usuarios</h1>
-       
+  <!-- Vista de Lista de Usuarios -->
+  <app-contenido [title]="'Lista de usuarios'" *ngIf="currentView === 'list-users'">
+    <div class="view-controls">
+      <button class="toggle-view-button" (click)="toggleView('create-user-section')">
+        <i class="fa fa-plus"></i> Crear nuevo usuario
+      </button>
+    </div>
+    
+    <div class="card-content">
+      <div class="toolbar">
+        <div class="search-bar">
+          <input type="text" id="userSearch" placeholder="Buscar usuario..." (input)="onSearchInput($event)">
+          <button class="search-button"><i class="fa fa-search"></i></button>
+        </div>
       </div>
-      <div class="card-content">
-        <div class="toolbar">
-          <div class="search-bar">
-            <input type="text" id="userSearch" placeholder="Buscar usuario...">
-            <button class="search-button"><i class="fa fa-search"></i></button>
-          </div>
-        </div>
 
-        <div class="table-responsive">
-          <table class="user-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Documento</th>
-                <th>Tipo de Usuario</th>
-                <th>Teléfono</th>
-                <th>Email</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="userTableBody">
-            </tbody>
-          </table>
-        </div>
+      <div class="table-responsive">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>NOMBRE</th>
+              <th>DOCUMENTO</th>
+              <th>TIPO DE USUARIO</th>
+              <th>TELÉFONO</th>
+              <th>EMAIL</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+          </tbody>
+        </table>
+      </div>
 
-        <div class="pagination">
-          <button id="prevPage" class="pagination-button" disabled>Anterior</button>
-          <span id="pageInfo">Página 1 de 1</span>
-          <button id="nextPage" class="pagination-button" disabled>Siguiente</button>
-        </div>
+      <div class="pagination">
+        <button class="pagination-button" [disabled]="currentPage === 1" (click)="previousPage()">Anterior</button>
+        <span>{{ 'Página ' + currentPage + ' de ' + totalPages }}</span>
+        <button class="pagination-button" [disabled]="currentPage === totalPages || totalPages === 0" (click)="nextPage()">Siguiente</button>
       </div>
     </div>
+  </app-contenido>
     <!-- ========================================
          MODAL DE CONFIRMACIÓN DE ELIMINACIÓN
          ======================================== -->
@@ -153,64 +160,4 @@
         </div>
       </div>
     </div>
-    <div class="content-view" id="appointments-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Citas</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Citas...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="services-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Servicios</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Servicios...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="schedule-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Horario de atención</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Horario de atención...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="plan-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Mi plan actual</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Mi plan actual...</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="content-view" id="reports-view">
-      <div class="content-card">
-        <div class="card-header">
-          <h1>Informe</h1>
-        </div>
-        <div class="card-content">
-          <p>Contenido de Informe...</p>
-        </div>
-      </div>
-    </div>
-
-
-
-
-  </app-contenido>
-
 </div>

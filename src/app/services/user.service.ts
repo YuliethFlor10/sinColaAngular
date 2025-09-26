@@ -11,6 +11,6 @@ export class UserService {
     if (token) {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
-    return this.http.post('http://localhost:8000/api/users', data, { headers });
+    return this.http.post('http://127.0.0.1:8000/api/users', data, { headers });
   }
 }

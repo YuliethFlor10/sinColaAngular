@@ -26,8 +26,16 @@ export class AuthService {
    * Usa estas credenciales o las que tengas en tu base de datos
    */
   loginWithDefaultCredentials(): Observable<any> {
-    // Cambia estos valores por los de tu usuario admin en Laravel
-    return this.login('admin@example.com', 'password');
+    // Intentar diferentes credenciales comunes
+    const credentials = [
+      { email: 'admin@admin.com', password: 'admin' },
+      { email: 'admin@example.com', password: 'password' },
+      { email: 'admin@test.com', password: '123456' },
+      { email: 'test@test.com', password: 'test' }
+    ];
+    
+    // Por ahora, usar la primera credencial
+    return this.login(credentials[0].email, credentials[0].password);
   }
 
   /**

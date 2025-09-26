@@ -16,8 +16,9 @@ export class UsersService {
     return headers;
   }
 
-  getAll() { 
-    return this.http.get(this.baseUrl, { headers: this.getHeaders() }); 
+  getAll(params?: any) { 
+    const url = params ? `${this.baseUrl}?${new URLSearchParams(params).toString()}` : this.baseUrl;
+    return this.http.get(url, { headers: this.getHeaders() }); 
   }
   getById(id: number | string) { 
     return this.http.get(`${this.baseUrl}/${id}`, { headers: this.getHeaders() }); 

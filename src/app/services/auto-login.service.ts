@@ -38,8 +38,41 @@ export class AutoLoginService {
       }
     } catch (error) {
       console.log('❌ Error en login automático:', error);
+      console.log('🔍 Detalles del error:', error);
       return false;
     }
+  }
+
+  /**
+   * NUEVO: Intentar login con múltiples credenciales
+   */
+  async attemptMultipleLogins(): Promise<boolean> {
+    const credentials = [
+      { email: 'admin@admin.com', password: 'admin' },
+      { email: 'admin@example.com', password: 'password' },
+      { email: 'admin@test.com', password: '123456' },
+      { email: 'test@test.com', password: 'test' },
+      { email: 'user@user.com', password: 'user' }
+    ];
+
+    for (const cred of credentials) {
+      try {
+        console.log(`🔄 Probando credenciales: ${cred.email}`);
+        const response = await this.authService.login(cred.email, cred.password).toPromise();
+        
+        if (response && (response.token || response.access_token)) {
+          const token = response.token || response.access_token;
+          this.authService.setToken(token);
+          console.log(`✅ Login exitoso con: ${cred.email}`);
+          return true;
+        }
+      } catch (error) {
+        console.log(`❌ Falló con: ${cred.email}`);
+      }
+    }
+    
+    console.log('❌ Todas las credenciales fallaron');
+    return false;
   }
 
   /**
