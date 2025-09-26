@@ -4,8 +4,6 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { AdminWeb } from '../admin-web';
 import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 import { AppointmentsService, Appointment } from '../../../services/appointments.service';
-import { HttpClient } from '@angular/common/http';
-
 @Component({
   selector: 'app-citas',
   templateUrl: './citas.component.html',
@@ -51,7 +49,6 @@ export class CitasComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private injector: Injector
-    
   ) {
     this.appointmentsService = this.injector.get(AppointmentsService);
   }
@@ -101,6 +98,7 @@ export class CitasComponent implements OnInit {
         const anyErr = err as { message?: string };
         this.errorMessage = `Error al cargar citas: ${anyErr?.message || 'Intente nuevamente.'}`;
         this.isLoading = false;
+        // eslint-disable-next-line no-console
         console.error(err);
       }
     });
@@ -230,25 +228,10 @@ export class CitasComponent implements OnInit {
     this.cambiarEstado(appointment.id, appointment.clientName, 'cancelled');
   }
 
-  // 📌 MÉTODO EDITAPPOINTMENT MEJORADO
   editAppointment(appointment: Appointment): void {
     this.isEditing = true;
     this.editingId = appointment.id ?? null;
-    
-    // Cargar datos en el formulario ngModel con campos adicionales de Laravel
-    this.appointmentForm = {
-      clientDocType: (appointment as any).tipo_documento || 'cedula',
-      clientDocNumber: (appointment as any).numero_documento || '',
-      clientName: appointment.clientName,
-      clientEmail: (appointment as any).clientEmail || '',
-      clientBirthDate: (appointment as any).fecha_nacimiento || '',
-      clientPhone: (appointment as any).numero_telefono || '',
-      appointmentService: appointment.serviceName,
-      appointmentStaff: (appointment as any).staffName || '',
-      appointmentObservations: appointment.nota || ''
-    };
-
-    // Sincronizar con formulario reactivo
+    // Sincroniza con el formulario reactivo básico
     this.citaForm.patchValue({
       clientName: appointment.clientName,
       serviceName: appointment.serviceName,
@@ -259,15 +242,24 @@ export class CitasComponent implements OnInit {
       nota: appointment.nota || ''
     });
 
-    // Seleccionar tiempo y fecha en la UI
+    // Sincroniza con el formulario de ngModel
+    this.appointmentForm = {
+      clientDocType: '',
+      clientDocNumber: '',
+      clientName: appointment.clientName,
+      clientEmail: '',
+      clientBirthDate: '',
+      clientPhone: '',
+      appointmentService: appointment.serviceName,
+      appointmentStaff: '',
+      appointmentObservations: appointment.nota || ''
+    };
+    // Selección de hora y fecha
     this.timeSlots.forEach(s => s.selected = (s.time === appointment.time));
     if (typeof appointment.day === 'number') {
       this.formCalendarDays.forEach(d => d.selected = d.number === appointment.day);
-      this.selectedDateText = `Día ${appointment.day}`;
     }
-
     this.switchView('create');
-    this.successMessage = `📝 Editando cita de ${appointment.clientName}`;
   }
 
   deleteAppointment(appointment: Appointment): void {
@@ -278,97 +270,61 @@ export class CitasComponent implements OnInit {
   cancelEdit(): void {
     this.isEditing = false;
     this.editingId = null;
-    this.appointmentForm = {};
     this.citaForm.reset();
-    this.timeSlots.forEach(s => s.selected = false);
-    this.formCalendarDays.forEach(d => d.selected = false);
-    this.selectedDateText = '';
     this.switchView('list');
   }
 
-  // 📌 MÉTODO ONSUBMIT MEJORADO
   onSubmit(): void {
-    // Validar datos mínimos requeridos
-    if (!this.appointmentForm.clientName && !this.appointmentForm.nombre) {
-      this.errorMessage = 'El nombre del cliente es requerido';
-      return;
-    }
-
-    if (!this.appointmentForm.appointmentService && !this.appointmentForm.tipo_cita) {
-      this.errorMessage = 'El tipo de cita es requerido';
-      return;
-    }
-
-    // Construye payload con los campos de Laravel
+    // Construye payload desde ngModel + selecciones
     const selectedDay = this.formCalendarDays.find(d => d.selected)?.number;
     const selectedTime = this.timeSlots.find(t => t.selected)?.time || this.appointmentForm.time;
     const monthName = this.currentMonthForm?.split(' ')[0] || this.currentMonth || '';
 
-    const payload: Partial<Appointment> = {
-      // Campos básicos para tu template actual
-      clientName: this.appointmentForm.clientName || 'Cliente',
-      serviceName: this.appointmentForm.appointmentService || 'Servicio',
-      day: selectedDay || new Date().getDate(),
-      monthName: monthName || 'ENERO',
-      time: selectedTime || '09:00',
-      status: this.isEditing ? 'reserved' : 'reserved',
-      nota: this.appointmentForm.appointmentObservations,
-      
-      // Campos adicionales de Laravel
-      clientEmail: this.appointmentForm.clientEmail,
-      staffName: this.appointmentForm.appointmentStaff,
-      tipo_documento: this.appointmentForm.clientDocType || 'CC',
-      numero_documento: this.appointmentForm.clientDocNumber,
-      fecha_nacimiento: this.appointmentForm.clientBirthDate,
-      numero_telefono: this.appointmentForm.clientPhone
+    const payload: Appointment = {
+      id: this.isEditing ? this.editingId ?? undefined : undefined,
+      clientName: this.appointmentForm.clientName || this.citaForm.value.clientName || 'Cliente',
+      serviceName: this.appointmentForm.appointmentService || this.citaForm.value.serviceName || 'manicure',
+      day: selectedDay || this.citaForm.value.day || new Date().getDate(),
+      monthName: monthName || this.citaForm.value.monthName || 'ENERO',
+      time: selectedTime || this.citaForm.value.time || '09:00',
+      status: this.isEditing ? (this.citaForm.value.status || 'reserved') : 'reserved',
+      nota: this.appointmentForm.appointmentObservations || this.citaForm.value.nota || ''
     };
 
-    if (this.isEditing && this.editingId) {
-      payload.id = this.editingId;
-    }
-
     this.isLoading = true;
-
-    const operation = this.isEditing && this.editingId ? 
-      this.appointmentsService.update(this.editingId, payload) :
-      this.appointmentsService.create(payload);
-
-    operation.subscribe({
-      next: (response) => {
-        console.log('Respuesta del servidor:', response);
-        this.successMessage = this.isEditing ? '✅ Cita actualizada correctamente' : '✅ Cita creada correctamente';
-        this.errorMessage = '';
-        this.isEditing = false;
-        this.editingId = null;
-        this.isLoading = false;
-        
-        // Limpiar formulario
-        this.appointmentForm = {};
-        this.timeSlots.forEach(s => s.selected = false);
-        this.formCalendarDays.forEach(d => d.selected = false);
-        this.selectedDateText = '';
-        
-        this.switchView('list');
-        this.cargarCitas();
-      },
-      error: (error) => {
-        console.error('Error completo:', error);
-        let errorMsg = 'Error desconocido';
-        
-        if (error.error?.message) {
-          errorMsg = error.error.message;
-        } else if (error.message) {
-          errorMsg = error.message;
-        } else if (error.error?.errors) {
-          // Errores de validación Laravel
-          const validationErrors = Object.values(error.error.errors).flat();
-          errorMsg = validationErrors.join(', ');
+    if (this.isEditing && this.editingId) {
+      this.appointmentsService.update(this.editingId, payload).subscribe({
+        next: () => {
+          this.successMessage = '✔ Cambios guardados';
+          this.errorMessage = '';
+          this.isEditing = false;
+          this.editingId = null;
+          this.isLoading = false;
+          this.switchView('list');
+          this.cargarCitas();
+        },
+        error: (err: unknown) => {
+          const anyErr = err as { message?: string };
+          this.errorMessage = `Error al guardar cambios: ${anyErr?.message || 'Intente nuevamente.'}`;
+          this.isLoading = false;
         }
-        
-        this.errorMessage = `❌ ${this.isEditing ? 'Error al actualizar' : 'Error al crear'} la cita: ${errorMsg}`;
-        this.isLoading = false;
-      }
-    });
+      });
+    } else {
+      this.appointmentsService.create(payload).subscribe({
+        next: () => {
+          this.successMessage = '✔ Cita creada';
+          this.errorMessage = '';
+          this.isLoading = false;
+          this.switchView('list');
+          this.cargarCitas();
+        },
+        error: (err: unknown) => {
+          const anyErr = err as { message?: string };
+          this.errorMessage = `Error al crear cita: ${anyErr?.message || 'Intente nuevamente.'}`;
+          this.isLoading = false;
+        }
+      });
+    }
   }
 
   private initFormCalendar(): void {
@@ -379,7 +335,6 @@ export class CitasComponent implements OnInit {
     const lastDay = new Date(year, monthIndex + 1, 0).getDate();
     this.formCalendarDays = Array.from({ length: lastDay }, (_, i) => ({ number: i + 1 }));
     this.currentMonthForm = `${months[monthIndex]} ${year}`;
-    this.currentMonth = this.currentMonthForm;
   }
 
   private computeStats(list: Appointment[]): void {

@@ -57,7 +57,7 @@ export interface Appointment {
 
 @Injectable({ providedIn: 'root' })
 export class AppointmentsService {
-  private readonly apiUrl = 'http://localhost:8000/api/appointments'; // Ajusta tu URL
+  private readonly apiUrl = 'http://127.0.0.1:8000/api/appointments'; // Ajusta tu URL
 
   constructor(private http: HttpClient) {}
 
