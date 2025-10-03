@@ -1,40 +1,25 @@
 export interface BrandingConfig {
+  id?: number;
+  // Información del negocio
   nombre_comercial: string;
   eslogan: string;
   descripcion_negocio: string;
-  color_primario: string;
-  color_secundario: string;
-  color_fondo_izquierdo: string;
-  color_fondo_derecho: string;
-  color_texto_principal: string;
-  color_texto_secundario: string;
-  logo_principal: string;
-  logo_pequeno: string;
-  favicon: string;
-  duracion_slot_minutos: number;
-  anticipacion_minima_horas: number;
-  horario_atencion_inicio: string;
-  horario_atencion_fin: string;
-  dias_atencion: string;
-  maximo_citas_dia: number;
-  titulo_principal: string;
-  subtitulo_formulario: string;
-  mensaje_bienvenida: string;
-  mensaje_confirmacion: string;
-  texto_seguir_redes: string;
+
+  // Redes sociales
   facebook_url: string;
   instagram_url: string;
   whatsapp_numero: string;
-  mostrar_redes_sociales: boolean;
+  texto_seguir_redes: string;
+
+  // Métodos de pago
   acepta_efectivo: boolean;
   acepta_tarjeta: boolean;
   acepta_nequi: boolean;
   acepta_transferencia: boolean;
   texto_metodos_pago: string;
-  mostrar_precios_publicos: boolean;
-  requiere_confirmacion_email: boolean;
-  requiere_confirmacion_telefono: boolean;
-  permite_cancelacion_cliente: boolean;
-  horas_limite_cancelacion: number;
-  configuracion_extra: string;
+
+  // Archivos y colores
+  logo_empresa: string | File | null;
+  color_fondo_branding: string;
+  color_letra_branding: string;
 }
