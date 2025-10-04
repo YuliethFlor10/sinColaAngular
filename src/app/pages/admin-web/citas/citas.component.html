@@ -48,7 +48,7 @@
               <!-- BOTÓN RECARGAR - AGREGADO -->
               <div class="filter-group">
                 <button type="button" class="reload-btn" (click)="reloadData()" [disabled]="isLoading">
-                  <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i> 
+                  <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i>
                   {{ isLoading ? 'Cargando...' : 'Recargar' }}
                 </button>
               </div>
@@ -96,85 +96,22 @@
                 <span class="stat-value cancelled" id="cancelledCount">{{ stats.cancelled }}</span>
               </div>
             </div>
+          }
+        </div>
 
-            <!-- LISTA DE CITAS CORREGIDA -->
-            <div class="appointments-list" id="appointmentsList">
-              <!-- INDICADOR DE CARGA -->
-              <div *ngIf="isLoading" class="loading">
-                <p><i class="fa fa-spinner fa-spin"></i> Cargando citas...</p>
-              </div>
-
-              <!-- MENSAJE CUANDO NO HAY CITAS -->
-              <div *ngIf="appointments.length === 0 && !isLoading" class="no-appointments">
-                <p>No hay citas programadas</p>
-              </div>
-
-              <!-- LISTA DE CITAS -->
-              <div *ngFor="let appointment of appointments; trackBy: trackAppointment"
-                   class="appointment-item"
-                   [class]="'status-' + appointment.status">
-                <div class="appointment-date">
-                  <span class="appointment-month">{{ appointment.monthName }}</span>
-                  <span class="appointment-day">{{ appointment.day }}</span>
-                  <span class="appointment-time">{{ appointment.time }}</span>
-                </div>
-                <div class="appointment-details">
-                  <div class="appointment-client">{{ appointment.clientName }}</div>
-                  <div class="appointment-contact">{{ appointment.clientEmail }}</div>
-                  <div class="appointment-service">{{ appointment.serviceName }}</div>
-                  <div class="appointment-staff">Atendido por: {{ appointment.staffName }}</div>
-                </div>
-                
-                <!-- ACCIONES CORREGIDAS -->
-                <div class="appointment-actions">
-                  <button class="appointment-menu-btn" 
-                          type="button"
-                          (click)="toggleMenu($event, appointment)">
-                    <i class="fa fa-ellipsis-v"></i>
-                  </button>
-                  
-                  <!-- MENÚ CORREGIDO -->
-                  <div class="appointment-menu" 
-                       [class.show]="appointment.showMenu"
-                       (click)="$event.stopPropagation()">
-                    
-                    <!-- Confirmar - solo si está reservada -->
-                    <button *ngIf="appointment.status === 'reserved'" 
-                            type="button"
-                            class="menu-action confirm-btn"
-                            (click)="confirmAppointment(appointment)">
-                      <i class="fa fa-check"></i> Confirmar cita
-                    </button>
-                    
-                    <!-- Editar -->
-                    <button type="button"
-                            class="menu-action edit-btn"
-                            (click)="editAppointment(appointment)">
-                      <i class="fa fa-edit"></i> Editar
-                    </button>
-                    
-                    <!-- Cancelar - solo si no está cancelada -->
-                    <button *ngIf="appointment.status !== 'cancelled'" 
-                            type="button"
-                            class="menu-action cancel-btn"
-                            (click)="cancelAppointment(appointment)">
-                      <i class="fa fa-times"></i> Cancelar cita
-                    </button>
-                    
-                    <!-- Eliminar -->
-                    <button type="button"
-                            class="menu-action delete-btn"
-                            (click)="deleteAppointment(appointment)">
-                      <i class="fa fa-trash"></i> Eliminar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="form-group">
+          <label for="staff">Personal que realiza el servicio</label>
+          <select id="staff" class="form-select" formControlName="staff">
+            <option value="">Seleccione al personal de preferencia</option>
+            @for (staff of staffMembers; track staff) {
+              <option [value]="staff.value">
+                {{ staff.label }}
+              </option>
+            }
+          </select>
         </div>
       </div>
-    
+
 
     <!-- Vista de Crear nueva cita -->
     <div class="content-card sub-view" [class.active]="currentView === 'create'" id="create-appointment-section">
@@ -188,12 +125,7 @@
           {{ errorMessage }}
           <button type="button" (click)="errorMessage = ''" class="alert-close">×</button>
         </div>
-
-        <div *ngIf="successMessage" class="alert alert-success">
-          {{ successMessage }}
-          {{ successMessage }}
-          <button type="button" (click)="successMessage = ''" class="alert-close">×</button>
-        </div>
+      </div>
 
       <div class="card-content">
         <form class="appointment-form" (ngSubmit)="onSubmit()">
@@ -352,38 +284,37 @@
 
           <div class="form-actions">
             <!-- Para crear nueva cita -->
-            <button 
-              *ngIf="!isEditing" 
-              type="button" 
-              class="submit-btn" 
-              (click)="onSubmit()" 
+            <button
+              *ngIf="!isEditing"
+              type="button"
+              class="submit-btn"
+              (click)="onSubmit()"
               [disabled]="isLoading">
               <span *ngIf="!isLoading">Crear Cita</span>
               <span *ngIf="isLoading">Creando...</span>
             </button>
             <!-- Para guardar cambios en edición -->
-            <button 
-              *ngIf="isEditing" 
-              type="button" 
-              class="save-btn" 
-              (click)="onSubmit()" 
+            <button
+              *ngIf="isEditing"
+              type="button"
+              class="save-btn"
+              (click)="onSubmit()"
               [disabled]="isLoading">
               <span *ngIf="!isLoading">Guardar Cambios</span>
               <span *ngIf="isLoading">Guardando...</span>
             </button>
             <!-- Botón cancelar para edición -->
            <!-- Botón cancelar para edición -->
-<button 
-  *ngIf="isEditing" 
-  type="button" 
-  class="cancel-btn" 
-  (click)="cancelEdit()" 
+<button
+  *ngIf="isEditing"
+  type="button"
+  class="cancel-btn"
+  (click)="cancelEdit()"
   [disabled]="isLoading">
   Cancelar Edición
 </button>
 
-          </div>
-        </form>
+        </div>
       </div>
     </div>
 
