@@ -1176,38 +1176,47 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     alert(details); // Puedes reemplazar esto con un modal más elegante
   }
 
-  deleteUser(userId: string | number): void {
-    // Cerrar el menú desplegable
-    this.closeAllUserMenus();
+deleteUser(userId: string | number): void {
+  // Cerrar el menú desplegable
+  this.closeAllUserMenus();
 
-    const user = this.users.find(u => u.id.toString() === userId.toString());
-    if (!user) {
-      console.error('❌ Usuario no encontrado para eliminar:', userId);
-      this.showErrorMessage('Usuario no encontrado');
-      return;
-    }
+  const user = this.users.find(u => u.id.toString() === userId.toString());
+  if (!user) {
+    console.error('❌ Usuario no encontrado para eliminar:', userId);
+    this.showErrorMessage('Usuario no encontrado');
+    return;
+  }
 
-    if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${user.name}"?`)) {
-      console.log('🔄 Eliminando usuario:', user.name);
+  // ✅ NUEVO: Advertencia especial si intentas eliminar tu propio usuario
+  const warningMessage = `¿Estás seguro de que deseas eliminar al usuario "${user.name}"?\n\n⚠️ ADVERTENCIA: Si este es tu usuario actual, perderás acceso al sistema.`;
 
-      this.usersService.delete(userId).subscribe({
-        next: (response: any) => {
-          console.log('✅ Usuario eliminado exitosamente:', response);
-          this.showSuccessMessage('Usuario eliminado correctamente');
+  if (confirm(warningMessage)) {
+    console.log('🔄 Eliminando usuario:', user.name);
 
-          // Recargar toda la lista después de eliminar
-          setTimeout(() => {
-            this.loadAllUsers();
-          }, 500);
-        },
-        error: (error: any) => {
-          console.error('❌ Error eliminando usuario:', error);
+    this.usersService.delete(userId).subscribe({
+      next: (response: any) => {
+        console.log('✅ Usuario eliminado exitosamente:', response);
+        this.showSuccessMessage('Usuario eliminado correctamente');
+
+        // Recargar toda la lista después de eliminar
+        setTimeout(() => {
+          this.loadAllUsers();
+        }, 500);
+      },
+      error: (error: any) => {
+        console.error('❌ Error eliminando usuario:', error);
+
+        // ✅ NUEVO: Manejo especial para error 403 (usuario propio)
+        if (error.status === 403) {
+          this.showErrorMessage('No puedes eliminar tu propio usuario mientras estás autenticado');
+        } else {
           const errorMsg = error?.error?.message || 'Error al eliminar el usuario';
           this.showErrorMessage(errorMsg);
         }
-      });
-    }
+      }
+    });
   }
+}
 
   // ========================================
   // GESTIÓN DE MENSAJES

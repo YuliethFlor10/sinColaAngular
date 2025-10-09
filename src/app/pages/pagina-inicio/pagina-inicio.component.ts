@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
   styleUrls: ['./pagina-inicio.component.css']
 })
 export class PaginaInicioComponent implements OnInit {
+  mobileMenuOpen = false;
 
   constructor(private router: Router) { }
 
@@ -20,6 +21,7 @@ export class PaginaInicioComponent implements OnInit {
 
   ngOnInit(): void {
     this.addScrollEffect();
+    this.addIntersectionObserver();
   }
 
   selectPlan(planType: string): void {
@@ -29,9 +31,24 @@ export class PaginaInicioComponent implements OnInit {
     this.router.navigate(['/admin/citas'], { queryParams: { plan: planType } });
   }
 
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  closeMobileMenu(): void {
+    this.mobileMenuOpen = false;
+  }
+
+  scrollToSection(sectionId: string): void {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+
   private addScrollEffect(): void {
     // Efecto de scroll para el header
-    const header = document.querySelector('.lp-header');
+    const header = document.querySelector('.modern-header');
 
     if (header) {
       window.addEventListener('scroll', () => {
@@ -42,8 +59,10 @@ export class PaginaInicioComponent implements OnInit {
         }
       });
     }
+  }
 
-    // Efecto de animación al hacer scroll
+  private addIntersectionObserver(): void {
+    // Configuración del observer para animaciones
     const observerOptions = {
       threshold: 0.1,
       rootMargin: '0px 0px -50px 0px'
@@ -58,7 +77,9 @@ export class PaginaInicioComponent implements OnInit {
     }, observerOptions);
 
     // Observar elementos que deben animarse
-    const elementsToAnimate = document.querySelectorAll('.feature-item, .mv-item, .plan-card, .team-member');
+    const elementsToAnimate = document.querySelectorAll(
+      '.feature-card, .mission-card, .pricing-card, .team-card, .intro-content'
+    );
     elementsToAnimate.forEach(el => {
       observer.observe(el);
     });
