@@ -776,6 +776,9 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 /* ========================================
    MENÚ DE TRES PUNTOS PARA USUARIOS
    ======================================== */
+/* ========================================
+   MENÚ DE TRES PUNTOS PARA USUARIOS
+   ======================================== */
 .user-menu-container {
   position: relative;
   display: flex;
@@ -786,49 +789,43 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 }
 
 .menu-dots-button {
-  background: #f0f0f0 !important;
-  border: none !important;
-  padding: 0 !important;
-  border-radius: 3px !important;
-  cursor: pointer !important;
-  color: #333333 !important;
-  font-size: 14px !important;
-  transition: all 0.2s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  width: 24px !important;
-  height: 24px !important;
-  font-weight: 400 !important;
-  line-height: 1 !important;
-  font-family: Arial, sans-serif !important;
-  box-shadow: none !important;
-  outline: none !important;
-  text-decoration: none !important;
-}
-
-/* Estilo más específico para asegurar que se aplique */
-.user-table .menu-dots-button {
-  background: #f0f0f0 !important;
-  border: none !important;
-  padding: 0 !important;
-  border-radius: 3px !important;
-  cursor: pointer !important;
-  color: #333333 !important;
-  font-size: 14px !important;
-  width: 24px !important;
-  height: 24px !important;
-  font-weight: 400 !important;
-  line-height: 1 !important;
-  font-family: Arial, sans-serif !important;
+  background: white;
+  border: 1px solid #d1d5db;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 20px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  min-height: 32px;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .menu-dots-button:hover {
-  background-color: #e5e5e5;
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111827;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .menu-dots-button:active {
-  background-color: #d5d5d5;
+  background-color: #e5e7eb;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dots-icon {
+  display: block;
+  pointer-events: none;
+  font-size: 18px;
+  letter-spacing: -2px;
 }
 
 .user-menu-dropdown {
@@ -836,38 +833,50 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
   bottom: 100%;
   right: 0;
   background: white;
-  border: none;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
   z-index: 1000;
-  min-width: 140px;
+  min-width: 180px;
   overflow: hidden;
-  margin-bottom: 4px;
-  padding: 4px 0;
+  margin-bottom: 8px;
+  padding: 6px 0;
 }
 
 .menu-item {
   width: 100%;
   background: none;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 16px;
   text-align: left;
   cursor: pointer;
-  font-size: 13px;
-  color: #000000;
-  transition: background-color 0.1s ease;
-  font-family: Arial, sans-serif;
-  line-height: 1.2;
-  font-weight: 400;
+  font-size: 14px;
+  color: #374151;
+  transition: all 0.15s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.4;
+  font-weight: 500;
   display: block;
 }
 
 .menu-item:hover {
-  background-color: #f8f8f8;
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.menu-item:first-child:hover {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+.menu-item:last-child:hover {
+  background-color: #fee2e2;
+  color: #991b1b;
 }
 
 .menu-item:active {
-  background-color: #f0f0f0;
+  background-color: #f3f4f6;
+  transform: scale(0.98);
 }
 
 /* ========================================
@@ -879,12 +888,12 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
     height: 28px !important;
     font-size: 16px !important;
   }
-  
+
   .user-menu-dropdown {
     min-width: 120px;
     right: -10px;
   }
-  
+
   .menu-item {
     padding: 10px 12px;
     font-size: 14px;
@@ -897,7 +906,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
     height: 32px !important;
     font-size: 18px !important;
   }
-  
+
   .user-menu-dropdown {
     min-width: 140px;
     right: -20px;

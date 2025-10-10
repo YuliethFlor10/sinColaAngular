@@ -1,141 +1,257 @@
 <div>
   <app-admin-web></app-admin-web>
   <app-contenido [title]="'Listado de servicios'">
-<div class="search-and-actions-section">
-                    <div class="search-field-container">
-                        <label for="searchField" class="search-label">Buscar</label>
-                        <input
-                            type="text"
-                            id="searchField"
-                            class="search-input-field"
-                            placeholder="Nombre o número de identificación"
-                            autocomplete="off"
-                        >
-                    </div>
-                    <button class="add-service-button" id="addServiceBtn">
-                        <span class="add-icon">+</span>
-                        <span class="add-text">Agregar nuevo servicio</span>
+
+    <!-- BÚSQUEDA Y BOTÓN AGREGAR -->
+    <div class="search-and-actions-section">
+      <div class="search-field-container">
+        <label for="searchField" class="search-label">Buscar</label>
+        <input
+          type="text"
+          id="searchField"
+          class="search-input-field"
+          placeholder="Nombre o número de identificación"
+          autocomplete="off"
+          [value]="searchTerm"
+          (input)="onSearchChange($any($event.target).value)"
+        >
+      </div>
+      <button class="add-service-button" (click)="openAddServiceModal()">
+        <span class="add-icon">+</span>
+        <span class="add-text">Agregar nuevo servicio</span>
+      </button>
+    </div>
+
+    <!-- TABLA/TARJETAS -->
+    <div class="services-table-container">
+
+      <!-- VISTA TABLA (Desktop) -->
+      <div class="table-desktop-view">
+        <table class="services-data-table">
+          <thead class="table-header-section">
+            <tr class="header-row">
+              <th class="header-cell header-nombre">NOMBRE</th>
+              <th class="header-cell header-duracion">DURACIÓN</th>
+              <th class="header-cell header-precio">PRECIO</th>
+              <th class="header-cell header-estado">ESTADO</th>
+              <th class="header-cell header-acciones">ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody class="table-body-section">
+            <tr *ngIf="filteredServices.length === 0">
+              <td colspan="5" style="text-align: center; padding: 2rem; color: #6b7280;">
+                {{ searchTerm ? 'No se encontraron servicios' : 'No hay servicios registrados' }}
+              </td>
+            </tr>
+
+            <tr *ngFor="let service of filteredServices" class="service-data-row">
+              <td class="data-cell cell-nombre">{{ service.name }}</td>
+              <td class="data-cell cell-duracion">{{ formatDuration(service.duration) }}</td>
+              <td class="data-cell cell-precio">${{ formatPrice(service.price) }}</td>
+              <td class="data-cell">
+                <span class="status-indicator status-{{ service.status.toLowerCase() }}">
+                  {{ service.status }}
+                </span>
+              </td>
+              <td class="data-cell cell-acciones">
+                <div class="service-menu-container">
+                  <button class="menu-dots-button"
+                          (click)="toggleServiceMenu(service.id); $event.stopPropagation()"
+                          type="button">
+                    <span class="dots-icon">⋮</span>
+                  </button>
+                  <div class="service-menu-dropdown"
+                       [style.display]="openMenuId === service.id ? 'block' : 'none'">
+                    <button class="menu-item"
+                            (click)="editService(service.id)"
+                            type="button">
+                      Editar servicio
                     </button>
+                    <button class="menu-item"
+                            (click)="openDeleteModal(service.id)"
+                            type="button">
+                      Eliminar servicio
+                    </button>
+                  </div>
                 </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-                <!-- ========================================
-                     TABLA COMPLETAMENTE RESPONSIVE
-                     ======================================== -->
-                <div class="services-table-container">
-                    <!-- Vista de tabla para desktop -->
-                    <div class="table-desktop-view">
-                        <table class="services-data-table" id="servicesTable">
-                            <thead class="table-header-section">
-                                <tr class="header-row">
-                                    <th class="header-cell header-nombre">Nombre</th>
-                                    <th class="header-cell header-duracion">Duración</th>
-                                    <th class="header-cell header-precio">Precio</th>
-                                    <th class="header-cell header-estado">Estado</th>
-                                    <th class="header-cell header-acciones">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody class="table-body-section" id="tableBody">
-                                <!-- Los datos se cargan dinámicamente -->
-                            </tbody>
-                        </table>
-                    </div>
+      <!-- VISTA TARJETAS (Móvil) -->
+      <div class="cards-mobile-view">
+        <div *ngIf="filteredServices.length === 0"
+             style="text-align: center; padding: 2rem; color: #6b7280;">
+          {{ searchTerm ? 'No se encontraron servicios' : 'No hay servicios registrados' }}
+        </div>
 
-                    <!-- Vista de tarjetas para móvil -->
-                    <div class="cards-mobile-view" id="mobileCards">
-                        <!-- Las tarjetas se generan dinámicamente -->
-                    </div>
-                </div>
+        <div *ngFor="let service of filteredServices" class="service-card">
+          <div class="card-header">
+            <h3 class="card-title">{{ service.name }}</h3>
+            <span class="status-indicator status-{{ service.status.toLowerCase() }}">
+              {{ service.status }}
+            </span>
+          </div>
+          <div class="card-body">
+            <div class="card-field">
+              <span class="card-field-label">DURACIÓN</span>
+              <span class="card-field-value">{{ formatDuration(service.duration) }}</span>
+            </div>
+            <div class="card-field">
+              <span class="card-field-label">PRECIO</span>
+              <span class="card-field-value">${{ formatPrice(service.price) }}</span>
+            </div>
+            <div class="card-field">
+              <span class="card-field-label">CATEGORÍA</span>
+              <span class="card-field-value">{{ service.category }}</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <div class="service-menu-container">
+              <button class="menu-dots-button"
+                      (click)="toggleServiceMenu(service.id); $event.stopPropagation()"
+                      type="button">
+                <span class="dots-icon">⋮</span>
+              </button>
+              <div class="service-menu-dropdown"
+                   [style.display]="openMenuId === service.id ? 'block' : 'none'">
+                <button class="menu-item"
+                        (click)="editService(service.id)"
+                        type="button">
+                  Editar servicio
+                </button>
+                <button class="menu-item"
+                        (click)="openDeleteModal(service.id)"
+                        type="button">
+                  Eliminar servicio
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
+    </div>
 
-
-
-    <!-- Botón flotante responsive -->
-    <button class="floating-action-button" id="floatingActionBtn" title="Agregar nuevo servicio">
-        <span class="floating-plus-icon">+</span>
+    <!-- BOTÓN FLOTANTE -->
+    <button class="floating-action-button"
+            (click)="openAddServiceModal()"
+            title="Agregar nuevo servicio">
+      <span class="floating-plus-icon">+</span>
     </button>
 
-    <!-- Overlay para móvil -->
-    <div class="mobile-overlay" id="mobileOverlay"></div>
+    <!-- OVERLAY MÓVIL -->
+    <div class="mobile-overlay"
+         [class.show]="openMenuId !== null"
+         (click)="closeAllMenus()"></div>
 
-    <!-- ========================================
-         MODAL COMPLETAMENTE RESPONSIVE
-         ======================================== -->
+    <!-- MODAL AGREGAR/EDITAR -->
     <div class="modal-backdrop" id="serviceModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Agregar nuevo servicio</h2>
-                <button class="modal-close-btn" id="modalCloseBtn">×</button>
-            </div>
-            <div class="modal-body">
-                <form class="service-form" id="serviceForm">
-                    <div class="form-field-group">
-                        <label for="serviceName" class="field-label">Nombre del servicio</label>
-                        <input type="text" id="serviceName" name="serviceName" class="field-input" placeholder="Ej: Manicure completa" required>
-                    </div>
-                    <div class="form-field-group">
-                        <label for="serviceDuration" class="field-label">Duración</label>
-                        <input type="time" id="serviceDuration" name="serviceDuration" class="field-input" required>
-                    </div>
-                    <div class="form-field-group">
-                        <label for="servicePrice" class="field-label">Precio</label>
-                        <input type="number" id="servicePrice" name="servicePrice" class="field-input" placeholder="50000" min="0" required>
-                    </div>
-                    <div class="form-field-group">
-                        <label for="serviceStatus" class="field-label">Estado</label>
-                        <select id="serviceStatus" name="serviceStatus" class="field-select" required>
-                            <option value="Activo">Activo</option>
-                            <option value="Inactivo">Inactivo</option>
-                        </select>
-                    </div>
-                      <div class="form-field-group">
-                        <label for="serviceStatus" class="field-label">Tipo de usuario que realiza el servicio</label>
-                        <select id="serviceStatus" name="serviceStatus" class="field-select" required>
-                            <option value="Activo">Seleccione el tipo</option>
-                            <option value="Inactivo">Administrador</option>
-                            <option value="Inactivo">Empleado</option>
-                        </select>
-                    </div>
-                    <div class="form-field-group">
-                        <label for="serviceStatus" class="field-label">Usuario a realizar sevicio</label>
-                        <select id="serviceStatus" name="serviceStatus" class="field-select" required>
-                            <option value="Activo">Seleccion</option>
-                            <option value="Inactivo">Yulieth</option>
-                            <option value="Inactivo">Juanita</option>
-                            <option value="Inactivo">Pablito</option>
-                        </select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="btn-cancel" id="cancelBtn">Cancelar</button>
-                        <button type="submit" class="btn-save" id="saveBtn">Guardar servicio</button>
-                    </div>
-                </form>
-            </div>
+      <div class="modal-container">
+        <div class="modal-header">
+          <h2 class="modal-title" id="modalTitle">Agregar nuevo servicio</h2>
+          <button class="modal-close-btn" (click)="closeServiceModal()">×</button>
         </div>
+        <div class="modal-body">
+          <form class="service-form" id="serviceForm" (submit)="$event.preventDefault(); saveService()">
+
+            <div class="form-field-group">
+              <label for="serviceName" class="field-label">Nombre del servicio</label>
+              <input type="text"
+                     id="serviceName"
+                     name="serviceName"
+                     class="field-input"
+                     placeholder="Ej: Manicure completa"
+                     required>
+            </div>
+
+            <div class="form-field-group">
+              <label for="serviceDuration" class="field-label">Duración</label>
+              <input type="time"
+                     id="serviceDuration"
+                     name="serviceDuration"
+                     class="field-input"
+                     required>
+            </div>
+
+            <div class="form-field-group">
+              <label for="servicePrice" class="field-label">Precio</label>
+              <input type="number"
+                     id="servicePrice"
+                     name="servicePrice"
+                     class="field-input"
+                     placeholder="50000"
+                     min="0"
+                     required>
+            </div>
+
+            <div class="form-field-group">
+              <label for="serviceStatus" class="field-label">Estado</label>
+              <select id="serviceStatus" name="serviceStatus" class="field-select" required>
+                <option value="Activo">Activo</option>
+                <option value="Inactivo">Inactivo</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label for="serviceType" class="field-label">Tipo de usuario que realiza el servicio</label>
+              <select id="serviceType" name="serviceType" class="field-select" required>
+                <option value="">Seleccione el tipo</option>
+                <option value="Administrador">Administrador</option>
+                <option value="Empleado">Empleado</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label for="serviceUser" class="field-label">Usuario a realizar servicio</label>
+              <select id="serviceUser" name="serviceUser" class="field-select" required>
+                <option value="">Selección</option>
+                <option value="Yulieth">Yulieth</option>
+                <option value="Juanita">Juanita</option>
+                <option value="Pablito">Pablito</option>
+              </select>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn-cancel" (click)="closeServiceModal()">Cancelar</button>
+              <button type="submit" class="btn-save" id="saveBtn">Guardar servicio</button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
-    <!-- ========================================
-         MODAL DE CONFIRMACIÓN DE ELIMINACIÓN
-         ======================================== -->
+    <!-- MODAL ELIMINAR -->
     <div class="modal-backdrop" id="deleteModal">
-        <div class="modal-container delete-modal">
-            <div class="modal-header">
-                <h2 class="modal-title">Confirmar eliminación</h2>
-                <button class="modal-close-btn" id="deleteModalCloseBtn">×</button>
-            </div>
-            <div class="modal-body">
-                <div class="delete-confirmation">
-                    <div class="delete-icon"><span class="nav-icon"><img src="/assets/iconos/advertencia.svg" alt="Icono check" class="icon"></span>
-</div>
-                    <p class="delete-message" id="deleteMessage">¿Estás seguro de que deseas eliminar este servicio?</p>
-                    <p class="delete-warning">Esta acción es permanente y no se puede deshacer. Si deseas que el servicio acceda nuevamente, tendrás que crearlo desde cero.</p>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="btn-cancel" id="deleteModalCancelBtn">Cancelar</button>
-                    <button type="button" class="btn-delete-confirm" id="confirmDeleteBtn">Confirmar</button>
-                </div>
-            </div>
+      <div class="modal-container delete-modal">
+        <div class="modal-header">
+          <h2 class="modal-title">Confirmar eliminación</h2>
+          <button class="modal-close-btn" (click)="closeDeleteModal()">×</button>
         </div>
+        <div class="modal-body">
+          <div class="delete-confirmation">
+            <div class="delete-icon">
+              <span class="nav-icon">
+                <img src="/assets/iconos/advertencia.svg" alt="Advertencia" class="icon">
+              </span>
+            </div>
+            <p class="delete-message" id="deleteMessage">
+              ¿Estás seguro de que deseas eliminar este servicio?
+            </p>
+            <p class="delete-warning">
+              Esta acción es permanente y no se puede deshacer. Si deseas que el servicio
+              acceda nuevamente, tendrás que crearlo desde cero.
+            </p>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn-cancel" (click)="closeDeleteModal()">Cancelar</button>
+            <button type="button" class="btn-delete-confirm" (click)="confirmDelete()">Confirmar</button>
+          </div>
+        </div>
+      </div>
     </div>
-  </app-contenido>
 
+  </app-contenido>
 </div>

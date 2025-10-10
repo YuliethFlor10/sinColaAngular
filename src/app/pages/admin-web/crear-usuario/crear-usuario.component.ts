@@ -127,6 +127,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   editingUserId: number | string | null = null;
   isEditMode: boolean = false;
 
+  // Menú desplegable
+openMenuId: number | string | null = null;
+
   // ========================================
   // DATOS MAESTROS
   // ========================================
@@ -175,20 +178,21 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }, 100);
   }
 
-  ngAfterViewInit(): void {
-    (window as any).crearUsuarioComponent = this;
-    setTimeout(() => {
-      this.setupDOMEvents();
-    }, 100);
+ ngAfterViewInit(): void {
+  (window as any).crearUsuarioComponent = this;
 
-    // Agregar evento global para cerrar menús al hacer clic fuera
-    document.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.user-menu-container')) {
-        this.closeAllUserMenus();
-      }
-    });
-  }
+  setTimeout(() => {
+    this.setupDOMEvents();
+  }, 100);
+
+  // Agregar evento global para cerrar menús al hacer clic fuera
+  document.addEventListener('click', (event) => {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.user-menu-container')) {
+      this.closeAllUserMenus();
+    }
+  });
+}
 
   ngOnDestroy(): void {
     if ((window as any).crearUsuarioComponent === this) {
@@ -300,7 +304,6 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
           // Actualizar vista
           this.updatePagination();
-          this.renderUsersTable();
 
         } catch (error) {
           console.error('Error procesando respuesta:', error);
@@ -327,7 +330,6 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
         this.users = [];
         this.filteredUsers = [];
         this.updatePagination();
-        this.renderUsersTable();
         this.isLoading = false;
       }
     });
@@ -363,7 +365,6 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
             console.log('✅ Todos los usuarios cargados:', this.users.length);
 
             this.updatePagination();
-            this.renderUsersTable();
             this.isLoading = false;
           }
         },
@@ -377,7 +378,6 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
             this.filteredUsers = [...this.users];
 
             this.updatePagination();
-            this.renderUsersTable();
             this.isLoading = false;
           }
         }
@@ -410,7 +410,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
             // Si estamos en vista de lista, cambiar para forzar actualización visual
             if (this.currentView === 'list-users') {
-              this.renderUsersTable();
+
             }
           }, 1000);
 
@@ -992,10 +992,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.currentPage = 1;
     this.updatePagination();
-    this.renderUsersTable();
   }
 
-  renderUsersTable(): void {
+ /* renderUsersTable(): void {
     const tbody = document.getElementById('userTableBody');
     if (!tbody) {
       console.error('❌ No se encontró el elemento tbody con ID userTableBody');
@@ -1058,7 +1057,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     console.log('📋 Tabla renderizada con', currentUsers.length, 'usuarios');
     this.updateUserCounter();
-  }
+  }*/
 
   private updateUserCounter(): void {
     const counterElement = document.getElementById('userCounter');
@@ -1091,7 +1090,6 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.currentPage > 1) {
       this.currentPage--;
       this.updatePagination();
-      this.renderUsersTable();
     }
   }
 
@@ -1099,10 +1097,17 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
       this.updatePagination();
-      this.renderUsersTable();
     }
-  }
+}
 
+/**
+ * Obtener usuarios de la página actual para el template
+ */
+getCurrentPageUsers(): User[] {
+  const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+  const endIndex = startIndex + this.itemsPerPage;
+  return this.filteredUsers.slice(startIndex, endIndex);
+}
   // ========================================
   // MENÚ DE USUARIO
   // ========================================
@@ -1110,38 +1115,32 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   /**
    * NUEVO: Alternar menú desplegable de usuario (toggle)
    */
-  toggleUserMenu(userId: string | number): void {
-    console.log('🔄 Toggle menú para usuario:', userId);
+ /**
+ * Alternar menú desplegable de usuario (toggle)
+ */
+toggleUserMenu(userId: string | number): void {
+  console.log('🔄 Toggle menú para usuario:', userId);
 
-    const menuElement = document.getElementById(`menu-${userId}`) as HTMLElement;
-    console.log('🔍 Elemento del menú encontrado:', menuElement);
-
-    if (menuElement) {
-      // Si el menú está visible, cerrarlo
-      if (menuElement.style.display === 'block') {
-        menuElement.style.display = 'none';
-        console.log('📋 Menú cerrado para usuario:', userId);
-      } else {
-        // Cerrar todos los otros menús primero
-        this.closeAllUserMenus();
-        // Abrir este menú
-        menuElement.style.display = 'block';
-        console.log('📋 Menú abierto para usuario:', userId);
-      }
-    } else {
-      console.error('❌ No se encontró el elemento del menú para usuario:', userId);
-    }
+  // Si el menú clickeado ya está abierto, cerrarlo
+  if (this.openMenuId === userId) {
+    this.openMenuId = null;
+    console.log('📋 Menú cerrado para usuario:', userId);
+  } else {
+    // Cerrar cualquier otro menú y abrir este
+    this.openMenuId = userId;
+    console.log('📋 Menú abierto para usuario:', userId);
   }
+}
 
   /**
    * NUEVO: Cerrar todos los menús de usuario
    */
-  private closeAllUserMenus(): void {
-    const allMenus = document.querySelectorAll('.user-menu-dropdown');
-    allMenus.forEach(menu => {
-      (menu as HTMLElement).style.display = 'none';
-    });
-  }
+  /**
+ * Cerrar todos los menús de usuario
+ */
+private closeAllUserMenus(): void {
+  this.openMenuId = null;
+}
 
   // ========================================
   // ACCIONES DE USUARIO
