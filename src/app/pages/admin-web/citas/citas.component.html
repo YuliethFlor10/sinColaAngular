@@ -1,0 +1,382 @@
+<div>
+  <app-admin-web></app-admin-web>
+  <app-contenido [title]="'Gestión de citas'">
+
+    <!-- Vista de Lista de citas -->
+    <div class="content-card sub-view" [class.active]="currentView === 'list'" id="appointments-list-section">
+
+      <button class="toggle-view-button" (click)="switchView('create')">
+        <i class="fa fa-plus"></i> Crear nueva cita
+      </button>
+
+      <!-- MENSAJES DE ERROR Y ÉXITO -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+        <button type="button" (click)="errorMessage = ''" class="alert-close">×</button>
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+        <button type="button" (click)="successMessage = ''" class="alert-close">×</button>
+      </div>
+
+      <div class="appointments-layout">
+        <!-- Panel izquierdo: Filtros y calendario -->
+        <div class="appointments-sidebar">
+          <div class="filter-section">
+            <div class="filter-group">
+              <label>Tipo de cita</label>
+              <select id="appointmentTypeFilter">
+                <option value="">Todos los tipos de cita</option>
+                <option value="manicure">Manicure</option>
+                <option value="pedicure">Pedicure</option>
+                <option value="gelish">Uñas en Gelish</option>
+                <option value="acrilicas">Uñas Acrílicas</option>
+                <option value="pestanas">Pestañas</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label>Quien atiende la cita</label>
+              <select id="staffFilter">
+                <option value="">Todos los especialistas</option>
+                <option value="pepita-perez">Pepita Perez</option>
+                <option value="luna-lunera">Luna Lunera</option>
+                <option value="patricia-fernandez">Patricia Fernandez</option>
+              </select>
+            </div>
+
+            <!-- BOTÓN RECARGAR -->
+            <div class="filter-group">
+              <button type="button" class="reload-btn" (click)="reloadData()" [disabled]="isLoading">
+                <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i>
+                {{ isLoading ? 'Cargando...' : 'Recargar' }}
+              </button>
+            </div>
+          </div>
+
+          <div class="calendar-section">
+            <h3>Seleccione fecha</h3>
+            <div class="appointments-calendar">
+              <div class="calendar-header">
+                <button type="button" id="prevMonthAppt" (click)="previousMonth()">
+                  <i class="fa fa-chevron-left"></i>
+                </button>
+                <span id="currentMonthAppt">{{ currentMonthYear }}</span>
+                <button type="button" id="nextMonthAppt" (click)="nextMonth()">
+                  <i class="fa fa-chevron-right"></i>
+                </button>
+              </div>
+              <div class="calendar-grid">
+                <div class="calendar-days-header">
+                  <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                </div>
+                <div id="calendarDaysAppt" class="calendar-days">
+                  <div *ngFor="let day of calendarDays; trackBy: trackDay"
+                       class="calendar-day"
+                       [class.selected]="day.isSelected"
+                       [class.other-month]="day.isOtherMonth"
+                       [class.today]="day.isToday">
+                    {{ day.day }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Panel derecho: Lista de citas y estadísticas -->
+        <div class="appointments-main">
+          <div class="appointments-stats">
+            <div class="stat-item">
+              <span class="stat-label">Reservadas</span>
+              <span class="stat-value reserved" id="reservedCount">{{ stats.reserved }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Confirmadas</span>
+              <span class="stat-value confirmed" id="confirmedCount">{{ stats.confirmed }}</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Canceladas</span>
+              <span class="stat-value cancelled" id="cancelledCount">{{ stats.cancelled }}</span>
+            </div>
+          </div>
+
+          <!-- LISTA DE CITAS -->
+          <div class="appointments-list" id="appointmentsList">
+            <!-- INDICADOR DE CARGA -->
+            <div *ngIf="isLoading" class="loading">
+              <p><i class="fa fa-spinner fa-spin"></i> Cargando citas...</p>
+            </div>
+
+            <!-- MENSAJE CUANDO NO HAY CITAS -->
+            <div *ngIf="appointments.length === 0 && !isLoading" class="no-appointments">
+              <p>No hay citas programadas</p>
+            </div>
+
+            <!-- LISTA DE CITAS -->
+            <div *ngFor="let appointment of appointments; trackBy: trackAppointment"
+                 class="appointment-item"
+                 [class]="'status-' + appointment.status">
+              <div class="appointment-date">
+                <span class="appointment-day">{{ appointment.day }}</span>
+                <span class="appointment-month">{{ appointment.monthName }}</span>
+                <span class="appointment-time">{{ appointment.time }}</span>
+              </div>
+              <div class="appointment-details">
+                <div class="appointment-client">{{ appointment.clientName }}</div>
+                <div class="appointment-contact">{{ appointment.clientEmail }}</div>
+                <div class="appointment-service">{{ appointment.serviceName }}</div>
+                <div class="appointment-staff">Atendido por: {{ appointment.staffName || 'Por asignar' }}</div>
+              </div>
+
+              <!-- Botón del menú -->
+              <button class="appointment-menu-btn"
+                      type="button"
+                      (click)="toggleMenu($event, appointment)">
+                <img src="assets/iconos/menu_puntos.svg"
+                     alt="Menú"
+                     class="menu-icon">
+              </button>
+
+              <!-- MENÚ DE ACCIONES -->
+              <div class="appointment-menu"
+                   [class.show]="appointment.showMenu"
+                   (click)="$event.stopPropagation()">
+
+                <!-- Confirmar - solo si está reservada -->
+                <button *ngIf="appointment.status === 'reserved'"
+                        type="button"
+                        class="menu-action confirm-btn"
+                        (click)="confirmAppointment(appointment)">
+                  <i class="fa fa-check"></i> Confirmar cita
+                </button>
+
+                <!-- Editar -->
+                <button type="button"
+                        class="menu-action edit-btn"
+                        (click)="editAppointment(appointment)">
+                  <i class="fa fa-edit"></i> Editar
+                </button>
+
+                <!-- Cancelar - solo si no está cancelada -->
+                <button *ngIf="appointment.status !== 'cancelled'"
+                        type="button"
+                        class="menu-action cancel-btn"
+                        (click)="cancelAppointment(appointment)">
+                  <i class="fa fa-times"></i> Cancelar cita
+                </button>
+
+                <!-- Eliminar -->
+                <button type="button"
+                        class="menu-action delete-btn"
+                        (click)="deleteAppointment(appointment)">
+                  <i class="fa fa-trash"></i> Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vista de Crear nueva cita -->
+    <div class="content-card sub-view" [class.active]="currentView === 'create'" id="create-appointment-section">
+
+      <button class="toggle-view-button" (click)="switchView('list')">
+        <i class="fa fa-list"></i> Ver citas
+      </button>
+
+      <!-- MENSAJES EN FORMULARIO -->
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+        <button type="button" (click)="errorMessage = ''" class="alert-close">×</button>
+      </div>
+
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+        <button type="button" (click)="successMessage = ''" class="alert-close">×</button>
+      </div>
+
+      <div class="card-content">
+        <form class="appointment-form" (ngSubmit)="onSubmit()">
+          <div class="form-section">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="clientDocType">Tipo de documento</label>
+                <select id="clientDocType" name="clientDocType" [(ngModel)]="appointmentForm.clientDocType" required>
+                  <option value="">Seleccione un tipo</option>
+                  <option value="CC">Cédula</option>
+                  <option value="pasaporte">Pasaporte</option>
+                  <option value="TI">Tarjeta de identidad</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="clientDocNumber">Número de documento</label>
+                <input type="text" id="clientDocNumber" name="clientDocNumber"
+                       [(ngModel)]="appointmentForm.clientDocNumber"
+                       placeholder="Ingrese número" required>
+              </div>
+              <div class="form-group">
+                <label for="clientName">Nombre</label>
+                <input type="text" id="clientName" name="clientName"
+                       [(ngModel)]="appointmentForm.clientName"
+                       placeholder="Ingrese nombre completo" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="clientEmail">Email</label>
+                <input type="email" id="clientEmail" name="clientEmail"
+                       [(ngModel)]="appointmentForm.clientEmail"
+                       placeholder="correo@ejemplo.com" required>
+              </div>
+              <div class="form-group">
+                <label for="clientBirthDate">Fecha de nacimiento</label>
+                <input type="date" id="clientBirthDate" name="clientBirthDate"
+                       [(ngModel)]="appointmentForm.clientBirthDate"
+                       placeholder="dd/mm/aa" required>
+              </div>
+              <div class="form-group">
+                <label for="clientPhone">Número de teléfono</label>
+                <input type="tel" id="clientPhone" name="clientPhone"
+                       [(ngModel)]="appointmentForm.clientPhone"
+                       placeholder="Ingrese su número" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="appointmentService">Tipo de cita</label>
+                <select id="appointmentService" name="appointmentService"
+                        [(ngModel)]="appointmentForm.appointmentService"
+                        (ngModelChange)="onServiceChange()" required>
+                  <option value="">Procedimiento a realizar</option>
+                  <option value="manicure">Manicure Clásico</option>
+                  <option value="pedicure">Pedicure Spa</option>
+                  <option value="gelish">Uñas en Gelish</option>
+                  <option value="acrilicas">Uñas Acrílicas</option>
+                  <option value="pestanas">Pestañas</option>
+                </select>
+                <div *ngIf="selectedService" class="service-info">
+                  <span class="price">Valor: $ {{ selectedService.price }}</span>
+                  <span class="duration">Duración: {{ selectedService.duration }}</span>
+                  <span class="recommendation">Recomendación: {{ selectedService.recommendation }}</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="appointmentStaff">Personal que realiza el servicio</label>
+                <select id="appointmentStaff" name="appointmentStaff"
+                        [(ngModel)]="appointmentForm.appointmentStaff" required>
+                  <option value="">Seleccione al personal de preferencia</option>
+                  <option value="pepita-perez">Pepita Perez</option>
+                  <option value="luna-lunera">Luna Lunera</option>
+                  <option value="patricia-fernandez">Patricia Fernandez</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="datetime-section">
+              <div class="date-section">
+                <div class="section-header">
+                  <i class="fa fa-calendar"></i>
+                  <span>Selecciona la fecha</span>
+                </div>
+                <div class="selected-date">
+                  <span class="date-indicator"></span>
+                  <span id="selectedDateTextAppt">{{ selectedDateText || 'Día seleccionado' }}</span>
+                </div>
+                <div class="calendar-container">
+                  <div class="calendar-header">
+                    <button type="button" id="prevMonthForm"><i class="fa fa-chevron-left"></i></button>
+                    <span id="currentMonthForm">{{ currentMonthForm }}</span>
+                    <button type="button" id="nextMonthForm"><i class="fa fa-chevron-right"></i></button>
+                  </div>
+                  <div class="calendar-grid">
+                    <div class="calendar-days-header">
+                      <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                    </div>
+                    <div id="calendarDaysForm" class="calendar-days">
+                      <div *ngFor="let day of formCalendarDays; trackBy: trackDay"
+                           class="calendar-day"
+                           [class.selected]="day.selected"
+                           [class.other-month]="day.otherMonth"
+                           (click)="selectDate(day)">
+                        {{ day.number }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="time-section">
+                <div class="section-header">
+                  <i class="fa fa-clock-o"></i>
+                  <span>Selecciona la hora</span>
+                </div>
+                <div class="time-slots">
+                  <button *ngFor="let slot of timeSlots; trackBy: trackSlot"
+                          type="button" class="time-slot"
+                          [class.selected]="slot.selected"
+                          [attr.data-time]="slot.time"
+                          (click)="selectTime(slot)">
+                    {{ slot.display }}
+                  </button>
+                </div>
+                <div class="time-legend">
+                  <div class="legend-item">
+                    <span class="legend-color selected"></span>
+                    <span>Hora seleccionada</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-color available"></span>
+                    <span>Hora disponible</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="appointmentObservations">Observaciones o peticiones</label>
+              <textarea id="appointmentObservations" name="appointmentObservations"
+                        [(ngModel)]="appointmentForm.appointmentObservations"
+                        placeholder="Comentario opcional" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <!-- Para crear nueva cita -->
+            <button
+              *ngIf="!isEditing"
+              type="submit"
+              class="submit-btn"
+              [disabled]="isLoading">
+              <span *ngIf="!isLoading">Crear Cita</span>
+              <span *ngIf="isLoading">Creando...</span>
+            </button>
+            <!-- Para guardar cambios en edición -->
+            <button
+              *ngIf="isEditing"
+              type="submit"
+              class="save-btn"
+              [disabled]="isLoading">
+              <span *ngIf="!isLoading">Guardar Cambios</span>
+              <span *ngIf="isLoading">Guardando...</span>
+            </button>
+            <!-- Botón cancelar para edición -->
+            <button
+              *ngIf="isEditing"
+              type="button"
+              class="cancel-btn"
+              (click)="cancelEdit()"
+              [disabled]="isLoading">
+              Cancelar Edición
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </app-contenido>
+</div>

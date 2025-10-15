@@ -48,8 +48,8 @@ export class InicioSesionComponent implements OnInit {
       nombres: ['', [Validators.required, Validators.minLength(3)]],
       apellidos: ['', [Validators.required, Validators.minLength(3)]],
       email: ['', [Validators.required, Validators.email]],
-      clave: ['', [Validators.required, Validators.minLength(6)]],
-      confirmar_clave: ['', [Validators.required, Validators.minLength(6)]],
+      clave: ['', [Validators.required, Validators.minLength(8)]], // Mínimo 8 caracteres
+      confirmar_clave: ['', [Validators.required, Validators.minLength(8)]],
       celular: ['', Validators.required],
       telefono: ['', Validators.required],
       direccion: ['', Validators.required],
@@ -95,8 +95,10 @@ export class InicioSesionComponent implements OnInit {
     this.auth.login(email, clave).subscribe({
       next: (res) => {
         this.loadingLogin = false;
-        localStorage.setItem('token', res.access_token);
-        console.log('✅ Login exitoso, token guardado');
+        if (res.access_token) {
+          localStorage.setItem('token', res.access_token);
+          console.log('✅ Login exitoso, token guardado');
+        }
         this.loginError = '';
         this.router.navigate(['/crear-usuario']);
       },
@@ -108,38 +110,109 @@ export class InicioSesionComponent implements OnInit {
     });
   }
 
-  onRegister(): void {
+  async onRegister(): Promise<void> {
     this.registroError = '';
     this.registroExito = '';
     this.registroForm.markAllAsTouched();
 
     if (this.registroForm.invalid) {
       this.registroError = 'Todos los campos son obligatorios y deben ser válidos.';
+      console.log('Formulario inválido:', this.registroForm.errors);
+      return;
+    }
+
+    console.log('Iniciando registro de usuario...');
+    console.log('Datos del formulario:', this.registroForm.value);
+
+    // Validar datos antes de enviar
+    if (!this.validateRegistrationData(this.registroForm.value)) {
+      console.error('❌ Datos de registro inválidos');
       return;
     }
 
     this.loadingRegister = true;
-    this.userService.registerUser(this.registroForm.value).subscribe({
-      next: (res) => {
-        this.loadingRegister = false;
+
+    try {
+      const response = await this.userService.register(this.registroForm.value).toPromise();
+
+      if (response && response.access_token) {
+        console.log('✅ Registro exitoso:', response.user);
 
         // Guardar token automáticamente después del registro
-        if (res.access_token) {
-          localStorage.setItem('token', res.access_token);
-          console.log('✅ Token guardado automáticamente después del registro');
-        }
+        localStorage.setItem('token', response.access_token);
+        console.log('✅ Token guardado automáticamente después del registro');
+
+        // También guardar con el método del AuthService si existe
+        this.auth.saveToken(response.access_token);
 
         this.registroExito = '¡Usuario registrado exitosamente! Ahora registra tu negocio.';
+        this.loadingRegister = false;
+
         setTimeout(() => {
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }, 200);
-      },
-      error: (err) => {
+      } else {
         this.loadingRegister = false;
-        console.error('Error al registrar usuario:', err);
-        this.registroError = err.error?.message || 'Error al registrar usuario. Verifica los datos o credenciales.';
+        this.registroError = 'Error al registrar usuario. No se recibió token de acceso.';
       }
-    });
+    } catch (error: any) {
+      console.error('Error en registro:', error);
+      console.error('Error status:', error.status);
+      console.error('Error message:', error.error);
+
+      this.loadingRegister = false;
+
+      if (error.status === 422) {
+        this.handleValidationErrors(error.error.errors);
+      } else {
+        this.registroError = error.error?.message || 'Error al registrar usuario. Verifica los datos o credenciales.';
+      }
+    }
+  }
+
+  private validateRegistrationData(data: any): boolean {
+    const required = ['nombres', 'apellidos', 'email', 'clave'];
+
+    for (const field of required) {
+      if (!data[field] || data[field].trim() === '') {
+        console.error(`❌ Campo requerido faltante: ${field}`);
+        this.registroError = `El campo ${field} es requerido`;
+        return false;
+      }
+    }
+
+    // Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.email)) {
+      console.error('❌ Email inválido');
+      this.registroError = 'Email inválido';
+      return false;
+    }
+
+    // Validar contraseña
+    if (data.clave.length < 8) {
+      console.error('❌ La contraseña debe tener al menos 8 caracteres');
+      this.registroError = 'La contraseña debe tener al menos 8 caracteres';
+      return false;
+    }
+
+    return true;
+  }
+
+  private handleValidationErrors(errors: any) {
+    console.log('Errores de validación:', errors);
+
+    // Mostrar errores al usuario
+    const errorMessages: string[] = [];
+    for (const field in errors) {
+      if (errors.hasOwnProperty(field)) {
+        const errorMessage = errors[field][0];
+        console.error(`❌ ${field}: ${errorMessage}`);
+        errorMessages.push(`${field}: ${errorMessage}`);
+      }
+    }
+
+    this.registroError = errorMessages.join(' | ');
   }
 
   onNegocioSubmit(): void {

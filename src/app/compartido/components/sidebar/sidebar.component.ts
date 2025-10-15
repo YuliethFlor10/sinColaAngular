@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, HostListener, OnInit } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 
 @Component({
@@ -8,11 +8,28 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
   standalone: true,
   imports: [RouterLink, RouterLinkActive]
 })
-export class SidebarComponent {
-   isOpen: boolean = false; // ← agrega esta línea
+export class SidebarComponent implements OnInit {
+  @Input() isOpen: boolean = false;
 
-  // Puedes agregar métodos para controlarlo si quieres
+  @HostListener('window:resize', ['$event'])
+  onResize(event: any) {
+    // En pantallas de escritorio (más de 1024px), siempre mostrar el sidebar
+    if (window.innerWidth > 1024) {
+      this.isOpen = true;
+    }
+  }
+
+  ngOnInit() {
+    // Al inicializar, mostrar el sidebar en pantallas de escritorio
+    if (window.innerWidth > 1024) {
+      this.isOpen = true;
+    }
+  }
+
   toggleSidebar() {
-    this.isOpen = !this.isOpen;
+    // Solo permitir toggle en pantallas no de escritorio
+    if (window.innerWidth <= 1024) {
+      this.isOpen = !this.isOpen;
+    }
   }
 }

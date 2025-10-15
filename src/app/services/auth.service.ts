@@ -2,86 +2,86 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AuthService {
-  private baseUrl = 'http://127.0.0.1:8000/api';
+  private apiUrl = 'http://127.0.0.1:8000/api';
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Login básico para obtener token
-   * Ajusta estos datos según tu API de Laravel
-   */
+  // Login
   login(email: string, password: string): Observable<any> {
-    const loginData = {
+    return this.http.post(`${this.apiUrl}/login`, {
       email: email,
       password: password
-    };
-
-    return this.http.post(`${this.baseUrl}/login`, loginData);
+    });
   }
 
-  /**
-   * Login con credenciales por defecto para testing
-   * Usa estas credenciales o las que tengas en tu base de datos
-   */
+  // Register
+  register(userData: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/register`, userData);
+  }
+
+  // Login con credenciales por defecto (actualizadas)
   loginWithDefaultCredentials(): Observable<any> {
-    // Intentar diferentes credenciales comunes
-    const credentials = [
-      { email: 'admin@admin.com', password: 'admin' },
-      { email: 'admin@example.com', password: 'password' },
-      { email: 'admin@test.com', password: '123456' },
-      { email: 'test@test.com', password: 'test' }
-    ];
-    
-    // Por ahora, usar la primera credencial
-    return this.login(credentials[0].email, credentials[0].password);
+    return this.http.post(`${this.apiUrl}/login`, {
+      email: 'admin@admin.com',
+      password: '12345678'
+    });
   }
 
-  /**
-   * Guardar token en localStorage
-   */
-  setToken(token: string): void {
+  // Guardar token
+  saveToken(token: string): void {
     localStorage.setItem('token', token);
   }
 
-  /**
-   * Obtener token del localStorage
-   */
+  // Obtener token
   getToken(): string | null {
     return localStorage.getItem('token');
   }
 
-  /**
-   * Verificar si hay token guardado
-   */
-  isAuthenticated(): boolean {
-    return !!this.getToken();
+  // Método setToken para compatibilidad
+  setToken(token: string): void {
+    this.saveToken(token);
   }
 
-  /**
-   * Alias para isAuthenticated (compatibilidad)
-   */
-  isLoggedIn(): boolean {
-    return this.isAuthenticated();
-  }
-
-  /**
-   * Logout - remover token
-   */
-  logout(): void {
+  // Remover token
+  removeToken(): void {
     localStorage.removeItem('token');
   }
 
-  /**
-   * Obtener headers con autenticación
-   */
+  // Verificar si está autenticado
+  isAuthenticated(): boolean {
+    const token = this.getToken();
+    return token !== null && token !== '';
+  }
+
+  // Métodos de gestión de Business ID (para personalización)
+  getCurrentBusinessId(): number {
+    const businessId = localStorage.getItem('currentBusinessId');
+    return businessId ? parseInt(businessId) : 1;
+  }
+
+  setCurrentBusinessId(businessId: number): void {
+    localStorage.setItem('currentBusinessId', businessId.toString());
+  }
+
+  // Headers con autenticación
   getAuthHeaders(): HttpHeaders {
     const token = this.getToken();
-    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    return headers;
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    });
+  }
+
+  // Headers para archivos
+  getAuthHeadersForFiles(): HttpHeaders {
+    const token = this.getToken();
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/json'
+    });
   }
 }

@@ -15,6 +15,10 @@ import { SidebarComponent } from '../../compartido/components/sidebar/sidebar.co
   standalone: true
 })
 export class AdminWeb {
+  sidebarOpen = false;
 
+  onToggleSidebar() {
+    this.sidebarOpen = !this.sidebarOpen;
+  }
 }
 

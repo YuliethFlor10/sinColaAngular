@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AuthService } from './auth.service';
+import { lastValueFrom } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AutoLoginService {
@@ -19,10 +20,10 @@ export class AutoLoginService {
       }
 
       console.log('🔄 Intentando login automático...');
-      
+
       // Intentar login con credenciales por defecto
-      const response = await this.authService.loginWithDefaultCredentials().toPromise();
-      
+      const response = await lastValueFrom(this.authService.loginWithDefaultCredentials());
+
       if (response && response.token) {
         this.authService.setToken(response.token);
         console.log('✅ Login automático exitoso');
@@ -48,6 +49,7 @@ export class AutoLoginService {
    */
   async attemptMultipleLogins(): Promise<boolean> {
     const credentials = [
+      { email: 'admin@admin.com', password: '12345678' }, // Credenciales actualizadas
       { email: 'admin@admin.com', password: 'admin' },
       { email: 'admin@example.com', password: 'password' },
       { email: 'admin@test.com', password: '123456' },
@@ -58,8 +60,8 @@ export class AutoLoginService {
     for (const cred of credentials) {
       try {
         console.log(`🔄 Probando credenciales: ${cred.email}`);
-        const response = await this.authService.login(cred.email, cred.password).toPromise();
-        
+        const response = await lastValueFrom(this.authService.login(cred.email, cred.password));
+
         if (response && (response.token || response.access_token)) {
           const token = response.token || response.access_token;
           this.authService.setToken(token);
@@ -70,7 +72,7 @@ export class AutoLoginService {
         console.log(`❌ Falló con: ${cred.email}`);
       }
     }
-    
+
     console.log('❌ Todas las credenciales fallaron');
     return false;
   }
@@ -81,9 +83,9 @@ export class AutoLoginService {
   async manualLogin(email: string, password: string): Promise<boolean> {
     try {
       console.log('🔄 Intentando login manual...');
-      
-      const response = await this.authService.login(email, password).toPromise();
-      
+
+      const response = await lastValueFrom(this.authService.login(email, password));
+
       if (response && (response.token || response.access_token)) {
         const token = response.token || response.access_token;
         this.authService.setToken(token);
@@ -99,4 +101,3 @@ export class AutoLoginService {
     }
   }
 }
-

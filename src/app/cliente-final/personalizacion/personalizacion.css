@@ -351,3 +351,72 @@ body {
 .hidden {
   display: none;
 }
+
+/* Mensajes de estado */
+.success-message {
+  background: #d4edda;
+  color: #155724;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #c3e6cb;
+  font-size: 14px;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #f5c6cb;
+  font-size: 14px;
+}
+
+.loading-message {
+  background: #d1ecf1;
+  color: #0c5460;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  border: 1px solid #bee5eb;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* Estilos para archivos */
+.file-help {
+  display: block;
+  color: #666;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Botón deshabilitado */
+.continue-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Validación de campos */
+.right-section input.ng-invalid.ng-touched,
+.right-section textarea.ng-invalid.ng-touched {
+  border-color: #dc3545;
+}
+
+.right-section input.ng-valid.ng-touched,
+.right-section textarea.ng-valid.ng-touched {
+  border-color: #28a745;
+}
+
+/* Estilos para checkboxes */
+.right-section input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+.right-section label input[type="checkbox"] {
+  margin-right: 8px;
+}
