@@ -67,9 +67,9 @@ export class InicioSesionComponent implements OnInit {
       direccion: ['', Validators.required],
       telefono: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      tipo_servicio_id: ['', Validators.required],
-      estados_id: [1, Validators.required],
-      plan_id: [1, Validators.required],
+      tipo_servicio_id: [1], // Valor por defecto: 1 (salon de belleza)
+      estados_id: [1],
+      plan_id: [1],
       planes_id: [1]
     });
   }

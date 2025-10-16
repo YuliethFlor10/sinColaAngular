@@ -1,131 +1,151 @@
-.btn-registrar {
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.btn-registrar:disabled {
-  background: #888;
-  cursor: not-allowed;
-}
-.registro-form input.ng-invalid.ng-touched,
-.registro-form select.ng-invalid.ng-touched {
-  border: 2px solid #ff4d4f !important;
-  background: #fff0f0;
-}
-/* Modal de error para login */
-
-/* Modal de error reforzado */
-.modal-overlay {
-  position: fixed;
-  display: flex !important;
-  opacity: 1 !important;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999 !important;
-  pointer-events: all;
-}
-.modal-content {
-  background: #fff0f0;
-  border-radius: 16px;
-  padding: 32px 24px;
-  max-width: 350px;
-  margin: 0 auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
-  text-align: center;
-  position: relative;
-  animation: modalFadeIn 0.4s ease;
-}
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  background: none;
-  border: none;
-  font-size: 22px;
-  color: #ff4d4f;
-  cursor: pointer;
-  z-index: 100000;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
+/* ===========================
+   Estilos Base
+   =========================== */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   box-sizing: border-box;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+/* ===========================
+   Header
+   =========================== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
-  padding: 10px 10px;
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  padding: 10px 20px;
   color: white;
-  text-align: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .titulo {
   margin: 0;
   font-size: 2rem;
+  white-space: nowrap;
 }
 
+/* ===========================
+   Login Form
+   =========================== */
 .login-form {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .login-form input {
   padding: 0.5rem;
   border-radius: 5px;
   border: none;
-  width: 100%;
-  max-width: 200px;
+  width: 200px;
+  flex-shrink: 0;
 }
 
-.login-form button {
-    display: flex;
-  flex-direction: column; /* Apila los elementos verticalmente */
-  gap: 10px;
-  align-items: stretch;
-  width: 100%;
-  max-width: 350px;
+.boton-redireccion {
+  background-color: black;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
 }
 
+.boton-redireccion:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.boton-redireccion:disabled {
+  background: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ===========================
+   Extra (Recuérdame)
+   =========================== */
 .extra {
-    display: flex;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 10px;
+  gap: 20px;
+  font-size: 14px;
+  flex-wrap: wrap;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: white;
+}
+
+.remember-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #000;
+  cursor: pointer;
+}
+
+.extra a {
+  color: white;
+  text-decoration: none;
+}
+
+.extra a:hover {
+  text-decoration: underline;
+}
+
+/* Compatibilidad con remember-container */
+.remember-container {
+  display: flex;
   align-items: center;
   justify-content: center;
   margin-top: 10px;
   gap: 20px;
   font-family: Arial, sans-serif;
   font-size: 14px;
-
 }
 
+.remember-container input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #000;
+  cursor: pointer;
+}
 
-.extra a {
-  color: rgb(255, 255, 255);
+.remember-container a {
+  color: white;
   text-decoration: none;
-
 }
 
+.remember-container a:hover {
+  text-decoration: underline;
+}
+
+/* ===========================
+   Container Principal
+   =========================== */
 .container {
   display: flex;
   justify-content: space-between;
   padding: 3rem 5vw;
   flex-wrap: wrap;
+  gap: 2rem;
 }
 
 .izquierda,
@@ -137,8 +157,12 @@ body {
   padding: 2rem;
 }
 
+/* ===========================
+   Sección Izquierda
+   =========================== */
 .mensaje {
   font-size: 1.2rem;
+  line-height: 1.6;
   padding: 0 1rem;
 }
 
@@ -149,12 +173,16 @@ body {
   margin-top: 20px;
 }
 
+/* ===========================
+   Sección Derecha - Registro
+   =========================== */
 .registrate {
   font-size: 2rem;
-  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  margin-bottom: 1.5rem;
 }
 
 .registro-form {
@@ -166,10 +194,26 @@ body {
   width: 100%;
 }
 
-.registro-form input {
+.registro-form input,
+.registro-form select {
   padding: 0.75rem;
   border-radius: 5px;
   border: 1px solid #ccc;
+  width: 100%;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.registro-form input:focus,
+.registro-form select:focus {
+  outline: none;
+  border-color: #4ec4ff;
+}
+
+.registro-form input.ng-invalid.ng-touched,
+.registro-form select.ng-invalid.ng-touched {
+  border: 2px solid #ff4d4f !important;
+  background: #fff0f0;
 }
 
 .btn-registrar {
@@ -178,6 +222,35 @@ body {
   color: white;
   border: none;
   border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.btn-registrar:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.btn-registrar:disabled {
+  background: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ===========================
+   Footer
+   =========================== */
+.footer {
+  text-align: center;
+  margin: 30px 0;
+  font-style: italic;
+  font-size: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .iconos img {
@@ -186,70 +259,150 @@ body {
   cursor: pointer;
 }
 
-.footer {
-  text-align: center;
-  margin: 30px 0;
-  font-style: italic;
-  font-size: 1rem;
-  padding: 1rem;
-  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* ===========================
+   Modal
+   =========================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999 !important;
+  pointer-events: all;
+  opacity: 1 !important;
 }
 
+.modal-content {
+  background: #fff0f0;
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 350px;
+  width: 90%;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  position: relative;
+  animation: modalFadeIn 0.4s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
 
-
-.boton-redireccion {
-  background-color: black;
-  color: white;
-  padding: 0.5rem 1rem;
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: none;
   border: none;
-  border-radius: 5px;
-  text-decoration: none;
+  font-size: 22px;
+  color: #ff4d4f;
   cursor: pointer;
+  z-index: 100000;
+  transition: transform 0.2s;
+}
+
+.modal-close:hover {
+  transform: scale(1.1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ===========================
-   Responsive Mejorado
+   RESPONSIVE - Tablets (768px)
    =========================== */
-
-@media (max-width: 500px) {
-  .container {
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem 1rem;
+@media (max-width: 768px) {
+  .header {
+    padding: 15px;
   }
 
-  .izquierda,
-  .derecha {
-    padding: 1rem;
-    width: 100%;
-  }
-
-  .derecha {
-    border-top: 1px solid #eee;
-    margin-top: 1rem;
-    padding-top: 1rem;
+  .titulo {
+    font-size: 1.75rem;
   }
 
   .login-form {
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
+    justify-content: center;
+  }
+
+  .login-form input {
+    width: 180px;
   }
 }
 
+/* ===========================
+   RESPONSIVE - Móviles (600px)
+   =========================== */
 @media (max-width: 600px) {
+  /* Header vertical */
   .header {
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     padding: 1rem;
+    gap: 1rem;
   }
 
   .titulo {
     font-size: 1.5rem;
-    margin-bottom: 1rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  /* Login form vertical */
+  .login-form {
+    width: 100%;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .login-form input {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .boton-redireccion {
+    width: 100%;
+  }
+
+  /* Extra vertical */
+  .extra {
+    flex-direction: column;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Container */
+  .container {
+    flex-direction: column;
+    padding: 2rem 1rem;
+  }
+
+  .izquierda {
+    order: 2;
+    padding: 1rem;
+  }
+
+  .derecha {
+    order: 1;
+    padding: 1rem;
+  }
+
+  /* Ocultar mensaje y footer en móvil */
+  .mensaje,
+  .footer {
+    display: none;
   }
 
   .logo {
@@ -262,50 +415,150 @@ body {
     margin: 0 5px;
   }
 
-  .footer {
+  .registrate {
+    font-size: 1.5rem;
+  }
+
+  .registro-form {
+    max-width: 100%;
+  }
+
+  .modal-content {
+    max-width: 90%;
+    padding: 24px 16px;
+  }
+}
+
+/* ===========================
+   RESPONSIVE - Móviles pequeños (500px)
+   =========================== */
+@media (max-width: 500px) {
+  .header {
+    padding: 0.75rem;
+  }
+
+  .izquierda,
+  .derecha {
+    padding: 0.75rem;
+    width: 100%;
+  }
+
+  .derecha {
+    border-top: 1px solid #eee;
+    margin-top: 1rem;
+    padding-top: 1rem;
+  }
+}
+
+/* ===========================
+   RESPONSIVE - Móviles muy pequeños (400px)
+   =========================== */
+@media (max-width: 400px) {
+  .titulo {
+    font-size: 1.3rem;
+  }
+
+  .login-form input {
+    padding: 0.45rem;
     font-size: 0.9rem;
   }
-}
 
-@media (max-width: 600px) {
-  .mensaje {
-    display: none;
+  .boton-redireccion,
+  .login-form button {
+    padding: 0.45rem 0.85rem;
+    font-size: 0.9rem;
   }
 
-  .footer {
-    display: none;
+  .extra {
+    font-size: 0.8rem;
+  }
+
+  .registrate {
+    font-size: 1.3rem;
+  }
+
+  .registro-form input,
+  .registro-form select {
+    padding: 0.65rem;
+    font-size: 0.9rem;
+  }
+
+  .btn-registrar {
+    padding: 0.65rem;
+    font-size: 0.95rem;
+  }
+
+  .logo {
+    width: 80px;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    padding: 20px 16px;
   }
 }
 
-.remember-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 10px;
-  gap: 20px;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
+/* ===========================
+   Landscape Mode (móviles horizontales)
+   =========================== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header {
+    padding: 0.5rem 1rem;
+  }
+
+  .titulo {
+    font-size: 1.2rem;
+  }
+
+  .login-form {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+
+  .login-form input {
+    width: 150px;
+    padding: 0.4rem;
+  }
+
+  .boton-redireccion,
+  .login-form button {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.85rem;
+    width: auto;
+  }
+
+  .extra {
+    flex-direction: row;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .container {
+    padding: 1rem 3vw;
+  }
+
+  .modal-content {
+    max-height: 85vh;
+  }
 }
 
-.remember-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
+/* ===========================
+   Accesibilidad
+   =========================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-.remember-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #000; /* Cambia el color del check */
-  cursor: pointer;
-}
-
-.remember-container a {
-  color: black;
-  text-decoration: none;
-}
-
-.remember-container a:hover {
-  text-decoration: underline;
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid #4ec4ff;
+  outline-offset: 2px;
 }

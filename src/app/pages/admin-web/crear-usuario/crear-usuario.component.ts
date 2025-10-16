@@ -8,7 +8,7 @@ import { AutoLoginService } from '../../../services/auto-login.service';
 import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 
 // ========================================
-// INTERFACES CORREGIDAS
+// INTERFACES
 // ========================================
 
 interface ApiUserResponse {
@@ -25,7 +25,6 @@ interface ApiUserResponse {
   terminos_condiciones?: boolean;
   creado_en?: string;
   actualizado_en?: string;
-  // Relaciones
   status?: {
     id: number;
     nombre: string;
@@ -80,7 +79,7 @@ interface ApiUserRequest {
   email: string;
   nacimiento?: string | null;
   genero?: 'M' | 'F' | 'O';
-  clave: string;
+  clave?: string; // Ahora es opcional
   tipo_identificacion_id: number;
   identificacion: string;
   celular?: string | null;
@@ -116,7 +115,7 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Paginación
   currentPage: number = 1;
-  itemsPerPage: number = 50; // Aumentado para mostrar más usuarios
+  itemsPerPage: number = 50;
   totalPages: number = 1;
 
   // Mensajes
@@ -128,7 +127,12 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
   isEditMode: boolean = false;
 
   // Menú desplegable
-openMenuId: number | string | null = null;
+  openMenuId: number | string | null = null;
+
+  // ========================================
+  // NUEVO: Propiedad para controlar si la contraseña es requerida
+  // ========================================
+  isPasswordRequired: boolean = true;
 
   // ========================================
   // DATOS MAESTROS
@@ -172,31 +176,130 @@ openMenuId: number | string | null = null;
     this.initializeComponent();
     this.loadAllUsers();
 
-    // Inicializar formulario con valores por defecto
     setTimeout(() => {
       this.initializeFormDefaults();
+      this.setupUserTypeListener(); // NUEVO: Escuchar cambios en tipo de usuario
     }, 100);
   }
 
- ngAfterViewInit(): void {
-  (window as any).crearUsuarioComponent = this;
+  ngAfterViewInit(): void {
+    (window as any).crearUsuarioComponent = this;
 
-  setTimeout(() => {
-    this.setupDOMEvents();
-  }, 100);
+    setTimeout(() => {
+      this.setupDOMEvents();
+    }, 100);
 
-  // Agregar evento global para cerrar menús al hacer clic fuera
-  document.addEventListener('click', (event) => {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.user-menu-container')) {
-      this.closeAllUserMenus();
-    }
-  });
-}
+    document.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.user-menu-container')) {
+        this.closeAllUserMenus();
+      }
+    });
+  }
 
   ngOnDestroy(): void {
     if ((window as any).crearUsuarioComponent === this) {
       delete (window as any).crearUsuarioComponent;
+    }
+  }
+
+  // ========================================
+  // NUEVO: CONFIGURAR LISTENER PARA TIPO DE USUARIO
+  // ========================================
+
+  private setupUserTypeListener(): void {
+    // Escuchar cambios en el formulario reactivo
+    this.userForm.get('userType')?.valueChanges.subscribe((userType: string) => {
+      this.updatePasswordRequirement(userType);
+    });
+
+    // También escuchar cambios en el DOM
+    const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
+    if (userTypeSelect) {
+      userTypeSelect.addEventListener('change', (e) => {
+        const target = e.target as HTMLSelectElement;
+        this.updatePasswordRequirement(target.value);
+      });
+    }
+  }
+
+  // ========================================
+  // NUEVO: ACTUALIZAR REQUERIMIENTO DE CONTRASEÑA
+  // ========================================
+
+  private updatePasswordRequirement(userType: string): void {
+    const passwordControl = this.userForm.get('password');
+    const confirmPasswordControl = this.userForm.get('confirmPassword');
+
+    console.log('🔐 Actualizando requerimiento de contraseña para tipo:', userType);
+
+    // Si es Cliente, la contraseña NO es requerida
+    if (userType === 'Cliente') {
+      this.isPasswordRequired = false;
+
+      // Quitar validadores requeridos
+      passwordControl?.clearValidators();
+      passwordControl?.setValidators([Validators.minLength(6)]);
+      confirmPasswordControl?.clearValidators();
+
+      console.log('✅ Contraseña NO requerida para Cliente');
+    } else {
+      // Para Admin y Empleado, la contraseña SÍ es requerida (excepto en edición)
+      this.isPasswordRequired = !this.isEditMode;
+
+      if (!this.isEditMode) {
+        passwordControl?.setValidators([Validators.required, Validators.minLength(6)]);
+        confirmPasswordControl?.setValidators([Validators.required]);
+        console.log('✅ Contraseña REQUERIDA para Admin/Empleado');
+      } else {
+        passwordControl?.clearValidators();
+        passwordControl?.setValidators([Validators.minLength(6)]);
+        confirmPasswordControl?.clearValidators();
+        console.log('✅ Contraseña OPCIONAL en modo edición');
+      }
+    }
+
+    // Actualizar validación
+    passwordControl?.updateValueAndValidity();
+    confirmPasswordControl?.updateValueAndValidity();
+
+    // Actualizar placeholders visuales
+    this.updatePasswordPlaceholders(userType);
+
+    this.cdr.detectChanges();
+  }
+
+  // ========================================
+  // NUEVO: ACTUALIZAR PLACEHOLDERS DE CONTRASEÑA
+  // ========================================
+
+  private updatePasswordPlaceholders(userType: string): void {
+    const passwordInput = document.getElementById('password') as HTMLInputElement;
+    const confirmPasswordInput = document.getElementById('confirmPassword') as HTMLInputElement;
+    const passwordLabel = document.querySelector('label[for="password"]') as HTMLLabelElement;
+    const confirmPasswordLabel = document.querySelector('label[for="confirmPassword"]') as HTMLLabelElement;
+
+    if (passwordInput && confirmPasswordInput && passwordLabel && confirmPasswordLabel) {
+      if (userType === 'Cliente') {
+        if (!this.isEditMode) {
+          passwordLabel.textContent = 'Crear contraseña (opcional)';
+          confirmPasswordLabel.textContent = 'Confirmar contraseña (opcional)';
+          passwordInput.placeholder = 'Opcional - Se generará automáticamente si se omite';
+          confirmPasswordInput.placeholder = 'Opcional';
+        }
+      } else {
+        if (this.isEditMode) {
+          passwordLabel.textContent = 'Nueva contraseña (opcional)';
+          confirmPasswordLabel.textContent = 'Confirmar nueva contraseña';
+          passwordInput.placeholder = 'Dejar vacío para mantener la actual';
+          confirmPasswordInput.placeholder = 'Confirmar nueva contraseña';
+        } else {
+          passwordLabel.textContent = 'Crear contraseña';
+          confirmPasswordLabel.textContent = 'Confirmar contraseña';
+          passwordInput.placeholder = 'Contraseña';
+          confirmPasswordInput.placeholder = 'Confirmar contraseña';
+        }
+      }
     }
   }
 
@@ -218,6 +321,8 @@ openMenuId: number | string | null = null;
 
     if (userTypeSelect && !userTypeSelect.value) {
       userTypeSelect.value = 'Cliente';
+      // Actualizar requerimiento inicial
+      this.updatePasswordRequirement('Cliente');
     }
 
     console.log('✅ Valores por defecto del formulario inicializados');
@@ -225,16 +330,12 @@ openMenuId: number | string | null = null;
 
   private setupDOMEvents(): void {
     try {
-      // Solo configurar eventos que no se pueden manejar con Angular
       console.log('Eventos del DOM configurados correctamente');
     } catch (error) {
       console.warn('Error configurando eventos del DOM:', error);
     }
   }
 
-  /**
-   * NUEVO: Manejar input de búsqueda con Angular
-   */
   onSearchInput(event: Event): void {
     const target = event.target as HTMLInputElement;
     this.searchTerm = target.value;
@@ -242,67 +343,41 @@ openMenuId: number | string | null = null;
   }
 
   // ========================================
-  // CARGA DE DATOS - PROBLEMA PRINCIPAL CORREGIDO
+  // CARGA DE DATOS
   // ========================================
 
-  /**
-   * CORREGIDO: Maneja correctamente la respuesta paginada de Laravel y carga TODOS los usuarios
-   */
   private loadAllUsers(): void {
     this.isLoading = true;
     console.log('🔄 Cargando TODOS los usuarios desde la API...');
-    console.log('🔍 Token actual:', localStorage.getItem('token'));
 
-    // Intentar cargar todos los usuarios con parámetros de paginación amplios
     const params = {
-      'per_page': '1000', // Solicitar hasta 1000 usuarios por página
+      'per_page': '1000',
       'page': '1'
     };
 
     this.usersService.getAll(params).subscribe({
       next: (response: any) => {
         try {
-          console.log('📡 Respuesta completa de la API:', response);
-          console.log('📊 Tipo de respuesta:', typeof response);
-          console.log('🔍 Es array?', Array.isArray(response));
-          console.log('🔍 Tiene .data?', response?.data ? 'SÍ' : 'NO');
-
           let rawUsers: ApiUserResponse[] = [];
 
-          // CORREGIDO: Manejo mejorado de respuesta paginada de Laravel
           if (response && response.data && Array.isArray(response.data)) {
-            // Respuesta paginada: { data: [...], current_page: 1, ... }
             rawUsers = response.data;
-            console.log('✅ Respuesta paginada detectada. Usuarios extraídos:', rawUsers.length);
 
-            // Si hay más páginas, intentar cargar todas las páginas
             if (response.last_page && response.last_page > 1) {
-              console.log('🔄 Detectadas múltiples páginas. Cargando todas las páginas...');
               this.loadAllPages(response.last_page, rawUsers);
               return;
             }
           } else if (Array.isArray(response)) {
-            // Respuesta directa como array
             rawUsers = response;
-            console.log('✅ Respuesta directa como array:', rawUsers.length);
           } else {
-            console.error('❌ Formato de respuesta no reconocido:', response);
-            console.log('🔧 Intentando extraar de diferentes formatos...');
-
-            // Intentar otros formatos posibles
             if (response?.users) rawUsers = response.users;
             else if (response?.items) rawUsers = response.items;
             else rawUsers = [];
           }
 
-          // Transformar y asignar
           this.users = rawUsers.map(user => this.transformApiUserToFrontend(user));
           this.filteredUsers = [...this.users];
 
-          console.log('✅ Usuarios transformados correctamente:', this.users.length);
-          console.log('📋 Primera muestra:', this.users.slice(0, 2));
-
-          // Actualizar vista
           this.updatePagination();
 
         } catch (error) {
@@ -335,15 +410,11 @@ openMenuId: number | string | null = null;
     });
   }
 
-  /**
-   * NUEVO: Cargar todas las páginas de usuarios
-   */
   private loadAllPages(totalPages: number, initialUsers: ApiUserResponse[]): void {
     const allUsers = [...initialUsers];
     let completedRequests = 1;
 
     for (let page = 2; page <= totalPages; page++) {
-      // Crear parámetros para cada página
       const pageParams = {
         'per_page': '1000',
         'page': page.toString()
@@ -357,12 +428,9 @@ openMenuId: number | string | null = null;
 
           completedRequests++;
 
-          // Cuando todas las páginas estén cargadas
           if (completedRequests === totalPages) {
             this.users = allUsers.map(user => this.transformApiUserToFrontend(user));
             this.filteredUsers = [...this.users];
-
-            console.log('✅ Todos los usuarios cargados:', this.users.length);
 
             this.updatePagination();
             this.isLoading = false;
@@ -373,7 +441,6 @@ openMenuId: number | string | null = null;
           completedRequests++;
 
           if (completedRequests === totalPages) {
-            // Usar los usuarios que se pudieron cargar
             this.users = allUsers.map(user => this.transformApiUserToFrontend(user));
             this.filteredUsers = [...this.users];
 
@@ -386,7 +453,7 @@ openMenuId: number | string | null = null;
   }
 
   // ========================================
-  // CREACIÓN DE USUARIOS - CORREGIDO
+  // CREACIÓN DE USUARIOS - MODIFICADO
   // ========================================
 
   private createNewUser(formData: UserFormData): void {
@@ -403,22 +470,14 @@ openMenuId: number | string | null = null;
           this.showSuccessMessage('Usuario creado exitosamente');
           this.resetCreateUserForm();
 
-          // FORZAR RECARGA INMEDIATA - SOLUCION TEMPORAL
-          console.log('🔄 Forzando recarga de usuarios...');
           setTimeout(() => {
             this.loadAllUsers();
-
-            // Si estamos en vista de lista, cambiar para forzar actualización visual
-            if (this.currentView === 'list-users') {
-
-            }
           }, 1000);
 
         } catch (error) {
           console.error('❌ Error procesando respuesta de creación:', error);
           this.showErrorMessage('Usuario creado pero hubo un error actualizando la lista');
 
-          // Recargar de todos modos
           setTimeout(() => {
             this.loadAllUsers();
           }, 1000);
@@ -438,16 +497,12 @@ openMenuId: number | string | null = null;
   }
 
   // ========================================
-  // EDICIÓN DE USUARIOS - FUNCIONALIDAD COMPLETA
+  // EDICIÓN DE USUARIOS
   // ========================================
 
-  /**
-   * Cargar datos del usuario para edición
-   */
   editUser(userId: string | number): void {
     console.log('🔄 Iniciando edición de usuario:', userId);
 
-    // Cerrar el menú desplegable
     this.closeAllUserMenus();
 
     const user = this.users.find(u => u.id.toString() === userId.toString());
@@ -457,39 +512,23 @@ openMenuId: number | string | null = null;
       return;
     }
 
-    console.log('✅ Usuario encontrado:', user);
-
-    // Cambiar a modo edición
     this.isEditMode = true;
     this.editingUserId = userId;
-
-    // Cambiar a vista de creación/edición
     this.currentView = 'create-user';
-    console.log('🔄 Vista cambiada a:', this.currentView);
 
-    // Cargar datos en el formulario después de cambiar la vista
     setTimeout(() => {
       this.loadUserDataIntoForm(user);
+      this.updatePasswordRequirement(user.userType); // NUEVO: Actualizar según tipo de usuario
       this.updateButtonState(false, 'Actualizar usuario');
       this.cdr.detectChanges();
     }, 200);
 
-    console.log('✅ Modo edición activado para:', user.name);
     this.showSuccessMessage(`Editando usuario: ${user.name}`);
   }
 
-  /**
-   * NUEVO: Cargar datos del usuario en el formulario
-   */
   private loadUserDataIntoForm(user: User): void {
     console.log('📝 Cargando datos del usuario en el formulario:', user);
 
-    // Separar nombre y apellidos
-    const nameParts = user.name.split(' ');
-    const firstName = nameParts[0] || '';
-    const lastName = nameParts.slice(1).join(' ') || '';
-
-    // Mapear tipo de documento
     let documentType = 'cedula';
     if (user.documentType.toLowerCase().includes('extranjería')) {
       documentType = 'pasaporte';
@@ -497,19 +536,10 @@ openMenuId: number | string | null = null;
       documentType = 'tarjeta';
     }
 
-    console.log('📋 Datos mapeados:', {
-      documentType,
-      documentNumber: user.documentNumber,
-      name: user.name,
-      userType: user.userType
-    });
-
-    // Llenar formulario DOM con delay para asegurar que la vista esté renderizada
     setTimeout(() => {
       this.updateFormDOM(user, documentType);
     }, 200);
 
-    // Actualizar formulario reactivo
     this.userForm.patchValue({
       documentType,
       documentNumber: user.documentNumber,
@@ -547,24 +577,16 @@ openMenuId: number | string | null = null;
       if (emailInput) emailInput.value = user.email;
       if (userTypeSelect) userTypeSelect.value = user.userType;
 
-      // Las contraseñas se dejan vacías en edición
       if (passwordInput) passwordInput.value = '';
       if (confirmPasswordInput) confirmPasswordInput.value = '';
 
       console.log('✅ Formulario DOM actualizado');
-    } else {
-      console.error('❌ No se encontró el formulario DOM');
     }
   }
 
-  /**
-   * Actualizar usuario existente
-   */
   private updateExistingUser(userId: string | number, formData: UserFormData): void {
     console.log('🔄 updateExistingUser llamado con ID:', userId);
-    console.log('📋 Datos del formulario recibidos:', formData);
 
-    // Para edición, la contraseña es opcional
     const apiData = this.transformFormDataToApiRequest(formData, true);
     console.log('📤 Datos para enviar a la API:', apiData);
 
@@ -575,7 +597,6 @@ openMenuId: number | string | null = null;
         this.showSuccessMessage('Usuario actualizado exitosamente');
         this.cancelEdit();
 
-        // Recargar todos los usuarios después de un breve delay
         setTimeout(() => {
           this.loadAllUsers();
         }, 500);
@@ -604,19 +625,16 @@ openMenuId: number | string | null = null;
     });
   }
 
-  /**
-   * NUEVO: Cancelar edición
-   */
   cancelEdit(): void {
     this.isEditMode = false;
     this.editingUserId = null;
     this.resetCreateUserForm();
     this.updateButtonState(false, 'Crear usuario');
-    console.log('✅ Edición cancelada, volviendo a modo crear usuario');
+    console.log('✅ Edición cancelada');
   }
 
   // ========================================
-  // TRANSFORMADORES DE DATOS - CORREGIDOS
+  // TRANSFORMADORES DE DATOS - MODIFICADO
   // ========================================
 
   private transformApiUserToFrontend(apiUser: ApiUserResponse): User {
@@ -640,15 +658,13 @@ openMenuId: number | string | null = null;
   }
 
   /**
-   * CORREGIDO: Soporte para edición
+   * MODIFICADO: No enviar contraseña si está vacía y es Cliente o en edición
    */
   private transformFormDataToApiRequest(formData: UserFormData, isEdit = false): ApiUserRequest {
-    // Separar nombre completo
     const nameParts = formData.name.trim().split(' ');
     const nombres = nameParts[0] || '';
     const apellidos = nameParts.slice(1).join(' ') || 'Sin apellido';
 
-    // Mapear tipo de documento
     let tipoIdentificacionId = 1;
     switch (formData.documentType) {
       case 'cedula':
@@ -662,7 +678,6 @@ openMenuId: number | string | null = null;
         break;
     }
 
-    // Mapear rol - CORREGIDO para coincidir con tu base de datos
     let rolId = 2;
     switch (formData.userType) {
       case 'Cliente':
@@ -682,7 +697,6 @@ openMenuId: number | string | null = null;
       email: formData.email,
       nacimiento: formData.birthDate || null,
       genero: 'O' as 'M' | 'F' | 'O',
-      clave: formData.password,
       tipo_identificacion_id: tipoIdentificacionId,
       identificacion: formData.documentNumber,
       celular: formData.phoneNumber || null,
@@ -694,27 +708,24 @@ openMenuId: number | string | null = null;
       negocios_id: null
     };
 
-    // Si es edición y no hay contraseña, eliminar el campo
-    if (isEdit && !formData.password) {
-      delete (apiData as any).clave;
+    // NUEVO: Solo agregar contraseña si se proporcionó
+    if (formData.password && formData.password.trim() !== '') {
+      apiData.clave = formData.password;
     }
+    // Si es edición y no hay contraseña, no enviar el campo
+    // Si es creación y es Cliente sin contraseña, el backend debe generar una
 
     return apiData;
   }
 
   // ========================================
-  // MANEJO DE FORMULARIO - CORREGIDO
+  // MANEJO DE FORMULARIO - MODIFICADO
   // ========================================
 
-  /**
-   * CORREGIDO: Maneja tanto creación como edición
-   */
   onSubmit(event?: Event): void {
     console.log('🔄 onSubmit llamado');
     console.log('📊 Modo edición:', this.isEditMode);
-    console.log('📊 ID usuario editando:', this.editingUserId);
 
-    // SIEMPRE prevenir el comportamiento por defecto del formulario
     if (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -722,13 +733,11 @@ openMenuId: number | string | null = null;
 
     const formData = this.getFormDataFromDOM();
     console.log('📋 Datos del formulario:', formData);
+    console.log('🔐 Tipo de usuario:', formData.userType);
 
-    // Validación especial para edición (contraseña opcional)
-    if (this.isEditMode && !formData.password && !formData.confirmPassword) {
-      formData.password = 'dummy-password'; // Se ignorará en el backend
-      formData.confirmPassword = 'dummy-password';
-      console.log('🔐 Contraseñas dummy agregadas para edición');
-    }
+    // Verificar si necesita contraseña
+    const needsPasswordValidation = this.needsPasswordValidation(formData);
+    console.log('🔐 Necesita validación de contraseña:', needsPasswordValidation);
 
     if (this.validateFormData(formData)) {
       console.log('✅ Validación exitosa');
@@ -749,6 +758,22 @@ openMenuId: number | string | null = null;
     }
   }
 
+  // NUEVO: Determinar si necesita validación de contraseña
+  private needsPasswordValidation(formData: UserFormData): boolean {
+    // En modo edición, la contraseña siempre es opcional
+    if (this.isEditMode) {
+      return false;
+    }
+
+    // Si es Cliente en modo creación, la contraseña es opcional
+    if (formData.userType === 'Cliente') {
+      return false;
+    }
+
+    // Para Admin y Empleado en modo creación, la contraseña es requerida
+    return true;
+  }
+
   private createUserForm(): FormGroup {
     return this.formBuilder.group({
       documentType: ['cedula', Validators.required],
@@ -758,8 +783,8 @@ openMenuId: number | string | null = null;
       phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]+$/)]],
       email: ['', [Validators.required, Validators.email]],
       userType: ['Cliente', Validators.required],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', Validators.required],
+      password: ['', [Validators.minLength(6)]], // Sin required por defecto
+      confirmPassword: [''],
       service: ['']
     });
   }
@@ -793,31 +818,52 @@ openMenuId: number | string | null = null;
       service: (document.getElementById('service') as HTMLSelectElement)?.value || ''
     };
 
-    console.log('📋 Datos obtenidos del DOM:', formData);
     return formData;
   }
 
   /**
-   * CORREGIDO: Validación especial para edición
+   * MODIFICADO: Validación especial para contraseña según tipo de usuario
    */
   private validateFormData(formData: UserFormData): boolean {
     let isValid = true;
+    const needsPassword = this.needsPasswordValidation(formData);
 
     Object.entries(formData).forEach(([key, value]) => {
       if (key === 'service') return; // Opcional
 
-      // En modo edición, contraseñas son opcionales
-      if (this.isEditMode && (key === 'password' || key === 'confirmPassword')) {
-        return;
+      // CORREGIDO: Contraseñas opcionales según contexto
+      if (key === 'password' || key === 'confirmPassword') {
+        if (!needsPassword) {
+          // Limpiar cualquier error visual de los campos de contraseña
+          const element = document.getElementById(key);
+          const formGroup = element?.closest('.form-group');
+          const errorDiv = formGroup?.querySelector('.error-message') as HTMLElement;
+          this.clearFieldError(formGroup, errorDiv);
+          return; // Saltar validación de contraseñas
+        }
       }
 
       const element = document.getElementById(key);
       const formGroup = element?.closest('.form-group');
       const errorDiv = formGroup?.querySelector('.error-message') as HTMLElement;
 
-      if (!value && key !== 'confirmPassword') {
-        isValid = false;
-        this.showFieldError(formGroup, errorDiv, 'Este campo es requerido');
+      // No validar campos vacíos si son contraseñas opcionales
+      if (!value) {
+        if (key === 'password' || key === 'confirmPassword') {
+          if (!needsPassword) {
+            this.clearFieldError(formGroup, errorDiv);
+            return;
+          }
+        }
+
+        // Para otros campos requeridos
+        if (key !== 'confirmPassword' && key !== 'password') {
+          isValid = false;
+          this.showFieldError(formGroup, errorDiv, 'Este campo es requerido');
+        } else if (needsPassword) {
+          isValid = false;
+          this.showFieldError(formGroup, errorDiv, 'Este campo es requerido');
+        }
       } else {
         const fieldError = this.validateSpecificField(key, value);
         if (fieldError) {
@@ -829,14 +875,25 @@ openMenuId: number | string | null = null;
       }
     });
 
-    // Validar contraseñas solo si se proporcionan
-    if (formData.password || formData.confirmPassword) {
+    // CORREGIDO: Validar coincidencia de contraseñas solo si se necesita contraseña Y se proporcionaron ambas
+    if (needsPassword && formData.password && formData.confirmPassword) {
       if (formData.password !== formData.confirmPassword) {
         isValid = false;
         const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
         const errorDiv = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
         this.showFieldError(confirmPasswordGroup, errorDiv, 'Las contraseñas no coinciden');
       }
+    }
+
+    // Si no necesita contraseña, limpiar cualquier error de validación
+    if (!needsPassword) {
+      const passwordGroup = document.getElementById('password')?.closest('.form-group');
+      const confirmPasswordGroup = document.getElementById('confirmPassword')?.closest('.form-group');
+      const passwordError = passwordGroup?.querySelector('.error-message') as HTMLElement;
+      const confirmPasswordError = confirmPasswordGroup?.querySelector('.error-message') as HTMLElement;
+
+      this.clearFieldError(passwordGroup, passwordError);
+      this.clearFieldError(confirmPasswordGroup, confirmPasswordError);
     }
 
     return isValid;
@@ -853,7 +910,8 @@ openMenuId: number | string | null = null;
       case 'phoneNumber':
         return !/^[0-9+\-\s()]+$/.test(value) ? 'Formato de teléfono inválido' : '';
       case 'password':
-        return value.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : '';
+        // Solo validar longitud si se proporcionó contraseña
+        return value && value.length > 0 && value.length < 6 ? 'La contraseña debe tener al menos 6 caracteres' : '';
       case 'birthDate':
         const birthDate = new Date(value);
         const today = new Date();
@@ -869,7 +927,6 @@ openMenuId: number | string | null = null;
     if (form) {
       form.reset();
 
-      // Establecer valores por defecto después del reset
       setTimeout(() => {
         const documentTypeSelect = document.getElementById('documentType') as HTMLSelectElement;
         if (documentTypeSelect) {
@@ -879,6 +936,7 @@ openMenuId: number | string | null = null;
         const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
         if (userTypeSelect) {
           userTypeSelect.value = 'Cliente';
+          this.updatePasswordRequirement('Cliente'); // NUEVO: Actualizar requerimiento
         }
       }, 10);
     }
@@ -897,17 +955,12 @@ openMenuId: number | string | null = null;
       userType: 'Cliente'
     });
 
-    // Reset modo edición
     this.isEditMode = false;
     this.editingUserId = null;
 
-    // Actualizar texto del botón
     this.updateButtonState(false, 'Crear usuario');
   }
 
-  /**
-   * CORREGIDO: Soporte para texto dinámico del botón
-   */
   private updateButtonState(loading: boolean, text?: string): void {
     const submitBtn = document.querySelector('.btn-create') as HTMLButtonElement;
     if (submitBtn) {
@@ -929,35 +982,25 @@ openMenuId: number | string | null = null;
 
   toggleView(targetSection: string): void {
     console.log('🔄 Cambiando vista a:', targetSection);
-    console.log('📊 Vista actual ANTES:', this.currentView);
 
     if (targetSection === 'create-user-section') {
       this.currentView = 'create-user';
-      console.log('✅ Vista cambiada a: Crear Usuario');
 
-      // Cancelar edición si estaba activa
       if (this.isEditMode) {
         this.cancelEdit();
       } else {
-        // Solo limpiar formulario si no estamos en modo edición
         this.resetCreateUserForm();
       }
 
     } else if (targetSection === 'list-users-section') {
       this.currentView = 'list-users';
-      console.log('✅ Vista cambiada a: Lista de Usuarios');
 
-      // Cancelar edición si estaba activa
       if (this.isEditMode) {
         this.cancelEdit();
       }
 
-      // Cargar usuarios cuando se cambie a la vista de lista
       this.refreshUsersList();
     }
-
-    console.log('📊 Vista actual DESPUÉS:', this.currentView);
-    console.log('🔍 ¿Es list-users?', this.currentView === 'list-users');
   }
 
   refreshUsersList(): void {
@@ -993,71 +1036,6 @@ openMenuId: number | string | null = null;
     this.currentPage = 1;
     this.updatePagination();
   }
-
- /* renderUsersTable(): void {
-    const tbody = document.getElementById('userTableBody');
-    if (!tbody) {
-      console.error('❌ No se encontró el elemento tbody con ID userTableBody');
-      return;
-    }
-
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    const currentUsers = this.filteredUsers.slice(startIndex, endIndex);
-
-    console.log('📋 Renderizando tabla con usuarios:', currentUsers.length);
-    console.log('📊 Usuarios filtrados totales:', this.filteredUsers.length);
-    console.log('📊 Usuarios totales:', this.users.length);
-
-    tbody.innerHTML = '';
-
-    if (currentUsers.length === 0) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">
-            ${this.searchTerm ? 'No se encontraron usuarios que coincidan con la búsqueda' : 'No hay usuarios registrados'}
-          </td>
-        </tr>
-      `;
-      return;
-    }
-
-    currentUsers.forEach((user, index) => {
-      const row = document.createElement('tr');
-
-      // Formatear el documento como en la imagen: "Tipo - Número"
-      const documentDisplay = `${user.documentType} - ${user.documentNumber}`;
-
-      row.innerHTML = `
-        <td>${user.name}</td>
-        <td>${documentDisplay}</td>
-        <td>${user.userType}</td>
-        <td>${user.phoneNumber}</td>
-        <td>${user.email}</td>
-        <td>
-          <div class="user-menu-container">
-            <button class="menu-dots-button" onclick="window.crearUsuarioComponent?.toggleUserMenu('${user.id}')">
-              ⋮
-            </button>
-            <div class="user-menu-dropdown" id="menu-${user.id}" style="display: none;">
-              <button class="menu-item" onclick="window.crearUsuarioComponent?.editUser('${user.id}')">
-                Editar usuario
-              </button>
-              <button class="menu-item" onclick="window.crearUsuarioComponent?.deleteUser('${user.id}')">
-                Eliminar usuario
-              </button>
-            </div>
-          </div>
-        </td>
-      `;
-      tbody.appendChild(row);
-
-      console.log(`✅ Usuario ${index + 1} renderizado:`, user.name);
-    });
-
-    console.log('📋 Tabla renderizada con', currentUsers.length, 'usuarios');
-    this.updateUserCounter();
-  }*/
 
   private updateUserCounter(): void {
     const counterElement = document.getElementById('userCounter');
@@ -1098,49 +1076,29 @@ openMenuId: number | string | null = null;
       this.currentPage++;
       this.updatePagination();
     }
-}
+  }
 
-/**
- * Obtener usuarios de la página actual para el template
- */
-getCurrentPageUsers(): User[] {
-  const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-  const endIndex = startIndex + this.itemsPerPage;
-  return this.filteredUsers.slice(startIndex, endIndex);
-}
+  getCurrentPageUsers(): User[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredUsers.slice(startIndex, endIndex);
+  }
+
   // ========================================
   // MENÚ DE USUARIO
   // ========================================
 
-  /**
-   * NUEVO: Alternar menú desplegable de usuario (toggle)
-   */
- /**
- * Alternar menú desplegable de usuario (toggle)
- */
-toggleUserMenu(userId: string | number): void {
-  console.log('🔄 Toggle menú para usuario:', userId);
-
-  // Si el menú clickeado ya está abierto, cerrarlo
-  if (this.openMenuId === userId) {
-    this.openMenuId = null;
-    console.log('📋 Menú cerrado para usuario:', userId);
-  } else {
-    // Cerrar cualquier otro menú y abrir este
-    this.openMenuId = userId;
-    console.log('📋 Menú abierto para usuario:', userId);
+  toggleUserMenu(userId: string | number): void {
+    if (this.openMenuId === userId) {
+      this.openMenuId = null;
+    } else {
+      this.openMenuId = userId;
+    }
   }
-}
 
-  /**
-   * NUEVO: Cerrar todos los menús de usuario
-   */
-  /**
- * Cerrar todos los menús de usuario
- */
-private closeAllUserMenus(): void {
-  this.openMenuId = null;
-}
+  private closeAllUserMenus(): void {
+    this.openMenuId = null;
+  }
 
   // ========================================
   // ACCIONES DE USUARIO
@@ -1172,50 +1130,46 @@ private closeAllUserMenus(): void {
       - Estado: ${user.status === 'active' ? 'Activo' : 'Inactivo'}
     `;
 
-    alert(details); // Puedes reemplazar esto con un modal más elegante
+    alert(details);
   }
 
-deleteUser(userId: string | number): void {
-  // Cerrar el menú desplegable
-  this.closeAllUserMenus();
+  deleteUser(userId: string | number): void {
+    this.closeAllUserMenus();
 
-  const user = this.users.find(u => u.id.toString() === userId.toString());
-  if (!user) {
-    console.error('❌ Usuario no encontrado para eliminar:', userId);
-    this.showErrorMessage('Usuario no encontrado');
-    return;
-  }
+    const user = this.users.find(u => u.id.toString() === userId.toString());
+    if (!user) {
+      console.error('❌ Usuario no encontrado para eliminar:', userId);
+      this.showErrorMessage('Usuario no encontrado');
+      return;
+    }
 
-  // ✅ NUEVO: Advertencia especial si intentas eliminar tu propio usuario
-  const warningMessage = `¿Estás seguro de que deseas eliminar al usuario "${user.name}"?\n\n⚠️ ADVERTENCIA: Si este es tu usuario actual, perderás acceso al sistema.`;
+    const warningMessage = `¿Estás seguro de que deseas eliminar al usuario "${user.name}"?\n\n⚠️ ADVERTENCIA: Si este es tu usuario actual, perderás acceso al sistema.`;
 
-  if (confirm(warningMessage)) {
-    console.log('🔄 Eliminando usuario:', user.name);
+    if (confirm(warningMessage)) {
+      console.log('🔄 Eliminando usuario:', user.name);
 
-    this.usersService.delete(userId).subscribe({
-      next: (response: any) => {
-        console.log('✅ Usuario eliminado exitosamente:', response);
-        this.showSuccessMessage('Usuario eliminado correctamente');
+      this.usersService.delete(userId).subscribe({
+        next: (response: any) => {
+          console.log('✅ Usuario eliminado exitosamente:', response);
+          this.showSuccessMessage('Usuario eliminado correctamente');
 
-        // Recargar toda la lista después de eliminar
-        setTimeout(() => {
-          this.loadAllUsers();
-        }, 500);
-      },
-      error: (error: any) => {
-        console.error('❌ Error eliminando usuario:', error);
+          setTimeout(() => {
+            this.loadAllUsers();
+          }, 500);
+        },
+        error: (error: any) => {
+          console.error('❌ Error eliminando usuario:', error);
 
-        // ✅ NUEVO: Manejo especial para error 403 (usuario propio)
-        if (error.status === 403) {
-          this.showErrorMessage('No puedes eliminar tu propio usuario mientras estás autenticado');
-        } else {
-          const errorMsg = error?.error?.message || 'Error al eliminar el usuario';
-          this.showErrorMessage(errorMsg);
+          if (error.status === 403) {
+            this.showErrorMessage('No puedes eliminar tu propio usuario mientras estás autenticado');
+          } else {
+            const errorMsg = error?.error?.message || 'Error al eliminar el usuario';
+            this.showErrorMessage(errorMsg);
+          }
         }
-      }
-    });
+      });
+    }
   }
-}
 
   // ========================================
   // GESTIÓN DE MENSAJES
@@ -1313,10 +1267,6 @@ deleteUser(userId: string | number): void {
     }
   }
 
-  // ========================================
-  // FUNCIONES DE DEPURACIÓN
-  // ========================================
-
   debugCurrentState(): void {
     console.log('Estado actual del componente:');
     console.log('   - Vista actual:', this.currentView);
@@ -1327,6 +1277,6 @@ deleteUser(userId: string | number): void {
     console.log('   - Página actual:', this.currentPage);
     console.log('   - Término de búsqueda:', this.searchTerm);
     console.log('   - Cargando:', this.isLoading);
+    console.log('   - Contraseña requerida:', this.isPasswordRequired);
   }
-
 }
