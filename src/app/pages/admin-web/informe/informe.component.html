@@ -27,16 +27,14 @@
         </div>
 
         <div class="person-selector-report form-group">
-          <label for="reportPersonSelect" class="person-label">Seleccione informe</label>
+          <label for="reportPersonSelect" class="person-label">Seleccione usuario</label>
           <select 
             id="reportPersonSelect" 
             class="person-select"
-            [(ngModel)]="selectedPerson"
+            [(ngModel)]="selectedUserId"
             (change)="onPersonChange()">
-            <option value="empresa">Empresa</option>
-            <option value="yulieth">Yulieth</option>
-            <option value="juanito">Juanito</option>
-            <option value="pablito">Pablito</option>
+            <option [ngValue]="null">-- Seleccionar usuario --</option>
+            <option *ngFor="let u of users" [ngValue]="u.id">{{u.name || u.full_name || u.username}}</option>
           </select>
         </div>
         
@@ -84,6 +82,15 @@
           <div class="total-value-obtained">
             <h3>Valor total obtenido</h3>
             <p class="summary-value">{{totalValue | currency:'COP':'symbol':'1.0-0'}}</p>
+          </div>
+          
+          <div class="statistics-section">
+            <h3>Estadísticas</h3>
+            <ul class="stats-list">
+              <li><strong>Mes con mayor actividad:</strong> {{bestMonthLabel || 'No disponible'}}</li>
+              <li><strong>Total de registros:</strong> {{totalRecords}}</li>
+              <li><strong>Promedio por mes:</strong> {{averagePerMonth}}</li>
+            </ul>
           </div>
         </div>
       </div>
