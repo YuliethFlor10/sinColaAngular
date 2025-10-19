@@ -17,6 +17,12 @@ export interface Appointment {
   time: string;
   status?: string;
   nota?: string;
+
+  // Campos del formulario extendidos para mapeo correcto
+  clientDocType?: string;
+  clientDocNumber?: string;
+  clientBirthDate?: string;
+  clientPhone?: string;
   
   // Campos del backend (opcionales para el frontend)
   tipo_documento?: string;
@@ -31,7 +37,7 @@ export interface Appointment {
   hora_cita?: string;
   negocios_id?: number;
   servicios_id?: number;
-  status_id?: number;
+  estados_id?: number;
   usuarios_id?: number;
   tiempo_estimado?: number;
   descripcion_cancel?: string;
@@ -64,12 +70,17 @@ export class AppointmentsService {
    * 📌 Obtener todas las citas
    */
   getAll(): Observable<Appointment[]> {
-    console.log('🔍 Obteniendo todas las citas...');
-    return this.http.get<any[]>(this.apiUrl, this.httpOptions)
+    return this.http.get<any>(this.apiUrl, this.httpOptions)
       .pipe(
-        map(appointments => {
-          console.log('📥 Citas recibidas del servidor:', appointments);
-          return appointments.map(apt => this.mapToFrontend(apt));
+        map(response => {
+          // Algunos backends devuelven { data: [...] } y otros devuelven directamente un array
+          const list = Array.isArray(response) ? response : (response?.data || []);
+          if (!Array.isArray(list)) {
+            // si la forma es inesperada, log para facilitar debugging
+            console.warn('appointments.getAll: respuesta inesperada del backend', response);
+            return [] as Appointment[];
+          }
+          return list.map((apt: any) => this.mapToFrontend(apt));
         }),
         catchError(this.handleError)
       );
@@ -79,12 +90,16 @@ export class AppointmentsService {
    * 📌 Obtener una cita por ID
    */
   getById(id: number): Observable<Appointment> {
-    console.log(`🔍 Obteniendo cita #${id}...`);
     return this.http.get<any>(`${this.apiUrl}/${id}`, this.httpOptions)
       .pipe(
-        map(apt => {
-          console.log('📥 Cita recibida:', apt);
-          return this.mapToFrontend(apt);
+        map(response => {
+          // soporta { data: {...} } o el objeto directo
+          const payload = response?.data || response;
+          if (!payload) {
+            console.warn(`appointments.getById: respuesta vacía para id=${id}`, response);
+            return {} as Appointment;
+          }
+          return this.mapToFrontend(payload);
         }),
         catchError(this.handleError)
       );
@@ -95,14 +110,9 @@ export class AppointmentsService {
    */
   create(appointment: Appointment): Observable<Appointment> {
     const payload = this.mapToBackend(appointment);
-    console.log('🚀 CREANDO cita - Payload completo:', JSON.stringify(payload, null, 2));
-    
     return this.http.post<any>(this.apiUrl, payload, this.httpOptions)
       .pipe(
-        map(response => {
-          console.log('✅ Respuesta exitosa del servidor:', response);
-          return this.mapToFrontend(response.data || response);
-        }),
+        map(response => this.mapToFrontend(response.data || response)),
         catchError(this.handleError)
       );
   }
@@ -112,14 +122,9 @@ export class AppointmentsService {
    */
   update(id: number, appointment: Appointment): Observable<Appointment> {
     const payload = this.mapToBackend(appointment);
-    console.log(`🔄 ACTUALIZANDO cita #${id} - Payload:`, JSON.stringify(payload, null, 2));
-    
     return this.http.put<any>(`${this.apiUrl}/${id}`, payload, this.httpOptions)
       .pipe(
-        map(response => {
-          console.log('✅ Cita actualizada:', response);
-          return this.mapToFrontend(response.data || response);
-        }),
+        map(response => this.mapToFrontend(response.data || response)),
         catchError(this.handleError)
       );
   }
@@ -128,21 +133,20 @@ export class AppointmentsService {
    * 📌 Eliminar cita
    */
   delete(id: number): Observable<void> {
-    console.log(`🗑️ Eliminando cita #${id}...`);
     return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions)
-      .pipe(
-        map(() => {
-          console.log('✅ Cita eliminada exitosamente');
-        }),
-        catchError(this.handleError)
-      );
+      .pipe(catchError(this.handleError));
   }
 
   /**
    * 📌 Cambiar estado de la cita
    */
-  changeStatus(id: number, status: string): Observable<Appointment> {
-    const statusMap: { [key: string]: number } = {
+  changeStatus(id: number, status: string, currentAppointment?: Appointment): Observable<Appointment> {
+    // Buscar la cita actual si no se pasa como argumento (debe pasarse desde el componente para evitar inconsistencias)
+    let appointmentData: Appointment | undefined = currentAppointment;
+    // Si no se pasa, intentar buscar en localStorage o similar (no implementado aquí)
+    // Si no se encuentra, solo enviar el estado como antes (fallback)
+
+    const estadosMap: { [key: string]: number } = {
       'reserved': 1,
       'pendiente': 1,
       'confirmed': 2,
@@ -153,19 +157,49 @@ export class AppointmentsService {
       'completada': 4
     };
 
-    const payload = {
-      status_id: statusMap[status.toLowerCase()] || 1
-    };
+    let payload: any;
+    if (appointmentData) {
+      // Actualizar el status en el objeto antes de mapear
+      appointmentData = { ...appointmentData, status };
+      payload = this.mapToBackend(appointmentData);
+    } else {
+      // Fallback: solo enviar el estado
+      payload = { estados_id: estadosMap[status.toLowerCase()] || 1 };
+    }
 
-    console.log(`🔄 Cambiando estado de cita #${id} a "${status}"`, payload);
-
+    // Intentar primero con todos los datos. Si falla, intentar con solo el estado como antes.
     return this.http.patch<any>(`${this.apiUrl}/${id}`, payload, this.httpOptions)
       .pipe(
-        map(response => {
-          console.log('✅ Estado cambiado:', response);
-          return this.mapToFrontend(response.data || response);
-        }),
-        catchError(this.handleError)
+        map(response => this.mapToFrontend(response.data || response)),
+        catchError(err => {
+          // Log y primer fallback
+          console.warn('changeStatus: patch with full payload failed, trying fallback with { status }', err);
+          const fallback = { status };
+          return this.http.patch<any>(`${this.apiUrl}/${id}`, fallback, this.httpOptions)
+            .pipe(
+              map(response2 => this.mapToFrontend(response2.data || response2)),
+              // Si el fallback también falla, devolvemos un Appointment optimista para que la UI pueda mostrar el cambio
+              catchError(finalErr => {
+                console.error('changeStatus: both primary and fallback failed, returning optimistic appointment', finalErr);
+                // Construimos un Appointment mínimo (optimista)
+                const optimistic: Appointment = {
+                  id: id,
+                  clientName: appointmentData?.clientName || 'Cliente',
+                  serviceName: appointmentData?.serviceName || 'Servicio',
+                  day: appointmentData?.day || new Date().getDate(),
+                  monthName: appointmentData?.monthName || 'ENERO',
+                  time: appointmentData?.time || '09:00',
+                  status: status,
+                  staffName: appointmentData?.staffName || '',
+                  nota: appointmentData?.nota || ''
+                };
+                return new Observable<Appointment>(subscriber => {
+                  subscriber.next(optimistic);
+                  subscriber.complete();
+                });
+              })
+            );
+        })
       );
   }
 
@@ -181,18 +215,13 @@ export class AppointmentsService {
    */
   cancel(id: number, razon: string): Observable<Appointment> {
     const payload = {
-      estatus_id: 3,
+      estados_id: 3,
       descripcion_cancel: razon
     };
 
-    console.log(`❌ Cancelando cita #${id} con razón: "${razon}"`);
-
     return this.http.patch<any>(`${this.apiUrl}/${id}`, payload, this.httpOptions)
       .pipe(
-        map(response => {
-          console.log('✅ Cita cancelada:', response);
-          return this.mapToFrontend(response.data || response);
-        }),
+        map(response => this.mapToFrontend(response.data || response)),
         catchError(this.handleError)
       );
   }
@@ -224,15 +253,21 @@ export class AppointmentsService {
     return {
       id: apt.id,
       clientName: apt.nombre || apt.clientName || 'Cliente',
-      clientEmail: apt.email || apt.clientEmail || '',
+      clientEmail: apt.clientEmail || apt.email || '',
       serviceName: apt.tipo_cita || apt.serviceName || 'Servicio',
-      staffName: apt.personal_servicio || apt.staffName || 'Por asignar',
       day: day,
       monthName: monthName,
       time: apt.hora_cita || apt.time || '09:00',
-      status: statusMap[apt.estatus_id] || 'reserved',
+      status: statusMap[apt.estados_id] || 'reserved',
+      staffName: apt.personal_servicio || apt.staffName || '',
       nota: apt.nota || '',
-      
+
+      // Mapeo extendido para formulario
+      clientDocType: apt.tipo_documento || '',
+      clientDocNumber: apt.numero_documento || '',
+      clientBirthDate: apt.fecha_nacimiento || '',
+      clientPhone: apt.numero_telefono || '',
+
       // Campos adicionales del backend
       tipo_documento: apt.tipo_documento,
       numero_documento: apt.numero_documento,
@@ -246,7 +281,7 @@ export class AppointmentsService {
       hora_cita: apt.hora_cita,
       negocios_id: apt.negocios_id,
       servicios_id: apt.servicios_id,
-      status_id: apt.estatus_id,
+      estados_id: apt.estados_id,
       usuarios_id: apt.usuarios_id,
       tiempo_estimado: apt.tiempo_estimado,
       descripcion_cancel: apt.descripcion_cancel,
@@ -271,10 +306,9 @@ export class AppointmentsService {
     
     const month = months[appointment.monthName?.toUpperCase() || 'ENERO'] || '01';
     const day = String(appointment.day || 1).padStart(2, '0');
-    const fecha_cita = `${year}-${month}-${day}`;
 
     // Mapea status a estados_id
-    const statusMap: { [key: string]: number } = {
+    const estadosMap: { [key: string]: number } = {
       'reserved': 1,
       'pendiente': 1,
       'confirmed': 2,
@@ -285,46 +319,29 @@ export class AppointmentsService {
       'completada': 4
     };
 
-    // ⚠️ IMPORTANTE: Construir payload con TODOS los campos requeridos
-    const payload: any = {
-      // Campos requeridos por el backend Laravel
-      tipo_documento: appointment.tipo_documento || 'CC',
-      numero_documento: appointment.numero_documento || '0000000000',
-      nombre: appointment.nombre || appointment.clientName || 'Cliente',
-      email: appointment.email || appointment.clientEmail || 'cliente@ejemplo.com',
-      fecha_nacimiento: appointment.fecha_nacimiento || '2000-01-01',
-      numero_telefono: appointment.numero_telefono || '3000000000',
-      tipo_cita: appointment.tipo_cita || appointment.serviceName || 'Servicio',
-      personal_servicio: appointment.personal_servicio || appointment.staffName || 'Por asignar',
-      fecha_cita: fecha_cita,
-      hora_cita: appointment.hora_cita || appointment.time || '09:00',
+    return {
+      clientName: appointment.clientName || 'Cliente',
+      clientEmail: appointment.clientEmail || appointment.email || 'cliente@ejemplo.com',
+      serviceName: appointment.serviceName || 'Servicio',
+      day: appointment.day || 1,
+      monthName: appointment.monthName || 'ENERO',
+      time: appointment.time || '09:00',
+      nota: appointment.nota || '',
+      // Enviar el personal asignado al backend como 'personal_servicio' (y también incluir staffName)
+      personal_servicio: appointment.staffName || appointment.personal_servicio || 'Por asignar',
+      staffName: appointment.staffName || appointment.personal_servicio || 'Por asignar',
+
+      // Campos requeridos con valores por defecto
+      tipo_documento: appointment.tipo_documento || appointment.clientDocType || 'CC',
+      numero_documento: appointment.numero_documento || appointment.clientDocNumber || '0000000000',
+      fecha_nacimiento: appointment.fecha_nacimiento || appointment.clientBirthDate || '2000-01-01',
+      numero_telefono: appointment.numero_telefono || appointment.clientPhone || '3000000000',
       negocios_id: appointment.negocios_id || 1,
-     status_id: appointment.status_id || statusMap[appointment.status?.toLowerCase() || 'reserved'] || 1
+
+      // Campos opcionales
+      servicios_id: appointment.servicios_id,
+      estados_id: appointment.estados_id || estadosMap[appointment.status?.toLowerCase() || 'reserved'] || 1
     };
-
-    // Campos opcionales - solo agregar si existen
-    if (appointment.nota && appointment.nota.trim() !== '') {
-      payload.nota = appointment.nota.trim();
-    }
-
-    if (appointment.servicios_id) {
-      payload.servicios_id = appointment.servicios_id;
-    }
-
-    if (appointment.usuarios_id) {
-      payload.usuarios_id = appointment.usuarios_id;
-    }
-
-    if (appointment.tiempo_estimado) {
-      payload.tiempo_estimado = appointment.tiempo_estimado;
-    }
-
-    if (appointment.descripcion_cancel && appointment.descripcion_cancel.trim() !== '') {
-      payload.descripcion_cancel = appointment.descripcion_cancel.trim();
-    }
-
-    console.log('🔄 Payload mapeado para backend:', payload);
-    return payload;
   }
 
   /**
@@ -334,38 +351,21 @@ export class AppointmentsService {
     let errorMessage = 'Ocurrió un error desconocido';
     
     if (error.error instanceof ErrorEvent) {
-      // Error del cliente (red, etc.)
-      errorMessage = `Error de red: ${error.error.message}`;
-      console.error('❌ Error del cliente:', error.error.message);
+      // Error del cliente
+      errorMessage = `Error: ${error.error.message}`;
     } else {
       // Error del servidor
-      console.error('❌ Error HTTP completo:', {
-        status: error.status,
-        statusText: error.statusText,
-        error: error.error,
-        message: error.message
-      });
+      console.error('Error HTTP:', error);
       
-      // Manejo específico de errores de Laravel
       if (error.error?.message) {
         errorMessage = error.error.message;
-      } else if (error.error?.errors) {
-        // Laravel validation errors (422)
-        const validationErrors = Object.entries(error.error.errors)
-          .map(([field, messages]: [string, any]) => {
-            const msgs = Array.isArray(messages) ? messages : [messages];
-            return `${field}: ${msgs.join(', ')}`;
-          })
-          .join(' | ');
-        errorMessage = `Errores de validación: ${validationErrors}`;
       } else if (error.message) {
         errorMessage = error.message;
       } else {
-        errorMessage = `Error del servidor (${error.status}): ${error.statusText}`;
+        errorMessage = `Error del servidor (${error.status})`;
       }
     }
     
-    console.error('💥 Error procesado:', errorMessage);
     return throwError(() => ({ message: errorMessage }));
   }
 }

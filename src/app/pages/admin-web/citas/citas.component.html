@@ -9,7 +9,7 @@
           <i class="fa fa-plus"></i> Crear nueva cita
         </button>
 
-        <!-- MENSAJES DE ERROR Y ÉXITO - AGREGADOS -->
+        <!-- MENSAJES DE ERROR Y ÉXITO -->
         <div *ngIf="errorMessage" class="alert alert-error">
           {{ errorMessage }}
           <button type="button" (click)="errorMessage = ''" class="alert-close">×</button>
@@ -35,17 +35,18 @@
                 </select>
               </div>
 
+              <!-- 🔥 FILTRO DE PERSONAL DINÁMICO -->
               <div class="filter-group">
                 <label>Quien atiende la cita</label>
                 <select id="staffFilter">
                   <option value="">Todos los especialistas</option>
-                  <option value="pepita-perez">Pepita Perez</option>
-                  <option value="luna-lunera">Luna Lunera</option>
-                  <option value="patricia-fernandez">Patricia Fernandez</option>
+                  <option *ngFor="let staff of staffList" [value]="staff.id">
+                    {{ staff.displayName }}
+                  </option>
                 </select>
               </div>
 
-              <!-- BOTÓN RECARGAR - AGREGADO -->
+              <!-- BOTÓN RECARGAR -->
               <div class="filter-group">
                 <button type="button" class="reload-btn" (click)="reloadData()" [disabled]="isLoading">
                   <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i> 
@@ -97,7 +98,7 @@
               </div>
             </div>
 
-            <!-- LISTA DE CITAS CORREGIDA CON CAMPOS REALES -->
+            <!-- LISTA DE CITAS -->
             <div class="appointments-list" id="appointmentsList">
               <!-- INDICADOR DE CARGA -->
               <div *ngIf="isLoading" class="loading">
@@ -109,7 +110,7 @@
                 <p>No hay citas programadas</p>
               </div>
 
-              <!-- LISTA DE CITAS CON CAMPOS ORIGINALES -->
+              <!-- LISTA DE CITAS -->
               <div *ngFor="let appointment of appointments; trackBy: trackAppointment"
                    class="appointment-item"
                    [class]="'status-' + appointment.status">
@@ -125,17 +126,17 @@
                   <div class="appointment-staff">Atendido por: {{ appointment.staffName }}</div>
                 </div>
                
+                <div class="appointment-actions">
                   <!-- Botón del menú -->
-<button class="appointment-menu-btn" 
-type="button"
-(click)="toggleMenu($event, appointment)">
-<img src="assets/iconos/menu_puntos.svg" 
-alt="Menú"
-class="menu-icon">
-</button>
-
+                  <button class="appointment-menu-btn" 
+                          type="button"
+                          (click)="toggleMenu($event, appointment)">
+                    <img src="assets/iconos/menu_puntos.svg" 
+                         alt="Menú"
+                         class="menu-icon">
+                  </button>
                   
-                  <!-- MENÚ CORREGIDO -->
+                  <!-- MENÚ -->
                   <div class="appointment-menu" 
                        [class.show]="appointment.showMenu"
                        (click)="$event.stopPropagation()">
@@ -170,7 +171,7 @@ class="menu-icon">
                       <i class="fa fa-trash"></i> Eliminar
                     </button>
                   </div>
-                
+                </div>
               </div>
             </div>
           </div>
@@ -185,7 +186,7 @@ class="menu-icon">
           <i class="fa fa-list"></i> Ver citas
         </button>
 
-        <!-- MENSAJES EN FORMULARIO TAMBIÉN -->
+        <!-- MENSAJES EN FORMULARIO -->
         <div *ngIf="errorMessage" class="alert alert-error">
           {{ errorMessage }}
           <button type="button" (click)="errorMessage = ''" class="alert-close">×</button>
@@ -252,7 +253,7 @@ class="menu-icon">
 
             <div class="form-row">
               <div class="form-group">
-                <label for="appointmentService">Tipo de cita</label>
+                <label for="appointmentService">Tipo de cita *</label>
                 <select id="appointmentService" name="appointmentService"
                         [(ngModel)]="appointmentForm.appointmentService"
                         (ngModelChange)="onServiceChange()" required>
@@ -270,17 +271,30 @@ class="menu-icon">
                 </div>
                 <div class="error-message"></div>
               </div>
+
+              <!-- 🔥 SELECTOR DE PERSONAL CONECTADO CON HORARIOS -->
               <div class="form-group">
-                <label for="appointmentStaff">Personal que realiza el servicio</label>
+                <label for="appointmentStaff">Personal que realiza el servicio *</label>
                 <select id="appointmentStaff" name="appointmentStaff"
-                        [(ngModel)]="appointmentForm.appointmentStaff" required>
+                        [(ngModel)]="appointmentForm.appointmentStaff"
+                        (change)="onStaffChange()" required>
                   <option value="">Seleccione al personal de preferencia</option>
-                  <option value="pepita-perez">Pepita Perez</option>
-                  <option value="luna-lunera">Luna Lunera</option>
-                  <option value="patricia-fernandez">Patricia Fernandez</option>
+                  <option *ngFor="let staff of staffList" [value]="staff.id">
+                    {{ staff.displayName }}
+                  </option>
                 </select>
+                <small class="form-hint">Seleccione primero el personal para ver sus horarios disponibles</small>
                 <div class="error-message"></div>
               </div>
+            </div>
+
+            <!-- 🔥 MENSAJES INFORMATIVOS DE DÍAS LABORABLES -->
+            <div class="info-message" *ngIf="appointmentForm.appointmentStaff && workingDays.length > 0">
+              <strong>📅 Días laborables de {{ getStaffName(appointmentForm.appointmentStaff) }}:</strong> {{ workingDays.join(', ') }}
+            </div>
+
+            <div class="warning-message" *ngIf="appointmentForm.appointmentStaff && workingDays.length === 0">
+              <strong>⚠️</strong> Este personal no tiene horarios configurados. Por favor, configure los horarios primero.
             </div>
 
             <div class="datetime-section">
@@ -303,10 +317,12 @@ class="menu-icon">
                     <div class="calendar-days-header">
                       <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
                     </div>
+                    <!-- 🔥 CALENDARIO CON DÍAS DESHABILITADOS -->
                     <div id="calendarDaysForm" class="calendar-days">
                       <div *ngFor="let day of formCalendarDays; trackBy: trackDay"
                            class="calendar-day"
                            [class.selected]="day.selected"
+                           [class.disabled]="day.disabled"
                            [class.other-month]="day.otherMonth"
                            (click)="selectDate(day)">
                         {{ day.number }}
@@ -321,8 +337,19 @@ class="menu-icon">
                   <i class="fa fa-clock-o"></i>
                   <span>Selecciona la hora</span>
                 </div>
-                <div class="time-slots">
-                  <button *ngFor="let slot of timeSlots; trackBy: trackSlot"
+                
+                <!-- 🔥 MENSAJES DE ADVERTENCIA -->
+                <div class="warning-message" *ngIf="!appointmentForm.appointmentStaff" style="margin-bottom: 1rem;">
+                  <strong>⚠️</strong> Seleccione primero el personal para ver los horarios disponibles
+                </div>
+
+                <div class="warning-message" *ngIf="appointmentForm.appointmentStaff && availableTimeSlots.length === 0" style="margin-bottom: 1rem;">
+                  <strong>⚠️</strong> No hay horarios disponibles. Seleccione un día laborable.
+                </div>
+
+                <!-- 🔥 HORARIOS DINÁMICOS -->
+                <div class="time-slots" *ngIf="availableTimeSlots.length > 0">
+                  <button *ngFor="let slot of availableTimeSlots; trackBy: trackSlot"
                           type="button" class="time-slot"
                           [class.selected]="slot.selected"
                           [attr.data-time]="slot.time"
@@ -330,7 +357,8 @@ class="menu-icon">
                     {{ slot.display }}
                   </button>
                 </div>
-                <div class="time-legend">
+
+                <div class="time-legend" *ngIf="availableTimeSlots.length > 0">
                   <div class="legend-item">
                     <span class="legend-color selected"></span>
                     <span>Hora seleccionada</span>
