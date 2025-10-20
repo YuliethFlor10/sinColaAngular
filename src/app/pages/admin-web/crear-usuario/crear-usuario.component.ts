@@ -281,11 +281,11 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
 
     if (passwordInput && confirmPasswordInput && passwordLabel && confirmPasswordLabel) {
       if (userType === 'Cliente') {
-        if (!this.isEditMode) {
-          passwordLabel.textContent = 'Crear contraseña (opcional)';
-          confirmPasswordLabel.textContent = 'Confirmar contraseña (opcional)';
-          passwordInput.placeholder = 'Opcional - Se generará automáticamente si se omite';
-          confirmPasswordInput.placeholder = 'Opcional';
+       if (!this.isEditMode) {
+          passwordLabel.textContent = 'Crear contraseña (no requerido)';
+          confirmPasswordLabel.textContent = 'Confirmar contraseña (no requerido)';
+          passwordInput.placeholder = 'No requerido - Se generará automáticamente si se omite';
+          confirmPasswordInput.placeholder = 'No requerido';
         }
       } else {
         if (this.isEditMode) {
@@ -320,9 +320,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (userTypeSelect && !userTypeSelect.value) {
-      userTypeSelect.value = 'Cliente';
+      userTypeSelect.value = 'Admin';
       // Actualizar requerimiento inicial
-      this.updatePasswordRequirement('Cliente');
+      this.updatePasswordRequirement('Admin');
     }
 
     console.log('✅ Valores por defecto del formulario inicializados');
@@ -782,9 +782,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       birthDate: ['', [Validators.required, this.ageValidator]],
       phoneNumber: ['', [Validators.required, Validators.pattern(/^[0-9+\-\s()]+$/)]],
       email: ['', [Validators.required, Validators.email]],
-      userType: ['Cliente', Validators.required],
-      password: ['', [Validators.minLength(6)]], // Sin required por defecto
-      confirmPassword: [''],
+      userType: ['Admin', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required],
       service: ['']
     });
   }
@@ -933,10 +933,10 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
           documentTypeSelect.value = 'cedula';
         }
 
-        const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
+      const userTypeSelect = document.getElementById('userType') as HTMLSelectElement;
         if (userTypeSelect) {
-          userTypeSelect.value = 'Cliente';
-          this.updatePasswordRequirement('Cliente'); // NUEVO: Actualizar requerimiento
+          userTypeSelect.value = 'Admin';
+          this.updatePasswordRequirement('Admin');
         }
       }, 10);
     }
@@ -950,9 +950,9 @@ export class CrearUsuarioComponent implements OnInit, AfterViewInit, OnDestroy {
       }
     });
 
-    this.userForm.reset({
+  this.userForm.reset({
       documentType: 'cedula',
-      userType: 'Cliente'
+      userType: 'Admin'
     });
 
     this.isEditMode = false;
