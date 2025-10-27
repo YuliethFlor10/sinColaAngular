@@ -125,7 +125,7 @@ export class HorarioComponent implements OnInit {
   private isValidTimeFormat(time: string): boolean {
     // Acepta formato 12 horas (8:00 AM) y 24 horas (14:30)
     const time12Regex = /^(1[0-2]|[1-9]):[0-5][0-9]\s?(AM|PM)$/i;
-    const time24Regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+     const time24Regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
     
     return time12Regex.test(time.trim()) || time24Regex.test(time.trim());
   }
