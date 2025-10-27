@@ -11,9 +11,9 @@ import { ScheduleService, DaySchedule, Staff } from '../../../services/schedule.
   styleUrls: ['./horario.component.css'],
   standalone: true,
   imports: [
-    CommonModule, 
-    FormsModule, 
-    AdminWeb, 
+    CommonModule,
+    FormsModule,
+    AdminWeb,
     ContenidoComponent
   ]
 })
@@ -77,7 +77,7 @@ export class HorarioComponent implements OnInit {
    */
   onDayToggle(day: DaySchedule) {
     console.log(`${day.name} cambiado a: ${day.isOpen ? 'Abierto' : 'Cerrado'}`);
-    
+
     // Si el día se cierra, deshabilitar segundo turno
     if (!day.isOpen) {
       day.secondShift.enabled = false;

@@ -1,0 +1,418 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  color: white;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+}
+
+.header {
+background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  color: white;
+    padding: 30px;
+    color: white;
+    position: relative;
+}
+
+.sincola-logo {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #ff1493;
+    font-size: 12px;
+    text-align: center;
+
+}
+
+.header h1 {
+    font-size: 2.2em;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.header h2 {
+    font-size: 1.5em;
+    font-weight: normal;
+    opacity: 0.9;
+}
+
+.content {
+    display: flex;
+    flex-wrap: wrap;
+    min-height: 500px;
+}
+
+.left-section {
+    flex: 1;
+    padding: 30px;
+    min-width: 300px;
+}
+
+.right-section {
+    flex: 1;
+    background: linear-gradient(135deg, #ffeef7, #fff0f8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    min-height: 400px;
+}
+
+.logo-circle {
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ffb3d9, #ff80cc);
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid #ffd700;
+    box-shadow: 0 10px 30px rgba(255, 20, 147, 0.3);
+}
+
+.logo-text {
+    text-align: center;
+    color: #333;
+}
+
+.logo-mk {
+    font-size: 4em;
+    font-weight: bold;
+    font-style: italic;
+    margin-bottom: -10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.logo-nails {
+    font-size: 1.2em;
+    font-weight: bold;
+    letter-spacing: 3px;
+}
+
+.appointment-info {
+    margin-bottom: 30px;
+}
+
+.intro-text {
+    color: #ff1493;
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.intro-text strong {
+    font-weight: bold;
+}
+
+.info-item {
+    margin-bottom: 12px;
+    display: flex;
+    align-items: flex-start;
+}
+
+.info-label {
+    color: #ff69b4;
+    font-weight: bold;
+    min-width: 140px;
+    font-size: 0.95em;
+}
+
+.info-value {
+    color: #333;
+    font-size: 0.95em;
+}
+
+.buttons-section {
+    text-align: center;
+    margin: 30px 0;
+}
+
+.button-text {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+.buttons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 120px;
+}
+
+.btn-confirm {
+    background: #ff69b4;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #ff1493;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 20, 147, 0.4);
+}
+
+.btn-cancel {
+    background: #333;
+    color: white;
+}
+
+.btn-cancel:hover {
+    background: #555;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.notes-section {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.notes-section p {
+    color: #666;
+    line-height: 1.5;
+    margin-bottom: 15px;
+    font-size: 0.95em;
+}
+
+.social-section {
+    text-align: center;
+    padding: 30px;
+    background: #f8f9fa;
+}
+
+.social-title {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    font-weight: 500;
+}
+
+.social-icons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.social-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    font-size: 1.2em;
+    transition: transform 0.3s ease;
+}
+
+.social-icon:hover {
+    transform: scale(1.1);
+}
+
+.whatsapp {
+    background: #25d366;
+}
+
+.instagram {
+    background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+}
+
+.facebook {
+    background: #1877f2;
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.modal h3 {
+    color: #ff1493;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+}
+
+.modal p {
+    color: #666;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.modal-btn {
+    background: #ff69b4;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.modal-btn:hover {
+    background: #ff1493;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+        border-radius: 15px;
+    }
+
+    .header {
+        padding: 20px;
+    }
+
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .header h2 {
+        font-size: 1.2em;
+    }
+
+    .sincola-logo {
+        width: 50px;
+        height: 50px;
+        font-size: 10px;
+    }
+
+    .content {
+        flex-direction: column;
+    }
+
+    .left-section {
+        padding: 20px;
+    }
+
+    .right-section {
+        min-height: 300px;
+        padding: 20px;
+    }
+
+    .logo-circle {
+        width: 220px;
+        height: 220px;
+    }
+
+    .logo-mk {
+        font-size: 3em;
+    }
+
+    .info-label {
+        min-width: 120px;
+        font-size: 0.9em;
+    }
+
+    .info-value {
+        font-size: 0.9em;
+    }
+
+    .buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .btn {
+        width: 100%;
+        max-width: 200px;
+    }
+
+    .social-section {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header h1 {
+        font-size: 1.5em;
+    }
+
+    .header h2 {
+        font-size: 1em;
+    }
+
+    .logo-circle {
+        width: 180px;
+        height: 180px;
+    }
+
+    .logo-mk {
+        font-size: 2.5em;
+    }
+
+    .logo-nails {
+        font-size: 1em;
+    }
+
+    .info-item {
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
+
+    .info-label {
+        min-width: auto;
+        margin-bottom: 5px;
+    }
+}

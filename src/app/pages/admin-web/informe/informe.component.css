@@ -96,7 +96,7 @@
 }
 
 .btn-generate-report {
-  background: #FDC030;
+  background: #44fee2;
   color: rgb(0, 0, 0);
   border: solid 2px;
   padding: 12px 20px;
@@ -110,7 +110,7 @@
 }
 
 .btn-generate-report:hover {
-  background: #fdca30f1;
+  background: #44fee2;
   transform: translateY(-1px);
 }
 
@@ -236,7 +236,7 @@
 .summary-value {
   font-size: 1.8rem;
   font-weight: 700;
-  color: #FDC030;
+  background: #44fee2;
   text-align: center;
   margin-top: 1rem;
 }

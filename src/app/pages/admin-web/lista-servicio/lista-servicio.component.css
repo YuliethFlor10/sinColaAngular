@@ -237,7 +237,7 @@
   }
 
   .nav-menu-item.active {
-    background-color: #fdc030;
+  background: #44fee2;
     color: #030b58;
     font-weight: 500;
   }
@@ -279,7 +279,7 @@
   }
 
   .nav-item.active {
-    background-color: #FDC030;
+  background: #44fee2;
     color: #000000;
     font-weight: 500;
   }
@@ -372,7 +372,7 @@
 
   .search-input-field:focus {
     outline: none;
-    border-color: #fdc030;
+  background: #44fee2;
     box-shadow: 0 0 0 3px rgba(253, 192, 48, 0.1);
   }
 
@@ -381,7 +381,7 @@
   }
 
   .add-service-button {
-    background: #fdc030;
+  background: #44fee2;
     color: #000000;
     border: solid 2px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);;
@@ -401,7 +401,7 @@
   }
 
   .add-service-button:hover {
-    background: #f4b942;
+  background: #44fee2;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(253, 192, 48, 0.3);
   }
@@ -489,12 +489,12 @@
   }
 
   .highlighted-service-row {
-    background-color: #fdc030 !important;
+  background: #44fee2;
     color: #030b58 !important;
   }
 
   .highlighted-service-row:hover {
-    background-color: #f4b942 !important;
+  background: #44fee2;
   }
 
   .data-cell {
@@ -536,9 +536,9 @@
   }
 
   .service-card.highlighted {
-    background-color: #fdc030;
+  background: #44fee2;
     color: #030b58;
-    border-color: #f4b942;
+  background: #44fee2;
   }
 
   .card-header {
@@ -663,7 +663,7 @@
     right: 1.5rem;
     width: 56px;
     height: 56px;
-    background: #FDC030;
+  background: #44fee2;
     color: rgb(0, 0, 0);
     border: none;
     border-radius: 50%;
@@ -679,7 +679,7 @@
   }
 
   .floating-action-button:hover {
-    background: #fccb2bea;
+  background: #44fee2;
     transform: translateY(-2px);
     box-shadow: 0 6px 16px rgba(250, 108, 36, 0.5);
   }
@@ -789,7 +789,7 @@
   .field-input:focus,
   .field-select:focus {
     outline: none;
-    border-color: #fdc030;
+  background: #44fee2;
     box-shadow: 0 0 0 3px rgba(253, 192, 48, 0.1);
   }
 
@@ -827,13 +827,13 @@
 
   .btn-save {
     border: none;
-    background: #fdc030;
+  background: #44fee2;
     color: #030b58;
     font-weight: 500;
   }
 
   .btn-save:hover {
-    background: #f4b942;
+  background: #44fee2;
   }
 
   /* ========================================
@@ -874,7 +874,7 @@
 
   .btn-delete-confirm {
     border: none;
-    background: #FDC030;
+  background: #44fee2;
     color: rgb(0, 0, 0);
     border: solid 2px #000000;
     font-weight: 600;
@@ -892,7 +892,7 @@
   }
 
   .btn-delete-confirm:hover {
-    background: #fad221dc;
+  background: #44fee2;
   }
 
   /* ========================================

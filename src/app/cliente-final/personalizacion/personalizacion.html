@@ -29,7 +29,28 @@
 	<!-- Lado derecho con el formulario -->
 	<div class="right-section">
 		<h1>Personalización de Branding</h1>
-		<form [formGroup]="brandingForm" (ngSubmit)="guardar()">
+
+		<!-- Mensajes de estado -->
+		@if (successMessage) {
+			<div class="success-message">
+				{{ successMessage }}
+			</div>
+		}
+		@if (errorMessage) {
+			<div class="error-message">
+				{{ errorMessage }}
+			</div>
+		}
+
+		<!-- Loading indicator -->
+		@if (isLoading) {
+			<div class="loading-message">
+				Cargando configuración...
+			</div>
+		}
+
+		@if (!isLoading) {
+			<form [formGroup]="brandingForm" (ngSubmit)="guardar()">
 					<div class="form-row">
 						<div class="form-group">
 							<label>Facebook</label>
@@ -81,18 +102,9 @@
 							<textarea formControlName="descripcion_negocio"></textarea>
 						</div>
 						<div class="form-group">
-							<label>Texto seguir redes</label>
-							<input formControlName="texto_seguir_redes" />
-						</div>
-					</div>
-					<div class="form-row">
-						<div class="form-group">
-							<label>Texto métodos de pago</label>
-							<input formControlName="texto_metodos_pago" />
-						</div>
-						<div class="form-group">
 							<label>Logo de la empresa</label>
-							<input type="file" formControlName="logo_empresa" accept="image/*" />
+							<input type="file" formControlName="logo_empresa" accept="image/*" (change)="onFileSelected($event)" />
+							<small class="file-help">Formatos aceptados: JPG, PNG, GIF (máximo 5MB)</small>
 						</div>
 					</div>
 					<div class="form-row">
@@ -105,7 +117,14 @@
 							<input type="color" formControlName="color_letra_branding" />
 						</div>
 					</div>
-					<button type="submit" class="continue-btn">Guardar</button>
-		</form>
+					<button type="submit" class="continue-btn" [disabled]="isSaving">
+						@if (isSaving) {
+							<span>Guardando...</span>
+						} @else {
+							<span>Guardar</span>
+						}
+					</button>
+			</form>
+		}
 	</div>
 </div>

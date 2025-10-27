@@ -150,11 +150,11 @@
 }
 
 input:checked + .slider {
-  background-color: #FDC030;
+  background: #44fee2;
 }
 
 input:focus + .slider {
-  box-shadow: 0 0 1px #FDC030;
+  background: #44fee2;  background: #44fee2;
 }
 
 input:checked + .slider:before {
@@ -221,7 +221,7 @@ input:checked + .slider:before {
 .toggle-turno-btn {
   margin: 0.5rem 0;
   padding: 0.3rem 0.8rem;
-  background: #FDC030;
+  background: #44fee2;
   color: #000000;
   border: none;
   border-radius: 6px;
@@ -233,7 +233,7 @@ input:checked + .slider:before {
 }
 
 .toggle-turno-btn:hover {
-  background: #fbbf24;
+  background: #44fee2;
 }
 
 .toggle-turno-btn:disabled {
@@ -252,7 +252,7 @@ input:checked + .slider:before {
 }
 
 .btn-create {
-  background: #FDC030;
+  background: #44fee2;
   color: #000000;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -265,7 +265,7 @@ input:checked + .slider:before {
 }
 
 .btn-create:hover {
-  background: #fbbf24;
+  background: #44fee2;
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
@@ -295,24 +295,24 @@ input:checked + .slider:before {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
-  
+
   .horario-description {
     margin-bottom: 1.5rem;
   }
-  
+
   .person-select-container {
     width: 100%;
     min-width: unset;
   }
-  
+
   .day-schedule {
     max-width: none;
   }
-  
+
   .form-actions {
     justify-content: stretch;
   }
-  
+
   .btn-create {
     width: 100%;
   }
@@ -322,21 +322,21 @@ input:checked + .slider:before {
   .day-schedule {
     padding: 1rem;
   }
-  
+
   .day-schedule h2 {
     font-size: 1.1rem;
   }
-  
+
   .time-inputs {
     gap: 0.5rem;
   }
-  
+
   .time-input {
     padding: 0.5rem;
     font-size: 0.85rem;
     max-width: none;
   }
-  
+
   .toggle-turno-btn {
     font-size: 0.75rem;
     padding: 0.25rem 0.6rem;
@@ -365,7 +365,7 @@ input:checked + .slider:before {
     border-color: #f97316;
     box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.05);
   }
-  
+
   .switch:hover .slider:not(:has(input:disabled)) {
     box-shadow: 0 0 5px rgba(253, 192, 48, 0.3);
   }

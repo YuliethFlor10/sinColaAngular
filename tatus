@@ -1,0 +1,32 @@
+*   [33ma8c3fd2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mYuli[m[33m)[m Merge completado: se conservaron todos los cambios de origin/Isa
+[31m|[m[32m\[m  
+[31m|[m * [33m5458bcc[m[33m ([m[1;31morigin/Isa[m[33m)[m vistas ultima actualizacion totalmente funcional
+[31m|[m * [33m5a2646d[m Actualizacion vista totalmente funcionales
+[31m|[m * [33ma91ae93[m Actualizacion vistas2.0
+[31m|[m * [33mf6a93a8[m Actualizacion de vistas
+* [32m|[m [33m4a0ee18[m[33m ([m[1;31morigin/Yuli[m[33m)[m actualizado
+* [32m|[m [33mbc11496[m personalizacion
+* [32m|[m [33mc1296a1[m sidebar funcionando
+[32m|[m[32m/[m  
+* [33mdedc424[m hasta el punto de que sirve inicio sesion
+* [33m95a840a[m Actualizar appointments.service.ts desde rama Tere - agregar interfaces y métodos faltantes
+* [33m9e8ac52[m Actualizar componente de citas desde rama Tere
+* [33m1bbe51b[m ultima Ac
+* [33m24b2323[m cliente-final y edicion
+*   [33ma64aa15[m cliente-final
+[33m|[m[34m\[m  
+[33m|[m * [33m828a991[m paginas de inicio de sesion, registro de usuario y negocio funcionando y conectado con api
+[33m|[m * [33m4fbffcf[m inicio de secion, fomularios cliente final
+[33m|[m *   [33mfaa1985[m Merge branch 'Tere' of https://github.com/YuliethFlor10/sinColaAngular into Yuli
+[33m|[m [35m|[m[36m\[m  
+[33m|[m * [36m|[m [33md60608a[m formulario de cliente final
+* [36m|[m [36m|[m [33med9b0da[m fotis tere e isa
+* [36m|[m [36m|[m [33mcd82455[m cambios isa angular
+[36m|[m [36m|[m[36m/[m  
+[36m|[m[36m/[m[36m|[m   
+* [36m|[m [33mfc85464[m feat: actualizar proyecto completo
+* [36m|[m [33m5b5e02f[m Subiendo proyecto Angular a la rama Tere
+[36m|[m[36m/[m  
+* [33m5a09dd6[m[33m ([m[1;31morigin/master[m[33m, [m[1;32mmaster[m[33m, [m[1;32mTere[m[33m, [m[1;32mIsa[m[33m)[m contenido compartido
+* [33maaf4350[m commit inicial y configuracion de angular
+* [33m66cc2ee[m initial commit
