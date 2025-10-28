@@ -1,3 +1,215 @@
+/* COPIA TODO ESTO Y PÉGALO EN TU confirmar-cita.component.css */
+
+/* ============================================ */
+/* LOADING Y ERROR */
+/* ============================================ */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top: 5px solid white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+    color: white;
+    margin-top: 20px;
+    font-size: 1.2em;
+}
+
+.error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+    padding: 20px;
+    text-align: center;
+}
+
+.error-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+}
+
+.error-container h2 {
+    color: white;
+    margin-bottom: 15px;
+}
+
+.error-container p {
+    color: white;
+    font-size: 1.1em;
+    margin-bottom: 20px;
+    max-width: 500px;
+}
+
+/* ============================================ */
+/* ESTADOS DE LA CITA */
+/* ============================================ */
+.status-confirmada {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+.status-cancelada {
+    color: #f44336;
+    font-weight: 600;
+}
+
+.status-pendiente {
+    color: #FF9800;
+    font-weight: 600;
+}
+
+/* ============================================ */
+/* MENSAJES DE ESTADO (NUEVO - ESTO RESUELVE TU PROBLEMA) */
+/* ============================================ */
+.status-message-section {
+    margin: 30px 0;
+}
+
+.status-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.status-alert-success {
+    background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+    border-left: 5px solid #4CAF50;
+}
+
+.status-alert-danger {
+    background: linear-gradient(135deg, #ffebee, #ffcdd2);
+    border-left: 5px solid #f44336;
+}
+
+.status-alert-info {
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+    border-left: 5px solid #2196F3;
+}
+
+.status-alert-icon {
+    font-size: 3em;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.status-alert-success .status-alert-icon {
+    color: #4CAF50;
+}
+
+.status-alert-danger .status-alert-icon {
+    color: #f44336;
+}
+
+.status-alert-info .status-alert-icon {
+    color: #2196F3;
+}
+
+.status-alert-content {
+    flex: 1;
+}
+
+.status-alert-content h3 {
+    margin: 0 0 10px 0;
+    font-size: 1.3em;
+    color: #333;
+}
+
+.status-alert-content p {
+    margin: 8px 0;
+    color: #555;
+    line-height: 1.5;
+}
+
+.status-alert-note {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: 0.95em;
+    color: #666;
+    font-style: italic;
+}
+
+/* ============================================ */
+/* MODAL */
+/* ============================================ */
+.modal-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-secondary {
+    background: #666;
+}
+
+.btn-secondary:hover {
+    background: #555;
+}
+
+.btn-danger {
+    background: #f44336;
+}
+
+.btn-danger:hover {
+    background: #d32f2f;
+}
+
+/* ============================================ */
+/* RESPONSIVE */
+/* ============================================ */
+@media (max-width: 768px) {
+    .status-alert {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .status-alert-icon {
+        font-size: 2.5em;
+    }
+
+    .status-alert-content h3 {
+        font-size: 1.1em;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -6,7 +218,7 @@
 
 body {
     font-family: Arial, sans-serif;
-background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  color: white;
+    background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -22,7 +234,7 @@ background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  col
 }
 
 .header {
-background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);  color: white;
+    background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
     padding: 30px;
     color: white;
     position: relative;

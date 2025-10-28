@@ -51,9 +51,9 @@
           <div class="form-row">
             <div class="form-group">
               <label for="userType">Tipo de usuario</label>
-              <select id="userType" formControlName="userType">
-                <option value="Cliente">Cliente</option>
+             <select id="userType" formControlName="userType">
                 <option value="Admin">Administrador</option>
+                <option value="Cliente">Cliente</option>
                 <option value="Empleado">Empleado</option>
               </select>
             </div>
@@ -109,22 +109,58 @@
         </div>
       </div>
 
-      <div class="table-responsive">
-        <table class="user-table">
-          <thead>
-            <tr>
-              <th>NOMBRE</th>
-              <th>DOCUMENTO</th>
-              <th>TIPO DE USUARIO</th>
-              <th>TELÉFONO</th>
-              <th>EMAIL</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="userTableBody">
-          </tbody>
-        </table>
-      </div>
+     <div class="table-responsive">
+  <table class="user-table">
+    <thead>
+      <tr>
+        <th>NOMBRE</th>
+        <th>DOCUMENTO</th>
+        <th>TIPO DE USUARIO</th>
+        <th>TELÉFONO</th>
+        <th>EMAIL</th>
+        <th>ACCIONES</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngIf="filteredUsers.length === 0">
+        <td colspan="6" style="text-align: center; padding: 2rem; color: #6b7280;">
+          {{ searchTerm ? 'No se encontraron usuarios que coincidan con la búsqueda' : 'No hay usuarios registrados' }}
+        </td>
+      </tr>
+
+      <tr *ngFor="let user of getCurrentPageUsers()">
+        <td>{{ user.name }}</td>
+        <td>{{ user.documentType }} - {{ user.documentNumber }}</td>
+        <td>{{ user.userType }}</td>
+        <td>{{ user.phoneNumber }}</td>
+        <td>{{ user.email }}</td>
+        <td>
+          <div class="user-menu-container">
+            <button class="menu-dots-button"
+                    (click)="toggleUserMenu(user.id); $event.stopPropagation()"
+                    type="button">
+              <span class="dots-icon">⋮</span>
+            </button>
+            <div class="user-menu-dropdown"
+                 [id]="'menu-' + user.id"
+                 [style.display]="openMenuId === user.id ? 'block' : 'none'">
+              <button class="menu-item"
+                      (click)="editUser(user.id)"
+                      type="button">
+                Editar usuario
+              </button>
+              <button class="menu-item"
+                      (click)="deleteUser(user.id)"
+                      type="button">
+                Eliminar usuario
+              </button>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
       <div class="pagination">
         <button class="pagination-button" [disabled]="currentPage === 1" (click)="previousPage()">Anterior</button>

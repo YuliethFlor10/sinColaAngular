@@ -2,6 +2,43 @@
    ESTILOS ESPECÍFICOS PARA GESTIÓN DE CITAS
    ======================================== */
 
+/* 🔥 ESTILOS PARA SEPARACIÓN DE VISTAS - ARREGLADO */
+.sub-view {
+  display: none;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.sub-view.active {
+  display: block !important;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+/* Asegurar que solo una vista se muestre a la vez */
+.content-card {
+  position: relative;
+  width: 100%;
+}
+
+/* Contenedor del contenido del formulario */
+.card-content {
+  padding: 2rem;
+  background: white;
+  border-radius: 8px;
+}
+
+/* Animación suave al cambiar de vista */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Layout principal de citas */
 .appointments-layout {
   display: grid;
@@ -524,128 +561,28 @@
 }
 
 .time-slot.selected {
-  background: #fdc030;
-  color: #000;
-  border-color: #fdc030;
-  font-weight: 600;
+  background:#ffca28;
+  border-color:#ffca28;
+  color:#111;
 }
 
-.time-legend {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.85rem;
-}
+/* leyenda */
+.time-legend { display:flex; gap:18px; align-items:center; }
+.legend-item { display:flex; gap:8px; align-items:center; font-size:13px; color:#6b7280; }
+.legend-color { width:14px; height:14px; display:inline-block; border-radius:3px; }
+.selected-color { background:#ffca28; }
+.available-color { background:#f3f4f6; }
 
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.legend-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.legend-color.selected {
-  background: #fdc030;
-}
-
-.legend-color.available {
-  background: #ccc;
-}
-
-/* ========================================
-   ESTILOS DE LAS SUB-VISTAS
-   ======================================== */
-.sub-view {
-  display: none;
-  transition: opacity 0.3s ease-in-out;
-  opacity: 0;
-}
-
-.sub-view.active {
-  display: block;
-  opacity: 1;
-}
-
-.toggle-view-button {
-  background: #44fee2;
-  color: rgb(0, 0, 0);
-  border: solid 2px #000000;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  padding: 0.75rem 1.25rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  white-space: nowrap;
-}
-
-.toggle-view-button i {
-  font-size: 1.1em;
-}
-
-.toggle-view-button:hover {
-  background: #73fce7;
-  transform: translateY(-1px);
-}
-
-.content-card {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.card-header {
-  padding: 2rem 2rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.card-header h1 {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #000000;
-  text-shadow: 2px 2px 4px rgba(53, 52, 52, 0.5);
-  margin: 0;
-}
-
-.card-content {
-  padding: 2rem;
-}
-
-/* ========================================
-   BOTONES DE ACCIÓN
-   ======================================== */
-.form-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
+/* acciones */
+.form-actions { margin-top:16px; }
 .btn-create {
-  background: #44fee2;
-  color: rgb(0, 0, 0);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-  border: solid 2px #000;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
+  background:#0b74de;
+  color:#fff;
+  padding:10px 16px;
+  border-radius:8px;
+  border:none;
+  font-weight:700;
+  cursor:pointer;
 }
 
 .btn-create:hover {
@@ -948,23 +885,30 @@
 /* Botón de alternar vista (crear nueva cita / ver citas) */
 .toggle-view-button {
   background: linear-gradient(135deg, #00ffd5, #00e6ff);
-  border: 1px solid #000;
+  border: 2px solid #000;
   border-radius: 8px;
-  padding: 10px 18px;
+  padding: 12px 24px;
   font-weight: bold;
   color: #000;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  font-size: 0.9rem;
-  display: flex;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   white-space: nowrap;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .toggle-view-button:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #73fce7, #73fce7);
+}
+
+.toggle-view-button:active {
+  transform: translateY(0);
 }
 
 .toggle-view-button i {
@@ -1226,8 +1170,12 @@
    DISEÑO RESPONSIVE
    ======================================== */
 
-/* Tablets y pantallas medianas */
+/* 🔥 RESPONSIVE: TABLETS Y PANTALLAS MEDIANAS */
 @media (max-width: 1024px) {
+  .sub-view {
+    padding: 1rem;
+  }
+
   .appointments-layout {
     grid-template-columns: 1fr;
     gap: 1.5rem;
@@ -1235,10 +1183,12 @@
 
   .appointments-sidebar {
     order: 1;
+    width: 100%;
   }
 
   .appointments-main {
     order: 2;
+    width: 100%;
   }
 
   .datetime-section {
@@ -1250,10 +1200,25 @@
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
   }
+
+  .toggle-view-button {
+    width: 100%;
+    max-width: 400px;
+  }
 }
 
-/* Móviles y tablets pequeñas */
+/* 🔥 RESPONSIVE: MÓVILES Y TABLETS PEQUEÑAS */
 @media (max-width: 768px) {
+  /* Vista responsive */
+  .sub-view {
+    padding: 0.75rem;
+    min-height: auto;
+  }
+
+  .sub-view.active {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
   .form-row {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -1275,7 +1240,25 @@
 
   .toggle-view-button {
     width: 100%;
+    max-width: 100%;
     justify-content: center;
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+
+  /* Layout responsive */
+  .appointments-layout {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .appointments-sidebar {
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .appointments-main {
+    width: 100%;
   }
 
   .appointments-stats {
@@ -1283,7 +1266,6 @@
     gap: 0.5rem;
     align-items: center;
     width: 100%;
-    max-width: 340px;
   }
 
   .stat-item {
@@ -1292,11 +1274,7 @@
   }
 
   .appointments-list {
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: center;
     width: 100%;
-    max-width: 340px;
   }
 
   .appointment-item {
@@ -1304,32 +1282,20 @@
     margin-bottom: 1rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     width: 100%;
-  }
-
-  .appointments-sidebar {
     flex-direction: column;
-    gap: 0.5rem;
-    align-items: center;
-    width: 100%;
-    max-width: 340px;
-  }
-
-  .appointment-item {
-    flex-direction: row;
-    align-items: center;
+    align-items: flex-start;
+    padding: 1rem;
   }
 
   .appointment-details {
     flex: 1;
-    width: auto;
+    width: 100%;
+    margin: 1rem 0;
   }
 
   .appointment-actions {
-    margin-left: auto;
-    align-items: center;
+    width: 100%;
     justify-content: flex-end;
-    display: flex;
-    height: 100%;
   }
 
   .time-slots {
@@ -1338,7 +1304,7 @@
 
   .filter-section {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 1rem;
     margin-bottom: 1.5rem;
   }
@@ -1361,37 +1327,45 @@
     flex-direction: column;
     align-items: center;
   }
-  
+
   .submit-btn,
   .save-btn,
   .cancel-btn {
     width: 100%;
-    max-width: 200px;
+    max-width: 100%;
     margin: 5px 0;
   }
-  
-  .toggle-view-button {
-    width: 100%;
-    justify-content: center;
-    max-width: 300px;
-    margin: 0 auto;
-  }
-  
+
   .reload-btn {
     width: 100%;
+    max-width: 100%;
     justify-content: center;
-    max-width: 200px;
+  }
+
+  /* Calendario responsive */
+  .calendar-container {
+    padding: 0.75rem;
+  }
+
+  .datetime-section {
+    flex-direction: column;
+    gap: 1rem;
   }
 }
 
-/* Móviles pequeños */
+/* 🔥 RESPONSIVE: MÓVILES PEQUEÑOS */
 @media (max-width: 480px) {
+  .sub-view {
+    padding: 0.5rem;
+  }
+
   .form-row {
     gap: 0.75rem;
   }
 
   .form-group input,
-  .form-group select {
+  .form-group select,
+  .form-group textarea {
     padding: 0.625rem;
     font-size: 0.9rem;
   }
@@ -1424,5 +1398,57 @@
   .filter-section {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+
+  .calendar-days {
+    gap: 1px;
+  }
+
+  .calendar-day {
+    min-height: 28px;
+    font-size: 0.75rem;
+  }
+
+  .appointment-item {
+    padding: 0.75rem;
+  }
+
+  .appointment-date {
+    min-width: 60px;
+  }
+
+  .appointment-client {
+    font-size: 0.95rem;
+  }
+
+  .appointment-contact,
+  .appointment-service,
+  .appointment-staff {
+    font-size: 0.8rem;
+  }
+
+  /* Botones más pequeños en móviles */
+  .toggle-view-button {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  .reload-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
+
+  /* Formulario responsive */
+  .form-group label {
+    font-size: 0.85rem;
+  }
+
+  .section-header {
+    font-size: 0.9rem;
+  }
+
+  .time-slot {
+    padding: 0.5rem;
+    font-size: 0.85rem;
   }
 }

@@ -1,6 +1,24 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
+// ✅ Interfaz para el usuario
+export interface User {
+  id: number;
+  nombres: string;
+  apellidos: string;
+  email: string;
+  nombre_completo?: string;
+  celular?: string;
+  telefono?: string;
+  direccion?: string;
+  identificacion?: string;
+  tipo_identificacion_id?: number;
+  estados_id?: number;
+  roles_id?: number;
+  negocios_id?: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -8,27 +26,104 @@ import { Observable } from 'rxjs';
 export class AuthService {
   private apiUrl = 'http://127.0.0.1:8000/api';
 
+  // ✅ BehaviorSubject para emitir cambios del usuario en tiempo real
+  private currentUserSubject = new BehaviorSubject<User | null>(this.getUserFromStorage());
+  public currentUser$ = this.currentUserSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
-  // Login
+  // ✅ Login actualizado para guardar datos del usuario
   login(email: string, password: string): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, {
       email: email,
       password: password
-    });
+    }).pipe(
+      tap((response: any) => {
+        if (response.access_token) {
+          this.saveToken(response.access_token);
+        }
+        if (response.user) {
+          this.saveUser(response.user);
+        }
+      })
+    );
   }
 
   // Register
   register(userData: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/register`, userData);
+    return this.http.post(`${this.apiUrl}/register`, userData).pipe(
+      tap((response: any) => {
+        if (response.access_token) {
+          this.saveToken(response.access_token);
+        }
+        if (response.user) {
+          this.saveUser(response.user);
+        }
+      })
+    );
   }
 
-  // Login con credenciales por defecto (actualizadas)
+  // Login con credenciales por defecto
   loginWithDefaultCredentials(): Observable<any> {
     return this.http.post(`${this.apiUrl}/login`, {
       email: 'admin@admin.com',
       password: '12345678'
-    });
+    }).pipe(
+      tap((response: any) => {
+        if (response.access_token) {
+          this.saveToken(response.access_token);
+        }
+        if (response.user) {
+          this.saveUser(response.user);
+        }
+      })
+    );
+  }
+
+  // ✅ Guardar usuario en localStorage y emitir cambio
+  saveUser(user: User): void {
+    // Asegurar que tenga nombre_completo
+    if (!user.nombre_completo && user.nombres && user.apellidos) {
+      user.nombre_completo = `${user.nombres} ${user.apellidos}`.trim();
+    }
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
+  // ✅ Obtener usuario actual
+  getCurrentUser(): User | null {
+    return this.currentUserSubject.value;
+  }
+
+  // ✅ Obtener usuario desde localStorage
+  private getUserFromStorage(): User | null {
+    const userStr = localStorage.getItem('currentUser');
+    if (userStr) {
+      try {
+        return JSON.parse(userStr);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // ✅ Obtener inicial del nombre
+  getUserInitial(): string {
+    const user = this.getCurrentUser();
+    if (user && user.nombres) {
+      return user.nombres.charAt(0).toUpperCase();
+    }
+    return 'U';
+  }
+
+  // ✅ Obtener nombre completo
+  getUserFullName(): string {
+    const user = this.getCurrentUser();
+    if (user) {
+      return user.nombre_completo || `${user.nombres} ${user.apellidos}`.trim() || 'Usuario';
+    }
+    return 'Usuario';
   }
 
   // Guardar token
@@ -46,9 +141,16 @@ export class AuthService {
     this.saveToken(token);
   }
 
-  // Remover token
+  // ✅ Remover token Y usuario
   removeToken(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('currentUser');
+    this.currentUserSubject.next(null);
+  }
+
+  // ✅ Logout actualizado
+  logout(): void {
+    this.removeToken();
   }
 
   // Verificar si está autenticado
@@ -57,7 +159,7 @@ export class AuthService {
     return token !== null && token !== '';
   }
 
-  // Métodos de gestión de Business ID (para personalización)
+  // Métodos de gestión de Business ID (sin cambios)
   getCurrentBusinessId(): number {
     const businessId = localStorage.getItem('currentBusinessId');
     return businessId ? parseInt(businessId) : 1;

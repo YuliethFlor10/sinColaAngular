@@ -9,13 +9,12 @@ export class AutoLoginService {
 
   /**
    * Intentar login automático al iniciar la aplicación
-   * Esto es útil para desarrollo/testing
    */
   async attemptAutoLogin(): Promise<boolean> {
     try {
-      // Si ya hay token, no hacer nada
-      if (this.authService.isAuthenticated()) {
-        console.log('✅ Ya hay token guardado, usuario autenticado');
+      // Si ya hay token Y usuario, no hacer nada
+      if (this.authService.isAuthenticated() && this.authService.getCurrentUser()) {
+        console.log('✅ Ya hay token y usuario guardados');
         return true;
       }
 
@@ -24,14 +23,10 @@ export class AutoLoginService {
       // Intentar login con credenciales por defecto
       const response = await lastValueFrom(this.authService.loginWithDefaultCredentials());
 
-      if (response && response.token) {
-        this.authService.setToken(response.token);
+      if (response && response.access_token) {
+        // ✅ El authService ya guarda token y usuario automáticamente gracias al pipe(tap())
         console.log('✅ Login automático exitoso');
-        return true;
-      } else if (response && response.access_token) {
-        // Algunas APIs usan 'access_token' en lugar de 'token'
-        this.authService.setToken(response.access_token);
-        console.log('✅ Login automático exitoso (access_token)');
+        console.log('👤 Usuario:', this.authService.getCurrentUser());
         return true;
       } else {
         console.log('⚠️ Login automático falló: respuesta sin token');
@@ -39,33 +34,31 @@ export class AutoLoginService {
       }
     } catch (error) {
       console.log('❌ Error en login automático:', error);
-      console.log('🔍 Detalles del error:', error);
       return false;
     }
   }
 
   /**
-   * NUEVO: Intentar login con múltiples credenciales
+   * Intentar login con múltiples credenciales
    */
   async attemptMultipleLogins(): Promise<boolean> {
     const credentials = [
-      { email: 'admin@admin.com', password: '12345678' }, // Credenciales actualizadas
+      { email: 'admin@admin.com', password: '12345678' },
       { email: 'admin@admin.com', password: 'admin' },
       { email: 'admin@example.com', password: 'password' },
-      { email: 'admin@test.com', password: '123456' },
-      { email: 'test@test.com', password: 'test' },
-      { email: 'user@user.com', password: 'user' }
+      { email: 'test@test.com', password: 'test' }
     ];
 
     for (const cred of credentials) {
       try {
         console.log(`🔄 Probando credenciales: ${cred.email}`);
-        const response = await lastValueFrom(this.authService.login(cred.email, cred.password));
+        const response = await lastValueFrom(
+          this.authService.login(cred.email, cred.password)
+        );
 
-        if (response && (response.token || response.access_token)) {
-          const token = response.token || response.access_token;
-          this.authService.setToken(token);
+        if (response && response.access_token) {
           console.log(`✅ Login exitoso con: ${cred.email}`);
+          console.log('👤 Usuario:', this.authService.getCurrentUser());
           return true;
         }
       } catch (error) {
@@ -84,12 +77,13 @@ export class AutoLoginService {
     try {
       console.log('🔄 Intentando login manual...');
 
-      const response = await lastValueFrom(this.authService.login(email, password));
+      const response = await lastValueFrom(
+        this.authService.login(email, password)
+      );
 
-      if (response && (response.token || response.access_token)) {
-        const token = response.token || response.access_token;
-        this.authService.setToken(token);
+      if (response && response.access_token) {
         console.log('✅ Login manual exitoso');
+        console.log('👤 Usuario:', this.authService.getCurrentUser());
         return true;
       } else {
         console.log('⚠️ Login manual falló: respuesta sin token');
