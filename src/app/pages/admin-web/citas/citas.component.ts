@@ -24,23 +24,19 @@ interface CalendarDay {
 })
 export class CitasComponent implements OnInit {
   
-  // 🔥 ESTADO
   currentView: 'list' | 'create' = 'list';
   isLoading = false;
   isEditing = false;
   editingId: number | null = null;
   
-  // 🔥 MENSAJES
   successMessage = '';
   errorMessage = '';
   
-  // 🔥 DATOS
   appointments: Appointment[] = [];
   stats = { reserved: 0, confirmed: 0, cancelled: 0 };
   
-  // 🔥 FORMULARIO - OBJETO SIMPLE
   form = {
-    clientDocType: '',
+    clientDocType: 'CC',
     clientDocNumber: '',
     clientName: '',
     clientEmail: '',
@@ -54,7 +50,6 @@ export class CitasComponent implements OnInit {
     selectedTime: ''
   };
   
-  // 🔥 CALENDARIO Y HORARIOS
   calendarDays: CalendarDay[] = [];
   formCalendarDays: CalendarDay[] = [];
   currentMonthYear = '';
@@ -94,7 +89,7 @@ export class CitasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    console.log('🚀 Componente de citas inicializado');
+    console.log('🚀 Componente inicializado');
     this.staffList = this.scheduleService.getStaffList();
     this.availableTimeSlots = [...this.allTimeSlots];
     this.initCalendars();
@@ -102,7 +97,7 @@ export class CitasComponent implements OnInit {
   }
 
   // ============================================
-  // 🔥 CRUD BÁSICO
+  // CRUD
   // ============================================
   
   loadAppointments(): void {
@@ -118,22 +113,26 @@ export class CitasComponent implements OnInit {
       },
       error: (err) => {
         console.error('❌ Error:', err);
-        this.errorMessage = err.message || 'Error al cargar citas';
+        this.showError(err.message || 'Error al cargar citas');
         this.isLoading = false;
       }
     });
   }
 
   onSubmit(): void {
-    console.log('📤 Intentando enviar formulario...');
+    console.log('📤 Enviando formulario...');
     
-    // 🔥 VALIDACIÓN
+    // Validaciones
     if (!this.form.clientName?.trim()) {
       this.showError('El nombre es obligatorio');
       return;
     }
     if (!this.form.clientEmail?.trim()) {
       this.showError('El email es obligatorio');
+      return;
+    }
+    if (!this.validateEmail(this.form.clientEmail)) {
+      this.showError('Email inválido');
       return;
     }
     if (!this.form.appointmentService) {
@@ -145,7 +144,7 @@ export class CitasComponent implements OnInit {
       return;
     }
     if (!this.form.selectedDay) {
-      this.showError('Seleccione una fecha en el calendario');
+      this.showError('Seleccione una fecha');
       return;
     }
     if (!this.form.selectedTime) {
@@ -153,7 +152,6 @@ export class CitasComponent implements OnInit {
       return;
     }
 
-    // 🔥 CONSTRUIR APPOINTMENT
     const appointment: Appointment = {
       clientName: this.form.clientName.trim(),
       clientEmail: this.form.clientEmail.trim(),
@@ -170,11 +168,10 @@ export class CitasComponent implements OnInit {
       nota: this.form.appointmentObservations || ''
     };
 
-    console.log('📦 Appointment a enviar:', appointment);
+    console.log('📦 Appointment:', appointment);
     this.isLoading = true;
 
     if (this.isEditing && this.editingId) {
-      // ACTUALIZAR
       appointment.id = this.editingId;
       this.appointmentsService.update(this.editingId, appointment).subscribe({
         next: () => {
@@ -182,19 +179,18 @@ export class CitasComponent implements OnInit {
           this.resetAndGoToList();
         },
         error: (err) => {
-          this.showError(`Error al actualizar: ${err.message}`);
+          this.showError(`Error: ${err.message}`);
           this.isLoading = false;
         }
       });
     } else {
-      // CREAR
       this.appointmentsService.create(appointment).subscribe({
         next: () => {
           this.showSuccess('✅ Cita creada exitosamente');
           this.resetAndGoToList();
         },
         error: (err) => {
-          this.showError(`Error al crear: ${err.message}`);
+          this.showError(`Error: ${err.message}`);
           this.isLoading = false;
         }
       });
@@ -209,7 +205,7 @@ export class CitasComponent implements OnInit {
     this.editingId = apt.id || null;
     
     this.form = {
-      clientDocType: apt.clientDocType || '',
+      clientDocType: apt.clientDocType || 'CC',
       clientDocNumber: apt.clientDocNumber || '',
       clientName: apt.clientName,
       clientEmail: apt.clientEmail || '',
@@ -223,10 +219,13 @@ export class CitasComponent implements OnInit {
       selectedTime: apt.time
     };
     
-    // Marcar en calendario y horario
     this.formCalendarDays.forEach(d => d.selected = d.number === apt.day);
     this.availableTimeSlots.forEach(s => s.selected = s.time === apt.time);
     this.selectedDateText = `Día ${apt.day}`;
+    
+    if (apt.serviceName) {
+      this.onServiceChange();
+    }
     
     if (apt.staffName) {
       this.onStaffChange();
@@ -244,11 +243,11 @@ export class CitasComponent implements OnInit {
     this.isLoading = true;
     this.appointmentsService.delete(apt.id).subscribe({
       next: () => {
-        this.showSuccess(`✅ Cita de ${apt.clientName} eliminada`);
+        this.showSuccess(`✅ Cita eliminada`);
         this.loadAppointments();
       },
       error: (err) => {
-        this.showError(`Error al eliminar: ${err.message}`);
+        this.showError(`Error: ${err.message}`);
         this.isLoading = false;
       }
     });
@@ -257,20 +256,30 @@ export class CitasComponent implements OnInit {
   confirmAppointment(apt: Appointment): void {
     if (!apt.id) return;
     apt.showMenu = false;
-    this.changeStatus(apt.id, 'confirmed', apt);
+    
+    this.isLoading = true;
+    this.appointmentsService.changeStatus(apt.id, 'confirmed').subscribe({
+      next: () => {
+        this.showSuccess('✅ Cita confirmada');
+        this.loadAppointments();
+      },
+      error: (err) => {
+        this.showError(`Error: ${err.message}`);
+        this.isLoading = false;
+      }
+    });
   }
 
   cancelAppointment(apt: Appointment): void {
     if (!apt.id) return;
     apt.showMenu = false;
-    this.changeStatus(apt.id, 'cancelled', apt);
-  }
-
-  private changeStatus(id: number, status: string, apt: Appointment): void {
+    
+    const motivo = prompt('Motivo de cancelación (opcional):');
+    
     this.isLoading = true;
-    this.appointmentsService.changeStatus(id, status, apt).subscribe({
+    this.appointmentsService.cancel(apt.id, motivo || undefined).subscribe({
       next: () => {
-        this.showSuccess(`✅ Estado cambiado a ${status}`);
+        this.showSuccess('✅ Cita cancelada');
         this.loadAppointments();
       },
       error: (err) => {
@@ -281,7 +290,7 @@ export class CitasComponent implements OnInit {
   }
 
   // ============================================
-  // 🔥 CALENDARIO
+  // CALENDARIO
   // ============================================
   
   private initCalendars(): void {
@@ -292,7 +301,8 @@ export class CitasComponent implements OnInit {
   private buildListCalendar(): void {
     const year = this.currentMonthDate.getFullYear();
     const month = this.currentMonthDate.getMonth();
-    const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                    'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
     
     this.currentMonthYear = `${months[month]} ${year}`;
     
@@ -304,7 +314,11 @@ export class CitasComponent implements OnInit {
     const days: CalendarDay[] = [];
     
     for (let i = 0; i < offset; i++) {
-      days.push({ number: 0, date: new Date(year, month, -offset + i + 1), otherMonth: true });
+      days.push({ 
+        number: 0, 
+        date: new Date(year, month, -offset + i + 1), 
+        otherMonth: true 
+      });
     }
     
     for (let d = 1; d <= lastDay; d++) {
@@ -312,7 +326,9 @@ export class CitasComponent implements OnInit {
       days.push({
         number: d,
         date: dateObj,
-        isToday: today.getFullYear() === year && today.getMonth() === month && today.getDate() === d
+        isToday: today.getFullYear() === year && 
+                 today.getMonth() === month && 
+                 today.getDate() === d
       });
     }
     
@@ -323,7 +339,8 @@ export class CitasComponent implements OnInit {
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth();
-    const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                    'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
     
     this.currentMonthForm = `${months[month]} ${year}`;
     
@@ -334,11 +351,18 @@ export class CitasComponent implements OnInit {
     const days: CalendarDay[] = [];
     
     for (let i = 0; i < offset; i++) {
-      days.push({ number: 0, date: new Date(year, month, -offset + i + 1), otherMonth: true });
+      days.push({ 
+        number: 0, 
+        date: new Date(year, month, -offset + i + 1), 
+        otherMonth: true 
+      });
     }
     
     for (let d = 1; d <= lastDay; d++) {
-      days.push({ number: d, date: new Date(year, month, d) });
+      days.push({ 
+        number: d, 
+        date: new Date(year, month, d) 
+      });
     }
     
     this.formCalendarDays = days;
@@ -367,7 +391,7 @@ export class CitasComponent implements OnInit {
     this.form.selectedMonth = this.currentMonthForm.split(' ')[0];
     this.selectedDateText = `Día ${day.number}`;
     
-    console.log(`📅 Fecha seleccionada: ${day.number} de ${this.form.selectedMonth}`);
+    console.log(`📅 Fecha: ${day.number} de ${this.form.selectedMonth}`);
     
     if (this.form.appointmentStaff) {
       this.updateTimeSlotsForDay(day.number);
@@ -378,16 +402,16 @@ export class CitasComponent implements OnInit {
     this.availableTimeSlots.forEach(s => s.selected = false);
     slot.selected = true;
     this.form.selectedTime = slot.time;
-    console.log(`⏰ Hora seleccionada: ${slot.time}`);
+    console.log(`⏰ Hora: ${slot.time}`);
   }
 
   // ============================================
-  // 🔥 HORARIOS Y PERSONAL
+  // HORARIOS Y PERSONAL
   // ============================================
   
   onStaffChange(): void {
     const staffId = this.form.appointmentStaff;
-    console.log('👤 Personal seleccionado:', staffId);
+    console.log('👤 Personal:', staffId);
     
     if (!staffId) {
       this.availableTimeSlots = [...this.allTimeSlots];
@@ -419,12 +443,15 @@ export class CitasComponent implements OnInit {
       'jueves': 4, 'viernes': 5, 'sabado': 6
     };
     
-    const workingDayIndices = workingDays.map(d => daysMap[d.toLowerCase()]).filter(i => i !== undefined);
+    const workingDayIndices = workingDays
+      .map(d => daysMap[d.toLowerCase()])
+      .filter(i => i !== undefined);
     
     this.formCalendarDays.forEach(day => {
       if (!day.otherMonth) {
         const dayIndex = day.date.getDay();
-        day.disabled = workingDayIndices.length > 0 && !workingDayIndices.includes(dayIndex);
+        day.disabled = workingDayIndices.length > 0 && 
+                       !workingDayIndices.includes(dayIndex);
       }
     });
   }
@@ -442,7 +469,9 @@ export class CitasComponent implements OnInit {
     this.scheduleService.getAvailableTimeSlotsForDay(staffId, dayName).subscribe({
       next: (slots) => {
         console.log(`⏰ Horarios para ${dayName}:`, slots);
-        this.availableTimeSlots = this.allTimeSlots.filter(s => slots.includes(s.time));
+        this.availableTimeSlots = this.allTimeSlots.filter(s => 
+          slots.includes(s.time)
+        );
         
         if (this.availableTimeSlots.length === 0) {
           this.showError(`No hay horarios disponibles para ${dayName}`);
@@ -474,11 +503,11 @@ export class CitasComponent implements OnInit {
   }
 
   // ============================================
-  // 🔥 UTILIDADES
+  // UTILIDADES
   // ============================================
   
   switchView(view: 'list' | 'create'): void {
-    console.log('🔄 Cambiando a vista:', view);
+    console.log('🔄 Vista:', view);
     this.currentView = view;
     this.clearMessages();
     
@@ -491,7 +520,7 @@ export class CitasComponent implements OnInit {
 
   resetForm(): void {
     this.form = {
-      clientDocType: '',
+      clientDocType: 'CC',
       clientDocNumber: '',
       clientName: '',
       clientEmail: '',
@@ -558,6 +587,11 @@ export class CitasComponent implements OnInit {
     this.errorMessage = '';
   }
 
+  private validateEmail(email: string): boolean {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
   toggleMenu(event: Event, apt: any): void {
     event.stopPropagation();
     this.appointments.forEach(a => {
@@ -571,10 +605,6 @@ export class CitasComponent implements OnInit {
     this.appointments.forEach(a => a.showMenu = false);
   }
 
-  // ============================================
-  // 🔥 TRACK BY FUNCTIONS
-  // ============================================
-  
   trackDay(_: number, item: CalendarDay): number {
     return item.date.getTime();
   }
