@@ -1,25 +1,25 @@
 <div>
   <app-admin-web></app-admin-web>
   <app-contenido [title]="'Informe de servicios realizados'">
-    
+
     <div class="container">
       <!-- Controles del reporte -->
       <div class="report-controls">
         <div class="date-range-selector">
           <div class="form-group">
             <label for="startDate">Fecha de inicio</label>
-            <input 
-              type="date" 
-              id="startDate" 
+            <input
+              type="date"
+              id="startDate"
               class="date-input"
               [(ngModel)]="startDate"
               (change)="onDateChange()">
           </div>
           <div class="form-group">
             <label for="endDate">Fecha de fin</label>
-            <input 
-              type="date" 
-              id="endDate" 
+            <input
+              type="date"
+              id="endDate"
               class="date-input"
               [(ngModel)]="endDate"
               (change)="onDateChange()">
@@ -28,8 +28,8 @@
 
         <div class="person-selector-report form-group">
           <label for="reportPersonSelect" class="person-label">Seleccione informe</label>
-          <select 
-            id="reportPersonSelect" 
+          <select
+            id="reportPersonSelect"
             class="person-select"
             [(ngModel)]="selectedPerson"
             (change)="onPersonChange()">
@@ -39,9 +39,9 @@
             <option value="pablito">Pablito</option>
           </select>
         </div>
-        
-        <button 
-          class="btn-generate-report" 
+
+        <button
+          class="btn-generate-report"
           (click)="generateReport()"
           [disabled]="isGenerating">
           {{isGenerating ? 'Generando...' : 'Generar Informe'}}
@@ -51,17 +51,17 @@
       <!-- Resultados del reporte -->
       <div class="report-results">
         <div class="chart-container">
-          <canvas 
-            #servicesChart 
+          <canvas
+            #servicesChart
             id="servicesChart"
             *ngIf="showChart"></canvas>
-          <p 
-            class="no-data-message" 
+          <p
+            class="no-data-message"
             *ngIf="!showChart && !isGenerating">
             {{noDataMessage}}
           </p>
-          <div 
-            class="loading-spinner" 
+          <div
+            class="loading-spinner"
             *ngIf="isGenerating">
             <div class="spinner"></div>
             <p>Generando informe...</p>
@@ -80,7 +80,7 @@
               </li>
             </ul>
           </div>
-          
+
           <div class="total-value-obtained">
             <h3>Valor total obtenido</h3>
             <p class="summary-value">{{totalValue | currency:'COP':'symbol':'1.0-0'}}</p>
@@ -90,28 +90,28 @@
 
       <!-- Mensajes de estado -->
       <div class="message-container">
-        <div 
-          class="success-message" 
+        <div
+          class="success-message"
           [class.show]="successMessage"
           *ngIf="successMessage">
           {{successMessage}}
         </div>
-        
-        <div 
-          class="error-message-global" 
+
+        <div
+          class="error-message-global"
           [class.show]="errorMessage"
           *ngIf="errorMessage">
           {{errorMessage}}
         </div>
-        
-        <div 
-          class="info-message-global" 
+
+        <div
+          class="info-message-global"
           [class.show]="infoMessage"
           *ngIf="infoMessage">
           {{infoMessage}}
         </div>
       </div>
     </div>
-    
+
   </app-contenido>
 </div>
