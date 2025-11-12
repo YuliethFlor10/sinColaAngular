@@ -1,131 +1,127 @@
-.btn-registrar {
-  cursor: pointer;
-  transition: background 0.2s;
-}
-.btn-registrar:disabled {
-  background: #888;
-  cursor: not-allowed;
-}
-.registro-form input.ng-invalid.ng-touched,
-.registro-form select.ng-invalid.ng-touched {
-  border: 2px solid #ff4d4f !important;
-  background: #fff0f0;
-}
-/* Modal de error para login */
-
-/* Modal de error reforzado */
-.modal-overlay {
-  position: fixed;
-  display: flex !important;
-  opacity: 1 !important;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 99999 !important;
-  pointer-events: all;
-}
-.modal-content {
-  background: #fff0f0;
-  border-radius: 16px;
-  padding: 32px 24px;
-  max-width: 350px;
-  margin: 0 auto;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.28);
-  text-align: center;
-  position: relative;
-  animation: modalFadeIn 0.4s ease;
-}
-.modal-close {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  background: none;
-  border: none;
-  font-size: 22px;
-  color: #ff4d4f;
-  cursor: pointer;
-  z-index: 100000;
-}
-
-@keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
-}
+/* ===========================
+   Estilos Base
+   =========================== */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
   box-sizing: border-box;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+/* ===========================
+   Header
+   =========================== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
-  padding: 10px 10px;
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  padding: 10px 20px;
   color: white;
-  text-align: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 .titulo {
   margin: 0;
   font-size: 2rem;
+  white-space: nowrap;
 }
 
+/* ===========================
+   Login Form
+   =========================== */
 .login-form {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-end;
 }
 
 .login-form input {
   padding: 0.5rem;
   border-radius: 5px;
   border: none;
-  width: 100%;
-  max-width: 200px;
+  width: 200px;
+  flex-shrink: 0;
 }
 
-.login-form button {
-    display: flex;
-  flex-direction: column; /* Apila los elementos verticalmente */
-  gap: 10px;
-  align-items: stretch;
-  width: 100%;
-  max-width: 350px;
+.boton-redireccion {
+  background-color: black;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
 }
 
+.boton-redireccion:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.boton-redireccion:disabled {
+  background: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ===========================
+   Extra (Recuérdame)
+   =========================== */
 .extra {
-    display: flex;
+  display: flex;
   align-items: center;
   justify-content: center;
+  width: 100%;
   margin-top: 10px;
   gap: 20px;
-  font-family: Arial, sans-serif;
   font-size: 14px;
-
+  flex-wrap: wrap;
 }
 
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: white;
+}
+
+.remember-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #000;
+  cursor: pointer;
+}
 
 .extra a {
-  color: rgb(255, 255, 255);
+  color: white;
   text-decoration: none;
-
 }
 
+.extra a:hover {
+  text-decoration: underline;
+}
+
+/* ===========================
+   Container Principal
+   =========================== */
 .container {
   display: flex;
   justify-content: space-between;
   padding: 3rem 5vw;
   flex-wrap: wrap;
+  gap: 2rem;
+  min-height: 60vh;
 }
 
 .izquierda,
@@ -137,9 +133,14 @@ body {
   padding: 2rem;
 }
 
+/* ===========================
+   Sección Izquierda
+   =========================== */
 .mensaje {
   font-size: 1.2rem;
+  line-height: 1.6;
   padding: 0 1rem;
+  margin-bottom: 2rem;
 }
 
 .logo {
@@ -147,29 +148,71 @@ body {
   max-width: 250px;
   height: auto;
   margin-top: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
 }
 
+/* ===========================
+   Sección Derecha - Registro
+   =========================== */
 .registrate {
   font-size: 2rem;
-  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  margin-bottom: 1.5rem;
 }
 
 .registro-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin: 20px auto;
-  max-width: 300px;
+  max-width: 320px;
   width: 100%;
 }
 
-.registro-form input {
+.registro-form input,
+.registro-form select {
   padding: 0.75rem;
   border-radius: 5px;
   border: 1px solid #ccc;
+  width: 100%;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.registro-form input:focus,
+.registro-form select:focus {
+  outline: none;
+  border-color: #4ec4ff;
+}
+
+.registro-form input.ng-invalid.ng-touched,
+.registro-form select.ng-invalid.ng-touched {
+  border: 2px solid #ff4d4f !important;
+  background: #fff0f0;
+}
+
+/* Estilos para el label de términos */
+.terminos-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.5rem 0;
+}
+
+.terminos-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4ec4ff;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
 .btn-registrar {
@@ -178,134 +221,568 @@ body {
   color: white;
   border: none;
   border-radius: 5px;
-}
-
-.iconos img {
-  width: 30px;
-  margin: 10px;
   cursor: pointer;
+  transition: background 0.2s;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
 }
 
+.btn-registrar:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.btn-registrar:disabled {
+  background: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ===========================
+   Footer
+   =========================== */
 .footer {
   text-align: center;
   margin: 30px 0;
   font-style: italic;
   font-size: 1rem;
   padding: 1rem;
-  background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
+/* ===========================
+   Modal
+   =========================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999 !important;
+  pointer-events: all;
+  opacity: 1 !important;
+}
 
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 400px;
+  width: 90%;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  position: relative;
+  animation: modalFadeIn 0.4s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
 
-.boton-redireccion {
-  background-color: black;
-  color: white;
-  padding: 0.5rem 1rem;
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: none;
   border: none;
-  border-radius: 5px;
-  text-decoration: none;
+  font-size: 28px;
+  color: #ff4d4f;
   cursor: pointer;
+  z-index: 100000;
+  transition: transform 0.2s;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  transform: scale(1.1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* ===========================
-   Responsive Mejorado
+   RESPONSIVE - Tablets (768px)
    =========================== */
+@media (max-width: 768px) {
+  .header {
+    padding: 15px;
+    gap: 15px;
+  }
 
-@media (max-width: 500px) {
+  .titulo {
+    font-size: 1.75rem;
+  }
+
+  .login-form {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .login-form input {
+    width: 160px;
+  }
+
+  .container {
+    padding: 2rem 3vw;
+    gap: 1.5rem;
+  }
+
+  .mensaje {
+    font-size: 1.1rem;
+  }
+
+  .logo {
+    width: 50%;
+    max-width: 200px;
+  }
+}
+
+/* ===========================
+   RESPONSIVE - Móviles (600px)
+   =========================== */
+@media (max-width: 600px) {
+  /* Header más compacto - OCULTAR BIENVENIDO */
+  .header {
+    padding: 0.4rem 0.2rem;
+    gap: 0.2rem;
+    flex-wrap: wrap;
+    min-height: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .titulo {
+    display: none !important; /* Ocultar "Bienvenido" en móvil */
+  }
+
+  /* Login form ocupa todo el ancho disponible */
+  .login-form {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.2rem;
+    box-sizing: border-box;
+  }
+
+  .login-form input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: none;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.65rem;
+    box-sizing: border-box;
+  }
+
+  .boton-redireccion {
+    flex-shrink: 0;
+    padding: 0.35rem 0.4rem;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
+  /* Extra debajo en nueva línea */
+  .extra {
+    width: 100%;
+    flex-direction: row;
+    gap: 0.4rem;
+    font-size: 0.6rem;
+    margin-top: 0.25rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+  }
+
+  .remember-label {
+    font-size: 0.6rem;
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+  }
+
+  .extra a {
+    font-size: 0.6rem;
+  }
+
+  /* Container */
   .container {
     flex-direction: column;
-    align-items: center;
-    padding: 2rem 1rem;
+    padding: 1rem 0.5rem;
+    gap: 1rem;
+    min-height: auto;
   }
 
   .izquierda,
   .derecha {
-    padding: 1rem;
     width: 100%;
+    padding: 0.5rem;
+    min-width: auto;
   }
 
+  /* Reordenar: registro arriba, mensaje abajo */
   .derecha {
-    border-top: 1px solid #eee;
-    margin-top: 1rem;
-    padding-top: 1rem;
+    order: 1;
   }
 
-  .login-form {
-    flex-direction: column;
-    width: 100%;
-    max-width: 350px;
-  }
-}
-
-@media (max-width: 600px) {
-  .header {
-    flex-direction: column;
-    align-items: center;
-    padding: 1rem;
+  .izquierda {
+    order: 2;
   }
 
-  .titulo {
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
+  /* Mensaje y logo más pequeños en móvil */
+  .mensaje {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    padding: 0;
+    margin-bottom: 0.5rem;
   }
 
   .logo {
-    width: 90px;
-    margin: 1rem auto;
+    width: 100px;
+    max-width: 100px;
+    margin: 0.5rem auto;
   }
 
-  .iconos img {
-    width: 28px;
-    margin: 0 5px;
-  }
-
+  /* Footer más pequeño */
   .footer {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    margin: 15px 0;
+  }
+
+  .registrate {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .registro-form {
+    max-width: 100%;
+    gap: 6px;
+    margin: 10px auto;
+  }
+
+  .registro-form input,
+  .registro-form select {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .terminos-label {
+    font-size: 0.75rem;
+    padding: 0.25rem 0;
+  }
+
+  .btn-registrar {
+    padding: 0.55rem;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+
+  .modal-content {
+    max-width: 90%;
+    padding: 20px 16px;
   }
 }
 
-@media (max-width: 600px) {
+/* ===========================
+   RESPONSIVE - Móviles pequeños (450px)
+   =========================== */
+@media (max-width: 450px) {
+  .header {
+    padding: 0.45rem 0.25rem;
+    gap: 0.25rem;
+  }
+
+  .titulo {
+    display: none;
+  }
+
+  .login-form input {
+    max-width: 95px;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.65rem;
+  }
+
+  .boton-redireccion {
+    padding: 0.35rem 0.45rem;
+    font-size: 0.65rem;
+  }
+
+  .extra {
+    font-size: 0.6rem;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+  }
+
+  .remember-label {
+    font-size: 0.6rem;
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+  }
+
+  .extra a {
+    font-size: 0.6rem;
+  }
+
+  .container {
+    padding: 0.75rem 0.4rem;
+    gap: 0.75rem;
+  }
+
   .mensaje {
-    display: none;
+    font-size: 0.8rem;
+  }
+
+  .logo {
+    width: 85px;
+  }
+
+  .registrate {
+    font-size: 1.25rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .registro-form {
+    gap: 5px;
+    margin: 8px auto;
+  }
+
+  .registro-form input,
+  .registro-form select {
+    padding: 0.45rem;
+    font-size: 0.75rem;
+  }
+
+  .terminos-label {
+    font-size: 0.7rem;
+  }
+
+  .btn-registrar {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    padding: 18px 14px;
   }
 
   .footer {
-    display: none;
+    font-size: 0.75rem;
+    margin: 10px 0;
   }
 }
 
-.remember-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-top: 10px;
-  gap: 20px;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
+/* ===========================
+   RESPONSIVE - Móviles muy pequeños (360px)
+   =========================== */
+@media (max-width: 360px) {
+  .header {
+    padding: 0.4rem 0.2rem;
+  }
+
+  .titulo {
+    display: none;
+  }
+
+  .login-form input {
+    max-width: 85px;
+    padding: 0.3rem 0.15rem;
+    font-size: 0.6rem;
+  }
+
+  .boton-redireccion {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .extra {
+    font-size: 0.55rem;
+    gap: 0.3rem;
+  }
+
+  .remember-label {
+    font-size: 0.55rem;
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 11px;
+    height: 11px;
+  }
+
+  .extra a {
+    font-size: 0.55rem;
+  }
+
+  .mensaje {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .logo {
+    width: 75px;
+  }
+
+  .registrate {
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .registro-form input,
+  .registro-form select {
+    padding: 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  .terminos-label {
+    font-size: 0.65rem;
+  }
+
+  .btn-registrar {
+    padding: 0.45rem;
+    font-size: 0.75rem;
+  }
+
+  .footer {
+    font-size: 0.7rem;
+  }
 }
 
-.remember-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  cursor: pointer;
+/* ===========================
+   Landscape Mode (móviles horizontales)
+   =========================== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header {
+    padding: 0.5rem 1rem;
+  }
+
+  .titulo {
+    font-size: 1.2rem;
+  }
+
+  .login-form {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .login-form input {
+    width: 160px;
+    padding: 0.45rem;
+    font-size: 0.85rem;
+  }
+
+  .boton-redireccion {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.85rem;
+    width: auto;
+  }
+
+  .extra {
+    flex-direction: row;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .container {
+    padding: 1rem 2vw;
+    flex-direction: row;
+    min-height: auto;
+  }
+
+  .izquierda,
+  .derecha {
+    padding: 0.5rem;
+  }
+
+  .mensaje {
+    font-size: 0.85rem;
+  }
+
+  .logo {
+    width: 80px;
+    margin-top: 0.5rem;
+  }
+
+  .modal-content {
+    max-height: 85vh;
+  }
 }
 
-.remember-label input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  accent-color: #000; /* Cambia el color del check */
-  cursor: pointer;
+/* ===========================
+   Accesibilidad
+   =========================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-.remember-container a {
-  color: black;
-  text-decoration: none;
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid #4ec4ff;
+  outline-offset: 2px;
 }
 
-.remember-container a:hover {
-  text-decoration: underline;
+/* ===========================
+   Ajustes adicionales para evitar overflow
+   =========================== */
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+.header,
+.container,
+footer {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* Prevenir que los inputs causen overflow */
+input,
+select,
+button {
+  max-width: 100%;
+  box-sizing: border-box;
 }

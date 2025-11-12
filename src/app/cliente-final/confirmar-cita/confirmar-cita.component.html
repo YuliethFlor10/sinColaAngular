@@ -1,110 +1,179 @@
- <div class="container">
-        <div class="header">
-            <div class="sincola-logo">
-                <img src="/assets/iconos/logo.svg" alt="Sincola Logo">
-            </div>
-            <h1>Hola Pepito Perez.</h1>
-            <h2>Bienvenido a MK Nails Salon</h2>
+<!-- LOADING SPINNER -->
+<div *ngIf="loading" class="loading-container">
+    <div class="spinner"></div>
+    <p>Cargando información de tu cita...</p>
+</div>
+
+<!-- ERROR MESSAGE -->
+<div *ngIf="error && !loading" class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h2>Error al cargar la cita</h2>
+    <p>{{ error }}</p>
+    <button class="btn btn-confirm" (click)="cargarDatosCita()">Reintentar</button>
+</div>
+
+<!-- CONTENIDO PRINCIPAL (Solo se muestra cuando hay datos) -->
+<div *ngIf="citaData && !loading && !error" class="container">
+    <div class="header">
+        <div class="sincola-logo">
+            <img src="/assets/iconos/logo.svg" alt="Sincola Logo">
         </div>
-
-        <div class="content">
-            <div class="left-section">
-                <div class="appointment-info">
-                    <p class="intro-text">
-                        Tu cita para <strong>UÑAS PERMANENTES</strong>, se ha programado exitosamente.<br>
-                        A continuación encontrará toda la información de su cita
-                    </p>
-
-                    <div class="info-item">
-                        <span class="info-label">Nombre del cliente:</span>
-                        <span class="info-value">PEPITO PEREZ</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Fecha de la cita:</span>
-                        <span class="info-value">Miércoles 28 de mayo 2025</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Hora de la cita:</span>
-                        <span class="info-value">05:00 PM</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Servicio a realizar:</span>
-                        <span class="info-value">Uñas permanentes</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Duración:</span>
-                        <span class="info-value">1 hora</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Persona a cargo:</span>
-                        <span class="info-value">YULIETH FLOR</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Lugar de atención:</span>
-                        <span class="info-value">Calle 29 # 30-10 MK Nails salon</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Teléfono de contacto:</span>
-                        <span class="info-value">32147823682</span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Observaciones:</span>
-                        <span class="info-value"></span>
-                    </div>
-                </div>
-
-                <div class="notes-section">
-                    <p>Una cita es un compromiso mutuo. Si no puedes asistir, te pedimos que nos avises con anticipación. Hay un profesional esperando por ti, y otra persona podría estar necesitando ese espacio.</p>
-                </div>
-
-                <div class="buttons-section">
-                    <p class="button-text">Dale click para confirmar o cancelar cita</p>
-                    <div class="buttons">
-                        <button class="btn btn-confirm" onclick="confirmarCita()">Confirmar</button>
-                        <button class="btn btn-cancel" onclick="cancelarCita()">Cancelar</button>
-                    </div>
-                </div>
-
-                <div class="notes-section">
-                    <p>Sabemos que pueden surgir imprevistos, te pedimos que nos avises con un mínimo de 2 horas de anticipación.</p>
-                    <p>Te recomendamos llegar entre 15 y 20 minutos antes y presentarte directamente en el punto de atención</p>
-                </div>
-            </div>
-
-            <div class="right-section">
-                <div class="logo-circle">
-                    <div class="logo-text">
-                        <div class="logo-mk">MK</div>
-                        <div class="logo-nails">NAILS SALON</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="social-section">
-            <p class="social-title">Síguenos en nuestras redes sociales</p>
-            <div class="social-icons">
-                <a href="#" class="social-icon whatsapp"><img src="/assets/iconos/wspp.svg" alt="WhatsApp"></a>
-                <a href="#" class="social-icon instagram"><img src="/assets/iconos/ig.svg" alt="Instagram"></a>
-                <a href="#" class="social-icon facebook"><img src="/assets/iconos/fc.svg" alt="Facebook"></a>
-            </div>
-        </div>
+        <h1>Hola {{ citaData.cliente_nombre }}.</h1>
+        <h2>Bienvenido a {{ citaData.negocio_nombre }}</h2>
     </div>
 
-    <!-- Modal para confirmación -->
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <h3>¡Cita Confirmada!</h3>
-            <p>Tu cita ha sido confirmada exitosamente. Te esperamos el Miércoles 28 de mayo 2025 a las 05:00 PM.</p>
-            <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+    <div class="content">
+        <div class="left-section">
+            <div class="appointment-info">
+                <p class="intro-text">
+                    Tu cita para <strong>{{ citaData.servicio }}</strong>, se ha programado exitosamente.<br>
+                    A continuación encontrarás toda la información de tu cita
+                </p>
+
+                <div class="info-item">
+                    <span class="info-label">Nombre del cliente:</span>
+                    <span class="info-value">{{ citaData.cliente_nombre }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Email:</span>
+                    <span class="info-value">{{ citaData.cliente_email }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Fecha de la cita:</span>
+                    <span class="info-value">{{ citaData.fecha }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Hora de la cita:</span>
+                    <span class="info-value">{{ citaData.hora }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Servicio a realizar:</span>
+                    <span class="info-value">{{ citaData.servicio }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Duración:</span>
+                    <span class="info-value">{{ citaData.duracion }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Precio:</span>
+                    <span class="info-value">${{ citaData.precio }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Lugar de atención:</span>
+                    <span class="info-value">{{ citaData.direccion }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Teléfono de contacto:</span>
+                    <span class="info-value">{{ citaData.telefono }}</span>
+                </div>
+                <div class="info-item" *ngIf="citaData.observaciones">
+                    <span class="info-label">Observaciones:</span>
+                    <span class="info-value">{{ citaData.observaciones }}</span>
+                </div>
+                <div class="info-item" *ngIf="citaData.recomendaciones">
+                    <span class="info-label">Recomendaciones:</span>
+                    <span class="info-value">{{ citaData.recomendaciones }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Estado:</span>
+                    <span class="info-value" [ngClass]="{
+                        'status-confirmada': citaData.estado === 'Confirmada',
+                        'status-cancelada': citaData.estado === 'Cancelada',
+                        'status-pendiente': citaData.estado === 'Pendiente'
+                    }">{{ citaData.estado }}</span>
+                </div>
+            </div>
+
+            <div class="notes-section">
+                <p>Una cita es un compromiso mutuo. Si no puedes asistir, te pedimos que nos avises con anticipación. Hay un profesional esperando por ti, y otra persona podría estar necesitando ese espacio.</p>
+            </div>
+
+            <!-- BOTONES - Solo mostrar si puede confirmar o cancelar -->
+            <div class="buttons-section" *ngIf="citaData.puede_confirmar || citaData.puede_cancelar">
+                <p class="button-text">Dale click para confirmar o cancelar cita</p>
+                <div class="buttons">
+                    <button
+                        *ngIf="citaData.puede_confirmar"
+                        class="btn btn-confirm"
+                        (click)="confirmarCita()">
+                        Confirmar
+                    </button>
+                    <button
+                        *ngIf="citaData.puede_cancelar"
+                        class="btn btn-cancel"
+                        (click)="cancelarCita()">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <!-- MENSAJE SI NO PUEDE HACER NADA (CITA YA CONFIRMADA O CANCELADA) -->
+            <div class="status-message-section" *ngIf="!citaData.puede_confirmar && !citaData.puede_cancelar">
+                <!-- Mensaje para cita confirmada -->
+                <div class="status-alert status-alert-success" *ngIf="citaData.estado === 'Confirmada'">
+                    <div class="status-alert-icon">✓</div>
+                    <div class="status-alert-content">
+                        <h3>Esta cita ya fue confirmada</h3>
+                        <p>Tu cita fue confirmada anteriormente. Te esperamos en la fecha y hora programada.</p>
+                        <p class="status-alert-note">Si necesitas hacer algún cambio, por favor contáctanos directamente.</p>
+                    </div>
+                </div>
+
+                <!-- Mensaje para cita cancelada -->
+                <div class="status-alert status-alert-danger" *ngIf="citaData.estado === 'Cancelada'">
+                    <div class="status-alert-icon">✕</div>
+                    <div class="status-alert-content">
+                        <h3>Esta cita fue cancelada</h3>
+                        <p>Esta cita fue cancelada previamente y no puede ser modificada.</p>
+                        <p class="status-alert-note">Si deseas agendar una nueva cita, por favor contáctanos.</p>
+                    </div>
+                </div>
+
+                <!-- Mensaje genérico para otros estados -->
+                <div class="status-alert status-alert-info" *ngIf="citaData.estado !== 'Confirmada' && citaData.estado !== 'Cancelada'">
+                    <div class="status-alert-icon">ℹ</div>
+                    <div class="status-alert-content">
+                        <h3>Estado de la cita: {{ citaData.estado }}</h3>
+                        <p>Esta cita no puede ser modificada en este momento.</p>
+                        <p class="status-alert-note">Para más información, por favor contáctanos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="notes-section">
+                <p>Sabemos que pueden surgir imprevistos, te pedimos que nos avises con un mínimo de 2 horas de anticipación.</p>
+                <p>Te recomendamos llegar entre 15 y 20 minutos antes y presentarte directamente en el punto de atención</p>
+            </div>
         </div>
+
+       
     </div>
 
-    <!-- Modal para cancelación -->
-    <div id="cancelModal" class="modal">
-        <div class="modal-content">
-            <h3>Cita Cancelada</h3>
-            <p>Tu cita ha sido cancelada exitosamente. Si necesitas más información o deseas reprogramarla, no dudes en contactarnos.</p>
-            <button class="modal-btn" onclick="cerrarModal()">Cerrar</button>
+    <div class="social-section">
+        <p class="social-title">Síguenos en nuestras redes sociales</p>
+        <div class="social-icons">
+            <a (click)="abrirWhatsApp()" class="social-icon whatsapp" style="cursor: pointer;">
+                <img src="/assets/iconos/wspp.svg" alt="WhatsApp">
+            </a>
+            <a (click)="abrirInstagram()" class="social-icon instagram" style="cursor: pointer;">
+                <img src="/assets/iconos/ig.svg" alt="Instagram">
+            </a>
+            <a (click)="abrirFacebook()" class="social-icon facebook" style="cursor: pointer;">
+                <img src="/assets/iconos/fc.svg" alt="Facebook">
+            </a>
         </div>
     </div>
+</div>
+
+<!-- MODAL PARA CANCELACIÓN -->
+<div id="cancelModal" class="modal" *ngIf="citaData">
+    <div class="modal-content">
+        <h3>¿Confirmar cancelación?</h3>
+        <p>¿Estás seguro de que deseas cancelar tu cita para <strong>{{ citaData.servicio }}</strong> el <strong>{{ citaData.fecha }}</strong> a las <strong>{{ citaData.hora }}</strong>?</p>
+        <p style="color: #999; font-size: 0.9em; margin-top: 10px;">Esta acción notificará al negocio sobre la cancelación.</p>
+        <div class="modal-buttons">
+            <button class="modal-btn btn-secondary" (click)="cerrarModal()">No, mantener cita</button>
+            <button class="modal-btn btn-danger" (click)="confirmarCancelacion()">Sí, cancelar cita</button>
+        </div>
+    </div>
+</div>

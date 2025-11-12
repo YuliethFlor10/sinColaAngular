@@ -3,21 +3,46 @@
   <app-contenido [title]="'Horario de atención'">
 
     <div class="horario-content">
+      <!-- Mensajes de éxito/error -->
+      <div *ngIf="successMessage" class="alert alert-success">
+        {{ successMessage }}
+      </div>
+      <div *ngIf="errorMessage" class="alert alert-error">
+        {{ errorMessage }}
+      </div>
+
+      <!-- Loading spinner -->
+      <div *ngIf="isLoading" class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Cargando horarios...</p>
+      </div>
+
       <p class="horario-description">
-        Define los horarios específicos de atención de la empresa o personal encargado de atender los servicios agendados
+        Define los horarios específicos de atención del personal encargado de atender los servicios agendados. 
+        Estos horarios determinarán qué días y horas están disponibles para agendar citas.
       </p>
       
       <div class="person-select-container">
-        <label for="personSelect" class="person-label">Seleccione empresa o personal</label>
-        <select id="personSelect" class="person-select" [(ngModel)]="selectedPerson">
-          <option value="empresa">Empresa</option>
-          <option value="yulieth">Yulieth</option>
-          <option value="juanito">Juanito</option>
-          <option value="pablito">Pablito</option>
+        <label for="personSelect" class="person-label">Seleccione personal</label>
+        <select 
+          id="personSelect" 
+          class="person-select" 
+          [(ngModel)]="selectedPerson"
+          (change)="onPersonChange()">
+          <option *ngFor="let staff of staffList" [value]="staff.id">
+            {{ staff.displayName }}
+          </option>
         </select>
       </div>
 
-      <div class="schedule-grid">
+      <!-- Información del personal seleccionado -->
+      <div class="staff-info" *ngIf="!isLoading && weekSchedule.length > 0">
+        <p class="info-text">
+          📅 <strong>{{ getOpenDaysCount() }}</strong> días laborales configurados
+        </p>
+      </div>
+
+      <div class="schedule-grid" *ngIf="!isLoading">
         <div class="day-schedule" *ngFor="let day of weekSchedule">
           <h2>{{ day.name }}</h2>
           
@@ -48,6 +73,7 @@
                   [value]="day.firstShift.start.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'firstShift', 'start')"
+                  placeholder="Inicio"
                   readonly>
                 <input 
                   type="text" 
@@ -55,6 +81,7 @@
                   [value]="day.firstShift.end.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'firstShift', 'end')"
+                  placeholder="Fin"
                   readonly>
               </div>
             </div>
@@ -65,7 +92,7 @@
               class="toggle-turno-btn"
               (click)="toggleSecondShift(day)"
               [disabled]="!day.isOpen">
-              {{ day.secondShift.enabled ? 'Quitar segundo turno' : 'Agregar segundo turno' }}
+              {{ day.secondShift.enabled ? '− Quitar segundo turno' : '+ Agregar segundo turno' }}
             </button>
 
             <!-- Segundo turno -->
@@ -78,6 +105,7 @@
                   [value]="day.secondShift.start.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'secondShift', 'start')"
+                  placeholder="Inicio"
                   readonly>
                 <input 
                   type="text" 
@@ -85,6 +113,7 @@
                   [value]="day.secondShift.end.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'secondShift', 'end')"
+                  placeholder="Fin"
                   readonly>
               </div>
             </div>
@@ -93,9 +122,13 @@
       </div>
 
       <!-- Botones de acción -->
-      <div class="form-actions">
-        <button type="button" class="btn-create" (click)="saveSchedule()">
-          Guardar horarios
+      <div class="form-actions" *ngIf="!isLoading">
+        <button 
+          type="button" 
+          class="btn-create" 
+          (click)="saveSchedule()"
+          [disabled]="!hasOpenDays() || isLoading">
+          {{ isLoading ? 'Guardando...' : 'Guardar horarios' }}
         </button>
       </div>
     </div>

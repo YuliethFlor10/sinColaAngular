@@ -9,8 +9,6 @@ import { AuthService } from '../../services/auth.service';
 import { UserService } from '../../services/user.service';
 import { BusinessService } from '../../services/business.service';
 import { ModalComponent } from '../../shared/modal.component';
-// Suponiendo que el header compartido se llama SharedHeaderComponent y está en /compartidos
-// import { SharedHeaderComponent } from '../../compartidos/shared-header.component';
 
 @Component({
   selector: 'app-inicio-sesion',
@@ -32,13 +30,20 @@ export class InicioSesionComponent implements OnInit {
   loadingRegister = false;
   loadingNegocio = false;
 
-  constructor(private fb: FormBuilder, private auth: AuthService, private userService: UserService, private businessService: BusinessService, private router: Router) {}
+  constructor(
+    private fb: FormBuilder,
+    private auth: AuthService,
+    private userService: UserService,
+    private businessService: BusinessService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       clave: ['', [Validators.required, Validators.minLength(6)]],
     });
+
     this.registroForm = this.fb.group({
       nombres: ['', [Validators.required, Validators.minLength(3)]],
       apellidos: ['', [Validators.required, Validators.minLength(3)]],
@@ -55,16 +60,17 @@ export class InicioSesionComponent implements OnInit {
       roles_id: [2, Validators.required],
       negocios_id: [1, Validators.required]
     }, { validators: this.passwordsMatchValidator });
+
     this.negocioForm = this.fb.group({
       nombre: ['', Validators.required],
       nit: ['', Validators.required],
       direccion: ['', Validators.required],
       telefono: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      tipo_servicio_id: ['', Validators.required],
-  estados_id: [1, Validators.required],
-  plan_id: [1, Validators.required],
-  planes_id: [1]
+      tipo_servicio_id: [1], // Valor por defecto: 1 (salon de belleza)
+      estados_id: [1],
+      plan_id: [1],
+      planes_id: [1]
     });
   }
 
@@ -75,10 +81,7 @@ export class InicioSesionComponent implements OnInit {
   }
 
   onLogin(): void {
-    // Limpiar el mensaje de error antes de cada intento
     this.loginError = '';
-
-    // Marcar todos los campos como tocados para mostrar errores de validación
     this.loginForm.markAllAsTouched();
 
     if (this.loginForm.invalid) {
@@ -92,14 +95,17 @@ export class InicioSesionComponent implements OnInit {
     this.auth.login(email, clave).subscribe({
       next: (res) => {
         this.loadingLogin = false;
-        // Usar saveToken en lugar de setToken
-        this.auth.saveToken(res.access_token);
+        if (res.access_token) {
+          localStorage.setItem('token', res.access_token);
+          console.log('✅ Login exitoso, token guardado');
+        }
         this.loginError = '';
         this.router.navigate(['/crear-usuario']);
       },
       error: (err) => {
         this.loadingLogin = false;
         this.loginError = err.error?.message || 'Usuario o contraseña incorrectos.';
+        console.error('Error en login:', err);
       }
     });
   }
@@ -107,8 +113,6 @@ export class InicioSesionComponent implements OnInit {
   async onRegister(): Promise<void> {
     this.registroError = '';
     this.registroExito = '';
-
-    // Marcar todos los campos como tocados para mostrar errores de validación
     this.registroForm.markAllAsTouched();
 
     if (this.registroForm.invalid) {
@@ -120,27 +124,36 @@ export class InicioSesionComponent implements OnInit {
     console.log('Iniciando registro de usuario...');
     console.log('Datos del formulario:', this.registroForm.value);
 
-    try {
-      // Validar datos antes de enviar
-      if (!this.validateRegistrationData(this.registroForm.value)) {
-        console.error('❌ Datos de registro inválidos');
-        return;
-      }
+    // Validar datos antes de enviar
+    if (!this.validateRegistrationData(this.registroForm.value)) {
+      console.error('❌ Datos de registro inválidos');
+      return;
+    }
 
-      this.loadingRegister = true;
+    this.loadingRegister = true;
+
+    try {
       const response = await this.userService.register(this.registroForm.value).toPromise();
 
-      if (response.access_token) {
+      if (response && response.access_token) {
         console.log('✅ Registro exitoso:', response.user);
-        this.loadingRegister = false;
-        this.registroExito = '¡Usuario registrado exitosamente! Ahora registra tu negocio.';
 
-        // Guardar token
+        // Guardar token automáticamente después del registro
+        localStorage.setItem('token', response.access_token);
+        console.log('✅ Token guardado automáticamente después del registro');
+
+        // También guardar con el método del AuthService si existe
         this.auth.saveToken(response.access_token);
+
+        this.registroExito = '¡Usuario registrado exitosamente! Ahora registra tu negocio.';
+        this.loadingRegister = false;
 
         setTimeout(() => {
           window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         }, 200);
+      } else {
+        this.loadingRegister = false;
+        this.registroError = 'Error al registrar usuario. No se recibió token de acceso.';
       }
     } catch (error: any) {
       console.error('Error en registro:', error);
@@ -205,8 +218,6 @@ export class InicioSesionComponent implements OnInit {
   onNegocioSubmit(): void {
     this.negocioError = '';
     this.negocioExito = '';
-
-    // Marcar todos los campos como tocados para mostrar errores de validación
     this.negocioForm.markAllAsTouched();
 
     if (this.negocioForm.invalid) {
@@ -223,30 +234,26 @@ export class InicioSesionComponent implements OnInit {
       },
       error: (err) => {
         this.loadingNegocio = false;
-        // Mostrar mensaje específico del backend si existe
         if (err.error && typeof err.error === 'object') {
-          // Si el backend envía errores por campo, los concatenamos
           const errores = Object.values(err.error).flat().join(' | ');
           this.negocioError = errores || 'Error al registrar negocio.';
         } else {
           this.negocioError = err.error?.message || 'Error al registrar negocio.';
         }
-        // Log para depuración
-        console.error('Negocio 422 error:', err.error);
+        console.error('Error al registrar negocio:', err.error);
       }
     });
   }
 
-  // Métodos para mostrar errores en el template
+  // Getters para acceder a los controles del formulario en el template
   get loginEmail() { return this.loginForm.get('email'); }
   get loginPassword() { return this.loginForm.get('clave'); }
   get registerName() { return this.registroForm.get('nombres'); }
   get registerEmail() { return this.registroForm.get('email'); }
   get registerPassword() { return this.registroForm.get('clave'); }
 
-  // Suponiendo que el header compartido se usa en el HTML
-  // Comentado: redirección automática que causaba problemas
   ngAfterViewInit() {
+    // Comentado: redirección automática que causaba problemas
     // if (this.auth.isLoggedIn()) {
     //   this.router.navigate(['/crear-usuario']);
     // }

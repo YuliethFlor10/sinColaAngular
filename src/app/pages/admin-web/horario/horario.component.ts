@@ -3,28 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminWeb } from "../admin-web";
 import { ContenidoComponent } from "../../../compartido/components/contenido/contenido.component";
-
-interface TimeSlot {
-  hour: number;
-  minute: number;
-  ampm: 'AM' | 'PM';
-  display: string;
-}
-
-interface DaySchedule {
-  name: string;
-  id: string;
-  isOpen: boolean;
-  firstShift: {
-    start: TimeSlot;
-    end: TimeSlot;
-  };
-  secondShift: {
-    start: TimeSlot;
-    end: TimeSlot;
-    enabled: boolean;
-  };
-}
+import { ScheduleService, DaySchedule, Staff } from '../../../services/schedule.service';
 
 @Component({
   selector: 'app-horario',
@@ -41,116 +20,61 @@ interface DaySchedule {
 export class HorarioComponent implements OnInit {
   sidebarOpen = false;
   selectedPerson = 'empresa';
-
+  
+  // Lista de personal disponible
+  staffList: Staff[] = [];
+  
   // Configuración de horarios por día
-  weekSchedule: DaySchedule[] = [
-    {
-      name: 'Domingo',
-      id: 'domingo',
-      isOpen: false,
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    },
-    {
-      name: 'Lunes',
-      id: 'lunes',
-      isOpen: true,
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    },
-    {
-      name: 'Martes',
-      id: 'martes',
-      isOpen: true,
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    },
-    {
-      name: 'Miércoles',
-      id: 'miercoles',
-      isOpen: true,
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    },
-    {
-      name: 'Jueves',
-      id: 'jueves',
-      isOpen: true,
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    },
-    {
-      name: 'Viernes',
-      id: 'viernes',
-      isOpen: true,
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    },
-    {
-      name: 'Sábado',
-      id: 'sabado',
-      isOpen: true,
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    }
-  ];
+  weekSchedule: DaySchedule[] = [];
 
-  constructor() {}
+  // Mensajes
+  successMessage = '';
+  errorMessage = '';
+  isLoading = false;
+
+  constructor(private scheduleService: ScheduleService) {}
 
   ngOnInit() {
-    // Inicialización del componente
     console.log('Componente de horarios inicializado');
+    
+    // Cargar lista de personal
+    this.staffList = this.scheduleService.getStaffList();
+    
+    // Cargar horarios del personal seleccionado por defecto
+    this.loadScheduleForSelectedPerson();
   }
 
+  /**
+   * 📌 Cargar horarios cuando cambia la persona seleccionada
+   */
+  onPersonChange() {
+    this.loadScheduleForSelectedPerson();
+  }
+
+  /**
+   * 📌 Cargar horarios de la persona seleccionada
+   */
+  private loadScheduleForSelectedPerson() {
+    this.isLoading = true;
+    this.errorMessage = '';
+    
+    this.scheduleService.getScheduleByStaff(this.selectedPerson).subscribe({
+      next: (schedules) => {
+        this.weekSchedule = schedules;
+        this.isLoading = false;
+        console.log(`Horarios cargados para ${this.selectedPerson}`, schedules);
+      },
+      error: (err) => {
+        this.errorMessage = `Error al cargar horarios: ${err.message}`;
+        this.isLoading = false;
+        console.error('Error cargando horarios:', err);
+      }
+    });
+  }
+
+  /**
+   * 📌 Toggle de día abierto/cerrado
+   */
   onDayToggle(day: DaySchedule) {
     console.log(`${day.name} cambiado a: ${day.isOpen ? 'Abierto' : 'Cerrado'}`);
 
@@ -160,24 +84,33 @@ export class HorarioComponent implements OnInit {
     }
   }
 
+  /**
+   * 📌 Habilitar/deshabilitar segundo turno
+   */
   toggleSecondShift(day: DaySchedule) {
     day.secondShift.enabled = !day.secondShift.enabled;
     console.log(`Segundo turno para ${day.name}: ${day.secondShift.enabled ? 'Habilitado' : 'Deshabilitado'}`);
   }
 
+  /**
+   * 📌 Abrir selector de tiempo
+   */
   openTimePicker(dayId: string, shiftType: 'firstShift' | 'secondShift', timeType: 'start' | 'end') {
-    // Aquí puedes implementar un modal o selector de tiempo
     console.log(`Abriendo selector de tiempo para: ${dayId} - ${shiftType} - ${timeType}`);
-
-    // Por ahora solo un alert de demostración
+    
     const currentTime = this.getCurrentTimeForSlot(dayId, shiftType, timeType);
-    const newTime = prompt(`Ingrese la nueva hora (formato: 8:00 AM):`, currentTime);
-
+    const newTime = prompt(`Ingrese la nueva hora (formato: 8:00 AM o 14:30 PM):`, currentTime);
+    
     if (newTime && this.isValidTimeFormat(newTime)) {
       this.updateTimeSlot(dayId, shiftType, timeType, newTime);
+    } else if (newTime) {
+      alert('Formato de hora inválido. Use formato como: 8:00 AM o 2:30 PM');
     }
   }
 
+  /**
+   * 📌 Obtener tiempo actual del slot
+   */
   private getCurrentTimeForSlot(dayId: string, shiftType: 'firstShift' | 'secondShift', timeType: 'start' | 'end'): string {
     const day = this.weekSchedule.find(d => d.id === dayId);
     if (day) {
@@ -186,50 +119,146 @@ export class HorarioComponent implements OnInit {
     return '';
   }
 
+  /**
+   * 📌 Validar formato de tiempo
+   */
   private isValidTimeFormat(time: string): boolean {
-    // Validación básica para formato de tiempo como "8:00 AM" o "12:30 PM"
-    const timeRegex = /^(1[0-2]|[1-9]):[0-5][0-9]\s?(AM|PM)$/i;
-    return timeRegex.test(time.trim());
+    // Acepta formato 12 horas (8:00 AM) y 24 horas (14:30)
+    const time12Regex = /^(1[0-2]|[1-9]):[0-5][0-9]\s?(AM|PM)$/i;
+     const time24Regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+    
+    return time12Regex.test(time.trim()) || time24Regex.test(time.trim());
   }
 
+  /**
+   * 📌 Actualizar slot de tiempo
+   */
   private updateTimeSlot(dayId: string, shiftType: 'firstShift' | 'secondShift', timeType: 'start' | 'end', newTime: string) {
     const day = this.weekSchedule.find(d => d.id === dayId);
     if (day) {
-      // Parsear el tiempo
       const timeObj = this.parseTime(newTime);
       if (timeObj) {
         day[shiftType][timeType] = timeObj;
         console.log(`Tiempo actualizado para ${dayId} ${shiftType} ${timeType}: ${newTime}`);
+        this.successMessage = `✔ Hora actualizada para ${day.name}`;
+        setTimeout(() => this.successMessage = '', 3000);
       }
     }
   }
 
-  private parseTime(timeString: string): TimeSlot | null {
-    const match = timeString.trim().match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
-    if (match) {
-      const hour = parseInt(match[1]);
-      const minute = parseInt(match[2]);
-      const ampm = match[3].toUpperCase() as 'AM' | 'PM';
-
+  /**
+   * 📌 Parsear string de tiempo a objeto TimeSlot
+   */
+  private parseTime(timeString: string): any | null {
+    const trimmed = timeString.trim();
+    
+    // Intenta formato 12 horas (8:00 AM)
+    const match12 = trimmed.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
+    if (match12) {
+      let hour = parseInt(match12[1]);
+      const minute = parseInt(match12[2]);
+      const ampm = match12[3].toUpperCase() as 'AM' | 'PM';
+      
+      // Convierte a hora de 24 horas para almacenamiento interno
+      let hour24 = hour;
+      if (ampm === 'PM' && hour !== 12) {
+        hour24 = hour + 12;
+      } else if (ampm === 'AM' && hour === 12) {
+        hour24 = 0;
+      }
+      
       return {
-        hour: ampm === 'PM' && hour !== 12 ? hour + 12 : (ampm === 'AM' && hour === 12 ? 0 : hour),
+        hour: hour24,
         minute: minute,
         ampm: ampm,
-        display: timeString.trim()
+        display: `${hour}:${minute.toString().padStart(2, '0')} ${ampm}`
       };
     }
+    
+    // Intenta formato 24 horas (14:30)
+    const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/);
+    if (match24) {
+      const hour24 = parseInt(match24[1]);
+      const minute = parseInt(match24[2]);
+      
+      // Convierte a formato 12 horas para display
+      let hour12 = hour24 % 12;
+      if (hour12 === 0) hour12 = 12;
+      const ampm = hour24 >= 12 ? 'PM' : 'AM';
+      
+      return {
+        hour: hour24,
+        minute: minute,
+        ampm: ampm,
+        display: `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`
+      };
+    }
+    
     return null;
   }
 
+  /**
+   * 📌 Guardar horarios
+   */
   saveSchedule() {
-    console.log('Guardando horarios:', this.weekSchedule);
-    console.log('Personal seleccionado:', this.selectedPerson);
+    // Validación básica
+    if (!this.weekSchedule || this.weekSchedule.length === 0) {
+      this.errorMessage = '⚠ No hay horarios para guardar';
+      return;
+    }
 
-    // Aquí implementarías la lógica para enviar los datos al servidor
-    alert('Horarios guardados exitosamente');
+    this.isLoading = true;
+    this.errorMessage = '';
+    this.successMessage = '';
+
+    console.log('Guardando horarios:', {
+      staff: this.selectedPerson,
+      schedules: this.weekSchedule
+    });
+
+    this.scheduleService.saveSchedule(this.selectedPerson, this.weekSchedule).subscribe({
+      next: (result) => {
+        this.successMessage = `✔ Horarios de ${this.getStaffDisplayName()} guardados exitosamente`;
+        this.isLoading = false;
+        console.log('Horarios guardados:', result);
+        
+        // Limpiar mensaje después de 5 segundos
+        setTimeout(() => this.successMessage = '', 5000);
+      },
+      error: (err) => {
+        this.errorMessage = `⚠ Error al guardar horarios: ${err.message}`;
+        this.isLoading = false;
+        console.error('Error guardando horarios:', err);
+      }
+    });
   }
 
+  /**
+   * 📌 Obtener nombre completo del personal seleccionado
+   */
+  private getStaffDisplayName(): string {
+    const staff = this.staffList.find(s => s.id === this.selectedPerson);
+    return staff?.displayName || staff?.name || this.selectedPerson;
+  }
+
+  /**
+   * 📌 Toggle sidebar
+   */
   toggleSidebar() {
     this.sidebarOpen = !this.sidebarOpen;
+  }
+
+  /**
+   * 📌 Verificar si hay al menos un día abierto
+   */
+  hasOpenDays(): boolean {
+    return this.weekSchedule.some(day => day.isOpen);
+  }
+
+  /**
+   * 📌 Contar días abiertos
+   */
+  getOpenDaysCount(): number {
+    return this.weekSchedule.filter(day => day.isOpen).length;
   }
 }

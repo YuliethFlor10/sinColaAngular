@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
@@ -7,29 +7,24 @@ export class UsersService {
 
   constructor(private http: HttpClient) {}
 
-  private getHeaders(): HttpHeaders {
-    const token = localStorage.getItem('token');
-    let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
-    if (token) {
-      headers = headers.set('Authorization', `Bearer ${token}`);
-    }
-    return headers;
-  }
-
   getAll(params?: any) {
     const url = params ? `${this.baseUrl}?${new URLSearchParams(params).toString()}` : this.baseUrl;
-    return this.http.get(url, { headers: this.getHeaders() });
+    return this.http.get(url);
   }
+
   getById(id: number | string) {
-    return this.http.get(`${this.baseUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.get(`${this.baseUrl}/${id}`);
   }
+
   create(data: any) {
-    return this.http.post(this.baseUrl, data, { headers: this.getHeaders() });
+    return this.http.post(this.baseUrl, data);
   }
+
   update(id: number | string, data: any) {
-    return this.http.put(`${this.baseUrl}/${id}`, data, { headers: this.getHeaders() });
+    return this.http.put(`${this.baseUrl}/${id}`, data);
   }
+
   delete(id: number | string) {
-    return this.http.delete(`${this.baseUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.delete(`${this.baseUrl}/${id}`);
   }
 }

@@ -1,10 +1,12 @@
 import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { HttpClient, HttpClientModule, HttpErrorResponse } from '@angular/common/http';
+import { FormsModule, FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { HttpClientModule, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AdminWeb } from "../admin-web";
 import { ContenidoComponent } from "../../../compartido/components/contenido/contenido.component";
-import { Observable, catchError, throwError } from 'rxjs';
+import { ReportsService } from '../../../services/reports.service';
 
 // Importar Chart.js
 declare var Chart: any;
@@ -48,36 +50,38 @@ interface MostPerformedService {
   imports: [
     CommonModule,
     FormsModule,
-    ReactiveFormsModule,
     HttpClientModule,
-    AdminWeb,
+    AdminWeb, 
     ContenidoComponent
   ]
 })
 export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
   @ViewChild('servicesChart') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
+  // Variables de navegación
+  currentView: 'reports' | 'users-list' | 'user-create' = 'reports';
+
   // Variables del formulario de informes
   startDate: string = '';
   endDate: string = '';
-  selectedPerson: string = 'empresa';
+  selectedUserId: number | null = null;
+  users: Array<any> = [];
   isGenerating: boolean = false;
   showChart: boolean = false;
 
   // Variables del resumen
   mostPerformedServices: MostPerformedService[] = [];
   totalValue: number = 0;
-
+  totalRecords: number = 0;
+  averagePerMonth: number = 0;
+  bestMonthLabel: string = '';
+  
   // Variables para gestión de usuarios
-  users: User[] = [];
-  selectedUser: User | null = null;
   isLoadingUsers: boolean = false;
   isCreatingUser: boolean = false;
-  currentView: 'reports' | 'users-list' | 'user-create' = 'reports';
-
-  // Formulario reactivo para crear usuario
-  createUserForm: FormGroup;
-
+  selectedUser: User | null = null;
+  createUserForm!: FormGroup;
+  
   // Mensajes de estado
   successMessage: string = '';
   errorMessage: string = '';
@@ -120,21 +124,14 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
   };
 
   constructor(
+    private reportsService: ReportsService,
     private http: HttpClient,
     private fb: FormBuilder
-  ) {
-    // Inicializar el formulario reactivo para crear usuario
-    this.createUserForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      password_confirmation: ['', [Validators.required]]
-    }, { validators: this.passwordMatchValidator });
-  }
+  ) {}
 
   ngOnInit() {
     this.initializeDates();
-    // Cargar usuarios al inicializar el componente
+    this.initializeForm();
     this.loadUsers();
   }
 
@@ -147,6 +144,22 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.chartInstance) {
       this.chartInstance.destroy();
     }
+  }
+
+  // ===========================================
+  // SECCIÓN: INICIALIZACIÓN
+  // ===========================================
+
+  /**
+   * Inicializa el formulario de creación de usuarios
+   */
+  private initializeForm(): void {
+    this.createUserForm = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+      password_confirmation: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator });
   }
 
   // ===========================================
@@ -184,9 +197,12 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clearMessages();
 
     this.getUsersFromApi().subscribe({
-      next: (response) => {
+      next: (response: ApiResponse<User[]>) => {
         if (response.success) {
           this.users = response.data;
+          if (this.users.length > 0 && !this.selectedUserId) {
+            this.selectedUserId = this.users[0].id || null;
+          }
           this.showSuccessMessage(`Se cargaron ${this.users.length} usuarios correctamente.`);
         } else {
           this.users = [];
@@ -194,7 +210,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.isLoadingUsers = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cargar usuarios:', error);
         this.showErrorMessage('Error de conexión al cargar usuarios. Verifique su conexión a internet.');
         this.users = [];
@@ -212,7 +228,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.showInfoMessage('Cargando datos del usuario...');
 
     this.getUserByIdFromApi(userId).subscribe({
-      next: (response) => {
+      next: (response: ApiResponse<User>) => {
         if (response.success) {
           this.selectedUser = response.data;
           this.showSuccessMessage('Usuario cargado correctamente.');
@@ -221,7 +237,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
           this.showErrorMessage(response.message || 'Usuario no encontrado.');
         }
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al cargar usuario por ID:', error);
         this.showErrorMessage('Error al cargar los datos del usuario.');
         this.selectedUser = null;
@@ -274,7 +290,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     const userData: User = this.createUserForm.value;
 
     this.createUserInApi(userData).subscribe({
-      next: (response) => {
+      next: (response: ApiResponse<User>) => {
         if (response.success) {
           this.showSuccessMessage('Usuario creado exitosamente.');
           this.resetCreateUserForm();
@@ -291,7 +307,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.isCreatingUser = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error al crear usuario:', error);
         this.handleCreateUserErrors(error.error?.errors || {});
         this.isCreatingUser = false;
@@ -447,7 +463,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   // ===========================================
-  // SECCIÓN: FUNCIONES DE INFORMES (ORIGINALES)
+  // SECCIÓN: FUNCIONES DE INFORMES
   // ===========================================
 
   private initializeDates() {
@@ -492,8 +508,8 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
       return;
     }
 
-    if (!this.selectedPerson) {
-      this.showErrorMessage('Por favor, selecciona el tipo de informe.');
+    if (!this.selectedUserId) {
+      this.showErrorMessage('Por favor, selecciona un usuario para el informe.');
       return;
     }
 
@@ -501,50 +517,137 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.clearMessages();
     this.showChart = false;
 
-    // Simular carga de datos
-    setTimeout(() => {
-      this.loadReportData();
-    }, 1500);
+    this.reportsService.generateReport(this.selectedUserId, this.startDate, this.endDate)
+      .subscribe({
+        next: (res: any) => {
+          this.processReportResponse(res);
+          this.isGenerating = false;
+          this.showSuccessMessage('Informe generado exitosamente.');
+          this.showChart = true;
+        },
+        error: (err: any) => {
+          console.error('Error generating report', err);
+          this.showErrorMessage(err?.message || 'Error al generar el informe.');
+          this.isGenerating = false;
+        }
+      });
   }
 
-  private loadReportData() {
-    try {
-      const data = this.sampleData[this.selectedPerson] || [];
+  private processReportResponse(response: any) {
+    let services: ServiceData[] = [];
 
-      if (data.length === 0) {
-        this.noDataMessage = 'No hay datos disponibles para el período y personal seleccionado.';
-        this.isGenerating = false;
-        return;
+    if (!response) {
+      this.noDataMessage = 'No hay datos disponibles para el período y usuario seleccionado.';
+      return;
+    }
+
+    if (Array.isArray(response.services)) {
+      services = response.services;
+    } else if (Array.isArray(response.data)) {
+      services = response.data;
+    } else if (Array.isArray(response)) {
+      services = response as ServiceData[];
+    }
+
+    if (!services || services.length === 0) {
+      this.noDataMessage = 'No hay datos disponibles para el período y usuario seleccionado.';
+      this.mostPerformedServices = [];
+      this.totalValue = 0;
+      this.totalRecords = 0;
+      this.averagePerMonth = 0;
+      this.bestMonthLabel = '';
+      return;
+    }
+
+    // Procesar datos para el resumen
+    this.mostPerformedServices = services
+      .slice()
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+      .map(item => ({ name: item.name, count: item.count }));
+
+    this.totalValue = services.reduce((sum, item) => sum + (item.value || 0), 0);
+
+    this.computeStatisticsFromResponse(response, services);
+    this.createChart(services);
+  }
+
+  private computeStatisticsFromResponse(response: any, services: ServiceData[]) {
+    this.totalRecords = 0;
+    this.averagePerMonth = 0;
+    this.bestMonthLabel = '';
+
+    const monthlyMap = new Map<string, number>();
+
+    if (response.monthly && typeof response.monthly === 'object') {
+      Object.keys(response.monthly).forEach(k => {
+        monthlyMap.set(k, Number(response.monthly[k] || 0));
+      });
+    } else if (Array.isArray(response.records)) {
+      response.records.forEach((r: any) => {
+        const date = new Date(r.date);
+        if (isNaN(date.getTime())) return;
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthlyMap.set(key, (monthlyMap.get(key) || 0) + (Number(r.count) || 1));
+      });
+    } else if (Array.isArray(response.activities)) {
+      response.activities.forEach((d: any) => {
+        const date = new Date(d);
+        if (isNaN(date.getTime())) return;
+        const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        monthlyMap.set(key, (monthlyMap.get(key) || 0) + 1);
+      });
+    }
+
+    if (monthlyMap.size === 0) {
+      const total = services.reduce((s, it) => s + (it.count || 0), 0);
+      this.totalRecords = total;
+      const months = this.monthsBetween(this.startDate, this.endDate);
+      this.averagePerMonth = months > 0 ? +(total / months).toFixed(2) : total;
+      this.bestMonthLabel = 'No disponible';
+      return;
+    }
+
+    let maxMonth = '';
+    let maxCount = -1;
+    let sum = 0;
+    monthlyMap.forEach((count, month) => {
+      sum += count;
+      if (count > maxCount) {
+        maxCount = count;
+        maxMonth = month;
       }
+    });
 
-      // Procesar datos para el resumen
-      this.mostPerformedServices = data
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5)
-        .map(item => ({ name: item.name, count: item.count }));
+    this.totalRecords = sum;
+    const monthsSpan = monthlyMap.size || this.monthsBetween(this.startDate, this.endDate) || 1;
+    this.averagePerMonth = +(this.totalRecords / monthsSpan).toFixed(2);
+    this.bestMonthLabel = maxMonth ? this.formatMonthLabel(maxMonth) : '';
+  }
 
-      this.totalValue = data.reduce((sum, item) => sum + item.value, 0);
-
-      // Crear el gráfico
-      this.createChart(data);
-
-      this.showChart = true;
-      this.isGenerating = false;
-
-      this.showSuccessMessage('Informe generado exitosamente.');
-
-    } catch (error) {
-      console.error('Error al generar el informe:', error);
-      this.showErrorMessage('Error al generar el informe. Por favor, inténtalo de nuevo.');
-      this.isGenerating = false;
+  private monthsBetween(start: string, end: string) {
+    try {
+      const s = new Date(start);
+      const e = new Date(end);
+      const months = (e.getFullYear() - s.getFullYear()) * 12 + (e.getMonth() - s.getMonth()) + 1;
+      return months > 0 ? months : 0;
+    } catch {
+      return 0;
     }
   }
 
+  private formatMonthLabel(monthKey: string) {
+    const parts = monthKey.split('-');
+    if (parts.length < 2) return monthKey;
+    const year = parts[0];
+    const month = Number(parts[1]);
+    const date = new Date(Number(year), month - 1, 1);
+    return date.toLocaleString(undefined, { month: 'long', year: 'numeric' });
+  }
+
   private createChart(data: ServiceData[]) {
-    // Esperar a que el canvas esté disponible
     setTimeout(() => {
       if (this.chartCanvas?.nativeElement) {
-        // Destruir gráfico anterior si existe
         if (this.chartInstance) {
           this.chartInstance.destroy();
         }
@@ -608,14 +711,11 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private getPersonDisplayName(): string {
-    const names: { [key: string]: string } = {
-      empresa: 'Empresa',
-      yulieth: 'Yulieth',
-      juanito: 'Juanito',
-      pablito: 'Pablito'
-    };
-
-    return names[this.selectedPerson] || 'Seleccionado';
+    if (this.users && this.selectedUserId != null) {
+      const u = this.users.find(x => x.id === this.selectedUserId);
+      if (u) return u.name || u.full_name || u.username || 'Seleccionado';
+    }
+    return 'Seleccionado';
   }
 
   // ===========================================

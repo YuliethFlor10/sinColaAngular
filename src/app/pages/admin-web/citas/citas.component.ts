@@ -1,360 +1,619 @@
-import { Component, OnInit, Inject, Injector } from '@angular/core';
+import { Component, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { AdminWeb } from '../admin-web';
 import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 import { AppointmentsService, Appointment } from '../../../services/appointments.service';
+import { ScheduleService, Staff } from '../../../services/schedule.service';
+
+interface CalendarDay {
+  number: number;
+  date: Date;
+  selected?: boolean;
+  otherMonth?: boolean;
+  disabled?: boolean;
+  isToday?: boolean;
+}
+
 @Component({
   selector: 'app-citas',
   templateUrl: './citas.component.html',
   styleUrls: ['./citas.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, AdminWeb, ContenidoComponent],
-  providers: [AppointmentsService]
+  imports: [CommonModule, FormsModule, AdminWeb, ContenidoComponent]
 })
 export class CitasComponent implements OnInit {
-  citas: Appointment[] = [];
-  citaForm!: FormGroup;
-  editingId: number | null = null;
-
-  successMessage: string = '';
-  errorMessage: string = '';
-  selectedDateText: string = '';
-
-  // Estado para alinear con el template HTML actual
+  
   currentView: 'list' | 'create' = 'list';
-  isLoading: boolean = false;
+  isLoading = false;
+  isEditing = false;
+  editingId: number | null = null;
+  
+  successMessage = '';
+  errorMessage = '';
+  
   appointments: Appointment[] = [];
   stats = { reserved: 0, confirmed: 0, cancelled: 0 };
-  calendarDays: Array<{ number: number; selected?: boolean; otherMonth?: boolean; hasAppointments?: boolean }> = [];
-  formCalendarDays: Array<{ number: number; selected?: boolean; otherMonth?: boolean }> = [];
-  currentMonth: string = '';
-  currentMonthForm: string = '';
-  appointmentForm: any = {};
-  isEditing: boolean = false;
+  
+  form = {
+    clientDocType: 'CC',
+    clientDocNumber: '',
+    clientName: '',
+    clientEmail: '',
+    clientBirthDate: '',
+    clientPhone: '',
+    appointmentService: '',
+    appointmentStaff: '',
+    appointmentObservations: '',
+    selectedDay: 0,
+    selectedMonth: '',
+    selectedTime: ''
+  };
+  
+  calendarDays: CalendarDay[] = [];
+  formCalendarDays: CalendarDay[] = [];
+  currentMonthYear = '';
+  currentMonthForm = '';
+  selectedDateText = '';
+  
+  staffList: Staff[] = [];
+  workingDays: string[] = [];
+  availableTimeSlots: Array<{ time: string; display: string; selected?: boolean }> = [];
+  
   selectedService: { price: number; duration: string; recommendation: string } | null = null;
-  timeSlots: Array<{ time: string; display: string; selected?: boolean }> = [
+  
+  private allTimeSlots = [
     { time: '09:00', display: '9:00 am' },
     { time: '09:30', display: '9:30 am' },
+    { time: '10:00', display: '10:00 am' },
     { time: '10:30', display: '10:30 am' },
     { time: '11:00', display: '11:00 am' },
+    { time: '11:30', display: '11:30 am' },
+    { time: '12:00', display: '12:00 pm' },
+    { time: '14:00', display: '2:00 pm' },
     { time: '14:30', display: '2:30 pm' },
     { time: '15:00', display: '3:00 pm' },
     { time: '15:30', display: '3:30 pm' },
-    { time: '17:30', display: '5:30 pm' }
+    { time: '16:00', display: '4:00 pm' },
+    { time: '16:30', display: '4:30 pm' },
+    { time: '17:00', display: '5:00 pm' },
+    { time: '17:30', display: '5:30 pm' },
+    { time: '18:00', display: '6:00 pm' }
   ];
 
-  private appointmentsService!: AppointmentsService;
+  private currentMonthDate = new Date();
 
   constructor(
-    private fb: FormBuilder,
-    private injector: Injector
-  ) {
-    this.appointmentsService = this.injector.get(AppointmentsService);
-  }
+    private appointmentsService: AppointmentsService,
+    private scheduleService: ScheduleService
+  ) {}
 
   ngOnInit(): void {
-    this.cargarCitas();
-
-    this.citaForm = this.fb.group({
-      clientName: ['', Validators.required],
-      serviceName: ['', Validators.required],
-      day: ['', Validators.required],
-      monthName: ['', Validators.required],
-      time: ['', Validators.required],
-      status: ['pendiente', Validators.required],
-      nota: ['']
-    });
-
-    this.initFormCalendar();
+    console.log('🚀 Componente inicializado');
+    this.staffList = this.scheduleService.getStaffList();
+    this.availableTimeSlots = [...this.allTimeSlots];
+    this.initCalendars();
+    this.loadAppointments();
   }
 
-  onServiceChange(): void {
-    const services: Record<string, { price: number; duration: string; recommendation: string }> = {
-      manicure: { price: 35000, duration: '45 min', recommendation: 'Hidratar manos antes' },
-      pedicure: { price: 45000, duration: '1 H', recommendation: 'Llevar sandalias' },
-      gelish: { price: 50000, duration: '1 H', recommendation: 'Evitar contacto con químicos' },
-      acrilicas: { price: 65000, duration: '1.5 H', recommendation: 'Planificar tiempo suficiente' },
-      pestanas: { price: 80000, duration: '1.5 H', recommendation: 'No usar maquillaje de ojos' }
-    };
-    const key = this.appointmentForm.appointmentService;
-    this.selectedService = services[key] || null;
-  }
-
-  // 📌 Listar citas
-  cargarCitas(): void {
+  // ============================================
+  // CRUD
+  // ============================================
+  
+  loadAppointments(): void {
+    console.log('📋 Cargando citas...');
     this.isLoading = true;
+    
     this.appointmentsService.getAll().subscribe({
-      next: (data: Appointment[]) => {
-        this.citas = data;
+      next: (data) => {
+        console.log(`✅ ${data.length} citas cargadas`);
         this.appointments = data;
-        this.computeStats(data);
+        this.calculateStats();
         this.isLoading = false;
-        if (data.length === 0) {
-          this.seedTestAppointments();
-        }
       },
-      error: (err: unknown) => {
-        const anyErr = err as { message?: string };
-        this.errorMessage = `Error al cargar citas: ${anyErr?.message || 'Intente nuevamente.'}`;
+      error: (err) => {
+        console.error('❌ Error:', err);
+        this.showError(err.message || 'Error al cargar citas');
         this.isLoading = false;
-        // eslint-disable-next-line no-console
-        console.error(err);
       }
     });
   }
 
-  // 📌 Guardar (crear o editar)
-  guardarCita(): void {
-    if (this.citaForm.invalid) return;
+  onSubmit(): void {
+    console.log('📤 Enviando formulario...');
+    
+    // Validaciones
+    if (!this.form.clientName?.trim()) {
+      this.showError('El nombre es obligatorio');
+      return;
+    }
+    if (!this.form.clientEmail?.trim()) {
+      this.showError('El email es obligatorio');
+      return;
+    }
+    if (!this.validateEmail(this.form.clientEmail)) {
+      this.showError('Email inválido');
+      return;
+    }
+    if (!this.form.appointmentService) {
+      this.showError('Seleccione un servicio');
+      return;
+    }
+    if (!this.form.appointmentStaff) {
+      this.showError('Seleccione el personal');
+      return;
+    }
+    if (!this.form.selectedDay) {
+      this.showError('Seleccione una fecha');
+      return;
+    }
+    if (!this.form.selectedTime) {
+      this.showError('Seleccione una hora');
+      return;
+    }
 
-    const cita = this.citaForm.value;
+    const appointment: Appointment = {
+      clientName: this.form.clientName.trim(),
+      clientEmail: this.form.clientEmail.trim(),
+      clientDocType: this.form.clientDocType || 'CC',
+      clientDocNumber: this.form.clientDocNumber || '0000000000',
+      clientBirthDate: this.form.clientBirthDate || '2000-01-01',
+      clientPhone: this.form.clientPhone || '3000000000',
+      serviceName: this.form.appointmentService,
+      staffName: this.getStaffName(this.form.appointmentStaff),
+      day: this.form.selectedDay,
+      monthName: this.form.selectedMonth,
+      time: this.form.selectedTime,
+      status: 'reserved',
+      nota: this.form.appointmentObservations || ''
+    };
 
-    if (this.editingId) {
-      // Editar
-      this.appointmentsService.update(this.editingId, cita).subscribe({
+    console.log('📦 Appointment:', appointment);
+    this.isLoading = true;
+
+    if (this.isEditing && this.editingId) {
+      appointment.id = this.editingId;
+      this.appointmentsService.update(this.editingId, appointment).subscribe({
         next: () => {
-          this.successMessage = `✔ Cita de ${cita.clientName} actualizada correctamente`;
-          this.errorMessage = '';
-          this.editingId = null;
-          this.citaForm.reset();
-          this.cargarCitas();
+          this.showSuccess('✅ Cita actualizada exitosamente');
+          this.resetAndGoToList();
         },
-        error: (err: unknown) => {
-          const anyErr = err as { message?: string };
-          this.errorMessage = `Error al actualizar la cita: ${anyErr?.message || 'Intente nuevamente.'}`;
+        error: (err) => {
+          this.showError(`Error: ${err.message}`);
+          this.isLoading = false;
         }
       });
     } else {
-      // Crear
-      this.appointmentsService.create(cita).subscribe({
+      this.appointmentsService.create(appointment).subscribe({
         next: () => {
-          this.successMessage = `✔ Cita creada para ${cita.clientName}`;
-          this.errorMessage = '';
-          this.citaForm.reset();
-          this.cargarCitas();
+          this.showSuccess('✅ Cita creada exitosamente');
+          this.resetAndGoToList();
         },
-        error: (err: unknown) => {
-          const anyErr = err as { message?: string };
-          this.errorMessage = `Error al crear la cita: ${anyErr?.message || 'Intente nuevamente.'}`;
+        error: (err) => {
+          this.showError(`Error: ${err.message}`);
+          this.isLoading = false;
         }
       });
     }
   }
 
-  // 📌 Cargar datos en el formulario para editar
-  editarCita(cita: any): void {
-    this.editingId = cita.id;
-    this.citaForm.patchValue(cita);
-    this.successMessage = `✏ Formulario cargado para edición de ${cita.clientName}. Modifique los datos y guarde.`;
-  }
-
-  // 📌 Eliminar cita
-  eliminarCita(id: number, clientName: string): void {
-    const confirmacion = confirm(
-      `¿Está seguro de eliminar la cita de ${clientName}?\n\nEsta acción no se puede deshacer.`
-    );
-
-    if (confirmacion) {
-      this.appointmentsService.delete(id).subscribe({
-        next: () => {
-          this.successMessage = `🗑 Cita de ${clientName} eliminada correctamente`;
-          this.errorMessage = '';
-          this.cargarCitas();
-        },
-        error: (err: unknown) => {
-          const anyErr = err as { message?: string };
-          this.errorMessage = `Error al eliminar la cita: ${anyErr?.message || 'Intente nuevamente.'}`;
-        }
-      });
+  editAppointment(apt: Appointment): void {
+    console.log('✏️ Editando:', apt);
+    apt.showMenu = false;
+    
+    this.isEditing = true;
+    this.editingId = apt.id || null;
+    
+    this.form = {
+      clientDocType: apt.clientDocType || 'CC',
+      clientDocNumber: apt.clientDocNumber || '',
+      clientName: apt.clientName,
+      clientEmail: apt.clientEmail || '',
+      clientBirthDate: apt.clientBirthDate || '',
+      clientPhone: apt.clientPhone || '',
+      appointmentService: apt.serviceName,
+      appointmentStaff: apt.staffName || '',
+      appointmentObservations: apt.nota || '',
+      selectedDay: apt.day,
+      selectedMonth: apt.monthName,
+      selectedTime: apt.time
+    };
+    
+    this.formCalendarDays.forEach(d => d.selected = d.number === apt.day);
+    this.availableTimeSlots.forEach(s => s.selected = s.time === apt.time);
+    this.selectedDateText = `Día ${apt.day}`;
+    
+    if (apt.serviceName) {
+      this.onServiceChange();
     }
+    
+    if (apt.staffName) {
+      this.onStaffChange();
+    }
+    
+    this.switchView('create');
   }
 
-  // 📌 Cambiar estado (ejemplo: confirmar, cancelar)
-  cambiarEstado(id: number, clientName: string, nuevoEstado: string): void {
-    this.appointmentsService.changeStatus(id, nuevoEstado).subscribe({
+  deleteAppointment(apt: Appointment): void {
+    if (!apt.id) return;
+    apt.showMenu = false;
+    
+    if (!confirm(`¿Eliminar cita de ${apt.clientName}?`)) return;
+    
+    this.isLoading = true;
+    this.appointmentsService.delete(apt.id).subscribe({
       next: () => {
-        this.successMessage = `🔄 Estado de la cita de ${clientName} cambiado a "${nuevoEstado}"`;
-        this.errorMessage = '';
-        this.cargarCitas();
+        this.showSuccess(`✅ Cita eliminada`);
+        this.loadAppointments();
       },
-      error: (err: unknown) => {
-        const anyErr = err as { message?: string };
-        this.errorMessage = `Error al cambiar estado de la cita: ${anyErr?.message || 'Intente nuevamente.'}`;
+      error: (err) => {
+        this.showError(`Error: ${err.message}`);
+        this.isLoading = false;
       }
     });
   }
 
-  // Métodos auxiliares para el template existente
-  switchView(view: 'list' | 'create'): void {
-    this.currentView = view;
-    this.successMessage = '';
-    this.errorMessage = '';
+  confirmAppointment(apt: Appointment): void {
+    if (!apt.id) return;
+    apt.showMenu = false;
+    
+    this.isLoading = true;
+    this.appointmentsService.changeStatus(apt.id, 'confirmed').subscribe({
+      next: () => {
+        this.showSuccess('✅ Cita confirmada');
+        this.loadAppointments();
+      },
+      error: (err) => {
+        this.showError(`Error: ${err.message}`);
+        this.isLoading = false;
+      }
+    });
   }
 
-  reloadData(): void {
-    this.cargarCitas();
+  cancelAppointment(apt: Appointment): void {
+    if (!apt.id) return;
+    apt.showMenu = false;
+    
+    const motivo = prompt('Motivo de cancelación (opcional):');
+    
+    this.isLoading = true;
+    this.appointmentsService.cancel(apt.id, motivo || undefined).subscribe({
+      next: () => {
+        this.showSuccess('✅ Cita cancelada');
+        this.loadAppointments();
+      },
+      error: (err) => {
+        this.showError(`Error: ${err.message}`);
+        this.isLoading = false;
+      }
+    });
   }
 
-  trackDay(_: number, item: { number: number }): number { return item.number; }
-  trackAppointment(_: number, item: Appointment): number { return item.id ?? 0; }
-  trackSlot(_: number, item: { time: string }): string { return item.time; }
+  // ============================================
+  // CALENDARIO
+  // ============================================
+  
+  private initCalendars(): void {
+    this.buildListCalendar();
+    this.buildFormCalendar();
+  }
 
-  selectDate(day: { number: number }): void {
+  private buildListCalendar(): void {
+    const year = this.currentMonthDate.getFullYear();
+    const month = this.currentMonthDate.getMonth();
+    const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                    'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    
+    this.currentMonthYear = `${months[month]} ${year}`;
+    
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const offset = (firstDayIndex + 6) % 7;
+    const today = new Date();
+    
+    const days: CalendarDay[] = [];
+    
+    for (let i = 0; i < offset; i++) {
+      days.push({ 
+        number: 0, 
+        date: new Date(year, month, -offset + i + 1), 
+        otherMonth: true 
+      });
+    }
+    
+    for (let d = 1; d <= lastDay; d++) {
+      const dateObj = new Date(year, month, d);
+      days.push({
+        number: d,
+        date: dateObj,
+        isToday: today.getFullYear() === year && 
+                 today.getMonth() === month && 
+                 today.getDate() === d
+      });
+    }
+    
+    this.calendarDays = days;
+  }
+
+  private buildFormCalendar(): void {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                    'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+    
+    this.currentMonthForm = `${months[month]} ${year}`;
+    
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const offset = (firstDayIndex + 6) % 7;
+    
+    const days: CalendarDay[] = [];
+    
+    for (let i = 0; i < offset; i++) {
+      days.push({ 
+        number: 0, 
+        date: new Date(year, month, -offset + i + 1), 
+        otherMonth: true 
+      });
+    }
+    
+    for (let d = 1; d <= lastDay; d++) {
+      days.push({ 
+        number: d, 
+        date: new Date(year, month, d) 
+      });
+    }
+    
+    this.formCalendarDays = days;
+  }
+
+  previousMonth(): void {
+    this.currentMonthDate.setMonth(this.currentMonthDate.getMonth() - 1);
+    this.buildListCalendar();
+  }
+
+  nextMonth(): void {
+    this.currentMonthDate.setMonth(this.currentMonthDate.getMonth() + 1);
+    this.buildListCalendar();
+  }
+
+  selectDate(day: CalendarDay): void {
+    if (day.otherMonth || day.disabled) {
+      this.showError('No puede seleccionar este día');
+      return;
+    }
+    
     this.formCalendarDays.forEach(d => d.selected = false);
-    const found = this.formCalendarDays.find(d => d.number === day.number);
-    if (found) found.selected = true;
+    day.selected = true;
+    
+    this.form.selectedDay = day.number;
+    this.form.selectedMonth = this.currentMonthForm.split(' ')[0];
     this.selectedDateText = `Día ${day.number}`;
+    
+    console.log(`📅 Fecha: ${day.number} de ${this.form.selectedMonth}`);
+    
+    if (this.form.appointmentStaff) {
+      this.updateTimeSlotsForDay(day.number);
+    }
   }
 
   selectTime(slot: { time: string; display: string; selected?: boolean }): void {
-    this.timeSlots.forEach(s => s.selected = false);
+    this.availableTimeSlots.forEach(s => s.selected = false);
     slot.selected = true;
-    this.appointmentForm.time = slot.time;
+    this.form.selectedTime = slot.time;
+    console.log(`⏰ Hora: ${slot.time}`);
   }
 
-  toggleMenu(event: Event, appointment: any): void {
-    event.stopPropagation();
-    appointment.showMenu = !appointment.showMenu;
-  }
-
-  confirmAppointment(appointment: Appointment): void {
-    if (!appointment.id) return;
-    this.cambiarEstado(appointment.id, appointment.clientName, 'confirmed');
-  }
-
-  cancelAppointment(appointment: Appointment): void {
-    if (!appointment.id) return;
-    this.cambiarEstado(appointment.id, appointment.clientName, 'cancelled');
-  }
-
-  editAppointment(appointment: Appointment): void {
-    this.isEditing = true;
-    this.editingId = appointment.id ?? null;
-    // Sincroniza con el formulario reactivo básico
-    this.citaForm.patchValue({
-      clientName: appointment.clientName,
-      serviceName: appointment.serviceName,
-      day: appointment.day,
-      monthName: appointment.monthName,
-      time: appointment.time,
-      status: appointment.status,
-      nota: appointment.nota || ''
+  // ============================================
+  // HORARIOS Y PERSONAL
+  // ============================================
+  
+  onStaffChange(): void {
+    const staffId = this.form.appointmentStaff;
+    console.log('👤 Personal:', staffId);
+    
+    if (!staffId) {
+      this.availableTimeSlots = [...this.allTimeSlots];
+      this.workingDays = [];
+      this.formCalendarDays.forEach(d => d.disabled = false);
+      return;
+    }
+    
+    this.scheduleService.getWorkingDays(staffId).subscribe({
+      next: (days) => {
+        this.workingDays = days;
+        console.log('📅 Días laborables:', days);
+        this.markDisabledDays(days);
+        
+        if (this.form.selectedDay) {
+          this.updateTimeSlotsForDay(this.form.selectedDay);
+        }
+      },
+      error: (err) => {
+        console.error('❌ Error:', err);
+        this.workingDays = [];
+      }
     });
+  }
 
-    // Sincroniza con el formulario de ngModel
-    this.appointmentForm = {
-      clientDocType: '',
+  private markDisabledDays(workingDays: string[]): void {
+    const daysMap: { [key: string]: number } = {
+      'domingo': 0, 'lunes': 1, 'martes': 2, 'miercoles': 3,
+      'jueves': 4, 'viernes': 5, 'sabado': 6
+    };
+    
+    const workingDayIndices = workingDays
+      .map(d => daysMap[d.toLowerCase()])
+      .filter(i => i !== undefined);
+    
+    this.formCalendarDays.forEach(day => {
+      if (!day.otherMonth) {
+        const dayIndex = day.date.getDay();
+        day.disabled = workingDayIndices.length > 0 && 
+                       !workingDayIndices.includes(dayIndex);
+      }
+    });
+  }
+
+  private updateTimeSlotsForDay(dayNumber: number): void {
+    const staffId = this.form.appointmentStaff;
+    if (!staffId) return;
+    
+    const date = this.formCalendarDays.find(d => d.number === dayNumber)?.date;
+    if (!date) return;
+    
+    const dayNames = ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'];
+    const dayName = dayNames[date.getDay()];
+    
+    this.scheduleService.getAvailableTimeSlotsForDay(staffId, dayName).subscribe({
+      next: (slots) => {
+        console.log(`⏰ Horarios para ${dayName}:`, slots);
+        this.availableTimeSlots = this.allTimeSlots.filter(s => 
+          slots.includes(s.time)
+        );
+        
+        if (this.availableTimeSlots.length === 0) {
+          this.showError(`No hay horarios disponibles para ${dayName}`);
+        }
+      },
+      error: () => {
+        this.availableTimeSlots = [...this.allTimeSlots];
+      }
+    });
+  }
+
+  onServiceChange(): void {
+    const services: { [key: string]: any } = {
+      'manicure': { price: 25000, duration: '45 min', recommendation: 'Cada 2 semanas' },
+      'pedicure': { price: 30000, duration: '60 min', recommendation: 'Cada 3 semanas' },
+      'gelish': { price: 35000, duration: '60 min', recommendation: '2-3 semanas' },
+      'acrilicas': { price: 50000, duration: '90 min', recommendation: 'Retoque cada 3 semanas' },
+      'pestanas': { price: 40000, duration: '75 min', recommendation: 'Retoque cada 2-3 semanas' }
+    };
+    
+    this.selectedService = services[this.form.appointmentService] || null;
+  }
+
+  getStaffName(staffId: string): string {
+    const staff = this.staffList.find(s => 
+      s.id === staffId || s.name === staffId || s.displayName === staffId
+    );
+    return staff?.name || staffId;
+  }
+
+  // ============================================
+  // UTILIDADES
+  // ============================================
+  
+  switchView(view: 'list' | 'create'): void {
+    console.log('🔄 Vista:', view);
+    this.currentView = view;
+    this.clearMessages();
+    
+    if (view === 'create' && !this.isEditing) {
+      this.resetForm();
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  resetForm(): void {
+    this.form = {
+      clientDocType: 'CC',
       clientDocNumber: '',
-      clientName: appointment.clientName,
+      clientName: '',
       clientEmail: '',
       clientBirthDate: '',
       clientPhone: '',
-      appointmentService: appointment.serviceName,
+      appointmentService: '',
       appointmentStaff: '',
-      appointmentObservations: appointment.nota || ''
+      appointmentObservations: '',
+      selectedDay: 0,
+      selectedMonth: '',
+      selectedTime: ''
     };
-    // Selección de hora y fecha
-    this.timeSlots.forEach(s => s.selected = (s.time === appointment.time));
-    if (typeof appointment.day === 'number') {
-      this.formCalendarDays.forEach(d => d.selected = d.number === appointment.day);
-    }
-    this.switchView('create');
-  }
-
-  deleteAppointment(appointment: Appointment): void {
-    if (!appointment.id) return;
-    this.eliminarCita(appointment.id, appointment.clientName);
+    
+    this.formCalendarDays.forEach(d => d.selected = false);
+    this.availableTimeSlots.forEach(s => s.selected = false);
+    this.selectedDateText = '';
+    this.selectedService = null;
+    this.workingDays = [];
+    this.clearMessages();
   }
 
   cancelEdit(): void {
     this.isEditing = false;
     this.editingId = null;
-    this.citaForm.reset();
+    this.resetForm();
     this.switchView('list');
   }
 
-  onSubmit(): void {
-    // Construye payload desde ngModel + selecciones
-    const selectedDay = this.formCalendarDays.find(d => d.selected)?.number;
-    const selectedTime = this.timeSlots.find(t => t.selected)?.time || this.appointmentForm.time;
-    const monthName = this.currentMonthForm?.split(' ')[0] || this.currentMonth || '';
+  reloadData(): void {
+    this.loadAppointments();
+  }
 
-    const payload: Appointment = {
-      id: this.isEditing ? this.editingId ?? undefined : undefined,
-      clientName: this.appointmentForm.clientName || this.citaForm.value.clientName || 'Cliente',
-      serviceName: this.appointmentForm.appointmentService || this.citaForm.value.serviceName || 'manicure',
-      day: selectedDay || this.citaForm.value.day || new Date().getDate(),
-      monthName: monthName || this.citaForm.value.monthName || 'ENERO',
-      time: selectedTime || this.citaForm.value.time || '09:00',
-      status: this.isEditing ? (this.citaForm.value.status || 'reserved') : 'reserved',
-      nota: this.appointmentForm.appointmentObservations || this.citaForm.value.nota || ''
+  private resetAndGoToList(): void {
+    this.isEditing = false;
+    this.editingId = null;
+    this.resetForm();
+    this.switchView('list');
+    this.loadAppointments();
+  }
+
+  private calculateStats(): void {
+    this.stats = {
+      reserved: this.appointments.filter(a => a.status === 'reserved').length,
+      confirmed: this.appointments.filter(a => a.status === 'confirmed').length,
+      cancelled: this.appointments.filter(a => a.status === 'cancelled').length
     };
-
-    this.isLoading = true;
-    if (this.isEditing && this.editingId) {
-      this.appointmentsService.update(this.editingId, payload).subscribe({
-        next: () => {
-          this.successMessage = '✔ Cambios guardados';
-          this.errorMessage = '';
-          this.isEditing = false;
-          this.editingId = null;
-          this.isLoading = false;
-          this.switchView('list');
-          this.cargarCitas();
-        },
-        error: (err: unknown) => {
-          const anyErr = err as { message?: string };
-          this.errorMessage = `Error al guardar cambios: ${anyErr?.message || 'Intente nuevamente.'}`;
-          this.isLoading = false;
-        }
-      });
-    } else {
-      this.appointmentsService.create(payload).subscribe({
-        next: () => {
-          this.successMessage = '✔ Cita creada';
-          this.errorMessage = '';
-          this.isLoading = false;
-          this.switchView('list');
-          this.cargarCitas();
-        },
-        error: (err: unknown) => {
-          const anyErr = err as { message?: string };
-          this.errorMessage = `Error al crear cita: ${anyErr?.message || 'Intente nuevamente.'}`;
-          this.isLoading = false;
-        }
-      });
-    }
   }
 
-  private initFormCalendar(): void {
-    const now = new Date();
-    const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-    const year = now.getFullYear();
-    const monthIndex = now.getMonth();
-    const lastDay = new Date(year, monthIndex + 1, 0).getDate();
-    this.formCalendarDays = Array.from({ length: lastDay }, (_, i) => ({ number: i + 1 }));
-    this.currentMonthForm = `${months[monthIndex]} ${year}`;
+  private showSuccess(msg: string): void {
+    this.successMessage = msg;
+    this.errorMessage = '';
+    console.log('✅', msg);
+    setTimeout(() => this.successMessage = '', 5000);
   }
 
-  private computeStats(list: Appointment[]): void {
-    const reserved = list.filter(a => a.status === 'reserved').length;
-    const confirmed = list.filter(a => a.status === 'confirmed').length;
-    const cancelled = list.filter(a => a.status === 'cancelled').length;
-    this.stats = { reserved, confirmed, cancelled };
+  private showError(msg: string): void {
+    this.errorMessage = msg;
+    this.successMessage = '';
+    console.error('❌', msg);
   }
 
-  private seedTestAppointments(): void {
-    const month = this.currentMonthForm.split(' ')[0] || 'ENERO';
-    const samples: Appointment[] = [
-      { clientName: 'Cliente Demo', serviceName: 'manicure', day: new Date().getDate(), monthName: month, time: '09:00', status: 'reserved', nota: 'Cita de prueba' },
-      { clientName: 'Ana Ejemplo', serviceName: 'pedicure', day: new Date().getDate(), monthName: month, time: '10:30', status: 'confirmed', nota: 'Confirmada demo' }
-    ];
-    samples.forEach(s => {
-      this.appointmentsService.create(s).subscribe({
-        next: () => this.cargarCitas(),
-        error: () => {}
-      });
+  private clearMessages(): void {
+    this.successMessage = '';
+    this.errorMessage = '';
+  }
+
+  private validateEmail(email: string): boolean {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+  }
+
+  toggleMenu(event: Event, apt: any): void {
+    event.stopPropagation();
+    this.appointments.forEach(a => {
+      if (a !== apt) a.showMenu = false;
     });
+    apt.showMenu = !apt.showMenu;
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.appointments.forEach(a => a.showMenu = false);
+  }
+
+  trackDay(_: number, item: CalendarDay): number {
+    return item.date.getTime();
+  }
+
+  trackAppointment(_: number, item: Appointment): number | undefined {
+    return item.id;
+  }
+
+  trackSlot(_: number, item: { time: string }): string {
+    return item.time;
   }
 }

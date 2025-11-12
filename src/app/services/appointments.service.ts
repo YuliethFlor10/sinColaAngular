@@ -1,215 +1,267 @@
-// appointments.service.ts - ADAPTADO A TU API LARAVEL
 import { Injectable } from '@angular/core';
-import { Observable, map, catchError } from 'rxjs';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { of } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 
-// Interfaz que coincide con tu estructura Laravel
-export interface LaravelAppointment {
-  id?: number;
-  created_at?: string;
-  updated_at?: string;
-  tipo_documento: string;
-  numero_documento: string;
-  nombre: string;
-  email: string;
-  fecha_nacimiento: string;
-  numero_telefono: string;
-  tipo_cita: string;
-  personal_servicio: string;
-  fecha_cita: string;
-  hora_cita: string;
-  fecha_hora_completa?: string;
-  negocios_id?: number;
-  nota?: string;
-  tiempo_estimado?: number;
-  descripcion_cancel?: string;
-  fecha_fin?: string;
-  user?: any;
-  staff?: any;
-  business?: any;
-  status?: any;
-  service?: any;
-}
-
-// Interfaz para el componente Angular (mantiene compatibilidad con tu template actual)
 export interface Appointment {
   id?: number;
   clientName: string;
+  clientEmail?: string;
   serviceName: string;
+  staffName?: string;
   day: number;
   monthName: string;
   time: string;
-  status: string;
+  status?: string;
   nota?: string;
-  clientEmail?: string;
-  staffName?: string;
-  created_at?: string;
-  updated_at?: string;
+  clientDocType?: string;
+  clientDocNumber?: string;
+  clientBirthDate?: string;
+  clientPhone?: string;
   showMenu?: boolean;
-  
-  // Campos adicionales de Laravel
-  tipo_documento?: string;
-  numero_documento?: string;
-  fecha_nacimiento?: string;
-  numero_telefono?: string;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class AppointmentsService {
-  private readonly apiUrl = 'http://127.0.0.1:8000/api/appointments'; // Ajusta tu URL
+  private apiUrl = 'http://localhost:8000/api/appointments';
 
-  constructor(private http: HttpClient) {}
-
-  private getHeaders(): HttpHeaders {
-    return new HttpHeaders({
+  private httpOptions = {
+    headers: new HttpHeaders({
       'Content-Type': 'application/json',
       'Accept': 'application/json'
-    });
+    })
+  };
+
+  constructor(private http: HttpClient) {
+    console.log('🚀 AppointmentsService inicializado');
   }
 
-  // Convierte datos de Laravel al formato que usa tu componente Angular
-  private mapToUI(laravel: LaravelAppointment): Appointment {
-    const date = new Date(laravel.fecha_cita);
-    const months = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
-                   'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
-    
-    // Determinar estado basado en fechas o campo status si existe
-    let status = 'reserved'; // por defecto
-    if (laravel.status?.nombre) {
-      status = laravel.status.nombre.toLowerCase();
-    }
-    
-    return {
-      id: laravel.id,
-      clientName: laravel.nombre,
-      serviceName: laravel.tipo_cita,
-      day: date.getDate(),
-      monthName: months[date.getMonth()],
-      time: laravel.hora_cita,
-      status: status,
-      nota: laravel.nota,
-      clientEmail: laravel.email,
-      staffName: laravel.personal_servicio,
-      created_at: laravel.created_at,
-      updated_at: laravel.updated_at,
-      
-      // Campos adicionales
-      tipo_documento: laravel.tipo_documento,
-      numero_documento: laravel.numero_documento,
-      fecha_nacimiento: laravel.fecha_nacimiento,
-      numero_telefono: laravel.numero_telefono
-    };
-  }
-
-  // Convierte datos del componente Angular al formato Laravel
-  private mapToLaravel(ui: Partial<Appointment>): Partial<LaravelAppointment> {
-    let fechaCita = '';
-    
-    if (ui.day && ui.monthName) {
-      const year = new Date().getFullYear();
-      const months = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 
-                     'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'];
-      const month = months.indexOf(ui.monthName) + 1;
-      fechaCita = `${year}-${month.toString().padStart(2, '0')}-${ui.day.toString().padStart(2, '0')}`;
-    }
-
-    return {
-      nombre: ui.clientName,
-      email: ui.clientEmail || '',
-      tipo_cita: ui.serviceName,
-      personal_servicio: ui.staffName || 'Por asignar',
-      fecha_cita: fechaCita,
-      hora_cita: ui.time,
-      nota: ui.nota,
-      tipo_documento: ui.tipo_documento || 'CC',
-      numero_documento: ui.numero_documento || '',
-      fecha_nacimiento: ui.fecha_nacimiento || '',
-      numero_telefono: ui.numero_telefono || '',
-      negocios_id: 1 // Ajusta según tu lógica de negocio
-    };
-  }
-
+  /**
+   * GET /api/appointments
+   */
   getAll(): Observable<Appointment[]> {
-    return this.http.get<LaravelAppointment[]>(this.apiUrl, { headers: this.getHeaders() }).pipe(
-      map(response => {
-        console.log('Datos recibidos de Laravel:', response);
-        // Laravel puede devolver { data: [...] } o directamente [...]
-        const appointments = (response as any).data || response;
-        return appointments.map((apt: LaravelAppointment) => this.mapToUI(apt));
-      }),
-      catchError(error => {
-        console.error('Error al obtener citas:', error);
-        return of([]);
-      })
-    );
-  }
-
-  getById(id: number | string): Observable<Appointment> {
-    return this.http.get<LaravelAppointment>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
-      map(response => {
-        const appointment = (response as any).data || response;
-        return this.mapToUI(appointment);
-      })
-    );
-  }
-
-  create(appointment: Partial<Appointment>): Observable<Appointment> {
-    const payload = this.mapToLaravel(appointment);
-    console.log('Enviando a Laravel:', payload);
+    console.log('📋 GET /api/appointments');
     
-    return this.http.post<LaravelAppointment>(this.apiUrl, payload, { headers: this.getHeaders() }).pipe(
+    return this.http.get<any[]>(this.apiUrl, this.httpOptions).pipe(
       map(response => {
-        const created = (response as any).data || response;
-        return this.mapToUI(created);
+        console.log('✅ Respuesta:', response);
+        return response.map(apt => this.mapToFrontend(apt));
       }),
-      catchError(error => {
-        console.error('Error al crear cita:', error);
-        throw error;
-      })
+      catchError(error => this.handleError(error))
     );
   }
 
-  update(id: number | string, appointment: Partial<Appointment>): Observable<Appointment> {
-    const payload = this.mapToLaravel(appointment);
-    console.log('Actualizando cita:', id, payload);
+  /**
+   * POST /api/appointments
+   */
+  create(appointment: Appointment): Observable<Appointment> {
+    const payload = this.buildPayload(appointment);
     
-    return this.http.put<LaravelAppointment>(`${this.apiUrl}/${id}`, payload, { headers: this.getHeaders() }).pipe(
-      map(response => {
-        const updated = (response as any).data || response;
-        return this.mapToUI(updated);
-      }),
-      catchError(error => {
-        console.error('Error al actualizar cita:', error);
-        throw error;
-      })
-    );
-  }
-
-  delete(id: number | string): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() }).pipe(
-      catchError(error => {
-        console.error('Error al eliminar cita:', error);
-        throw error;
-      })
-    );
-  }
-
-  changeStatus(id: number | string, status: string): Observable<Appointment> {
-    // Como no veo un campo específico de estado en tu API, 
-    // podrías crear un endpoint específico o usar update
-    const payload = { status: status };
+    console.log('➕ POST /api/appointments');
+    console.log('📤 Payload:', payload);
     
-    return this.http.patch<LaravelAppointment>(`${this.apiUrl}/${id}`, payload, { headers: this.getHeaders() }).pipe(
+    return this.http.post<any>(this.apiUrl, payload, this.httpOptions).pipe(
       map(response => {
-        const updated = (response as any).data || response;
-        return this.mapToUI(updated);
+        console.log('✅ Cita creada:', response);
+        return this.mapToFrontend(response);
       }),
-      catchError(error => {
-        console.error('Error al cambiar estado:', error);
-        // Si falla, intenta con update normal
-        return this.update(id, { status });
-      })
+      catchError(error => this.handleError(error))
     );
+  }
+
+  /**
+   * PUT /api/appointments/{id}
+   */
+  update(id: number, appointment: Appointment): Observable<Appointment> {
+    const payload = this.buildPayload(appointment);
+    
+    console.log(`✏️ PUT /api/appointments/${id}`);
+    console.log('📤 Payload:', payload);
+    
+    return this.http.put<any>(`${this.apiUrl}/${id}`, payload, this.httpOptions).pipe(
+      map(response => {
+        console.log('✅ Cita actualizada:', response);
+        return this.mapToFrontend(response);
+      }),
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
+   * DELETE /api/appointments/{id}
+   */
+  delete(id: number): Observable<void> {
+    console.log(`🗑️ DELETE /api/appointments/${id}`);
+    
+    return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
+      tap(() => console.log('✅ Cita eliminada')),
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
+   * PATCH /api/appointments/{id} - Cambiar estado
+   */
+  changeStatus(id: number, status: string): Observable<Appointment> {
+    console.log(`🔄 Cambiando estado de cita ${id} a: ${status}`);
+    
+    const estadosMap: { [key: string]: number } = {
+      'reserved': 1,
+      'pendiente': 1,
+      'confirmed': 2,
+      'confirmada': 2,
+      'cancelled': 3,
+      'cancelada': 3,
+      'completed': 4,
+      'completada': 4
+    };
+
+    const payload = {
+      estados_id: estadosMap[status.toLowerCase()] || 1
+    };
+
+    return this.http.patch<any>(`${this.apiUrl}/${id}`, payload, this.httpOptions).pipe(
+      map(response => {
+        console.log('✅ Estado cambiado:', response);
+        return this.mapToFrontend(response);
+      }),
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
+   * POST /api/appointments/{id}/confirmar
+   */
+  confirm(id: number): Observable<Appointment> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/confirmar`, {}, this.httpOptions).pipe(
+      map(response => this.mapToFrontend(response.data || response)),
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  /**
+   * POST /api/appointments/{id}/cancelar
+   */
+  cancel(id: number, motivo?: string): Observable<Appointment> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/cancelar`, { motivo }, this.httpOptions).pipe(
+      map(response => this.mapToFrontend(response.data || response)),
+      catchError(error => this.handleError(error))
+    );
+  }
+
+  // ============================================
+  // MÉTODOS AUXILIARES
+  // ============================================
+
+  private buildPayload(appointment: Appointment): any {
+    const year = new Date().getFullYear();
+    const months: { [key: string]: string } = {
+      'ENERO': '01', 'FEBRERO': '02', 'MARZO': '03', 'ABRIL': '04',
+      'MAYO': '05', 'JUNIO': '06', 'JULIO': '07', 'AGOSTO': '08',
+      'SEPTIEMBRE': '09', 'OCTUBRE': '10', 'NOVIEMBRE': '11', 'DICIEMBRE': '12'
+    };
+    
+    const monthNum = months[appointment.monthName?.toUpperCase()] || '01';
+    const dayNum = String(appointment.day || 1).padStart(2, '0');
+    const fecha_cita = `${year}-${monthNum}-${dayNum}`;
+
+    return {
+      nombre: appointment.clientName,
+      email: appointment.clientEmail || 'sin-email@ejemplo.com',
+      tipo_documento: appointment.clientDocType || 'CC',
+      numero_documento: appointment.clientDocNumber || '0000000000',
+      fecha_nacimiento: appointment.clientBirthDate || '2000-01-01',
+      numero_telefono: appointment.clientPhone || '3000000000',
+      tipo_cita: appointment.serviceName,
+      personal_servicio: appointment.staffName || 'Sin asignar',
+      fecha_cita: fecha_cita,
+      hora_cita: appointment.time,
+      nota: appointment.nota || '',
+      negocios_id: 1,
+      servicios_id: 1,
+      tiempo_estimado: 60
+    };
+  }
+
+  private mapToFrontend(apt: any): Appointment {
+    if (!apt) {
+      return {
+        clientName: 'Desconocido',
+        serviceName: 'Servicio',
+        day: 1,
+        monthName: 'ENERO',
+        time: '09:00'
+      };
+    }
+
+    let day = 1;
+    let monthName = 'ENERO';
+    let time = '09:00';
+    
+    if (apt.fecha) {
+      try {
+        const fecha = new Date(apt.fecha);
+        day = fecha.getDate();
+        const months = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
+                       'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+        monthName = months[fecha.getMonth()];
+        time = fecha.toTimeString().substring(0, 5);
+      } catch (error) {
+        console.warn('⚠️ Error parseando fecha:', apt.fecha);
+      }
+    }
+
+    const statusMap: { [key: number]: string } = {
+      1: 'reserved',
+      2: 'confirmed',
+      3: 'cancelled',
+      4: 'completed'
+    };
+
+    // 🔥 PRIORIZAR LOS DATOS GUARDADOS EN LA CITA
+    return {
+      id: apt.id,
+      clientName: apt.cliente_nombre || 'Cliente',
+      clientEmail: apt.cliente_email || '',
+      serviceName: apt.tipo_servicio || apt.service?.nombre || 'Servicio',
+      staffName: apt.personal_asignado || '',
+      day: day,
+      monthName: monthName,
+      time: time,
+      status: statusMap[apt.estados_id] || apt.status || 'reserved',
+      nota: apt.nota || '',
+      clientDocType: apt.cliente_tipo_doc || '',
+      clientDocNumber: apt.cliente_num_doc || '',
+      clientBirthDate: apt.cliente_fecha_nac || '',
+      clientPhone: apt.cliente_telefono || ''
+    };
+  }
+
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    let errorMessage = 'Error desconocido';
+    
+    console.error('❌ Error HTTP:', error);
+    
+    if (error.status === 0) {
+      errorMessage = 'No se puede conectar con el servidor';
+    } else if (error.status === 404) {
+      errorMessage = 'Endpoint no encontrado (404)';
+    } else if (error.status === 422) {
+      errorMessage = 'Error de validación';
+      if (error.error?.errors) {
+        const firstError = Object.values(error.error.errors)[0];
+        if (Array.isArray(firstError)) {
+          errorMessage += `: ${firstError[0]}`;
+        }
+      }
+    } else if (error.status === 500) {
+      errorMessage = 'Error interno del servidor';
+    } else if (error.error?.message) {
+      errorMessage = error.error.message;
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
 }
