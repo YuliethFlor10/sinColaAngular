@@ -1,4 +1,5 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { AppointmentsService } from '../../../services/appointments.service';
 
 @Component({
   selector: 'app-formulario',
@@ -15,6 +16,8 @@ export class FormularioComponent implements AfterViewInit {
 
   @ViewChild('personalForm', { static: false }) personalForm!: ElementRef<HTMLFormElement>;
   @ViewChild('appointmentForm', { static: false }) appointmentForm!: ElementRef<HTMLFormElement>;
+
+  constructor(private appointmentsService: AppointmentsService) {}
 
   ngAfterViewInit() {
     this.setupEventListeners();
@@ -79,6 +82,8 @@ export class FormularioComponent implements AfterViewInit {
     this.formData.birthDate = (document.getElementById('birthDate') as HTMLInputElement).value;
     this.formData.email = (document.getElementById('email') as HTMLInputElement).value;
     this.formData.phone = (document.getElementById('phone') as HTMLInputElement).value;
+
+    console.log('✅ Paso 1 completado:', this.formData);
     this.goToStep(2);
   }
 
@@ -96,11 +101,14 @@ export class FormularioComponent implements AfterViewInit {
       alert('Por favor selecciona una hora');
       return;
     }
+
     this.formData.appointmentType = (document.getElementById('appointmentType') as HTMLSelectElement).value;
     this.formData.staff = (document.getElementById('staff') as HTMLSelectElement).value;
     this.formData.date = this.selectedDate;
     this.formData.time = this.selectedTime;
     this.formData.observations = (document.getElementById('observations') as HTMLTextAreaElement).value;
+
+    console.log('✅ Paso 2 completado:', this.formData);
     this.processReservation();
   }
 
@@ -116,28 +124,34 @@ export class FormularioComponent implements AfterViewInit {
     const year = this.currentDate.getFullYear();
     const month = this.currentDate.getMonth();
     const monthNames = [
-      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO', 'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
     ];
     const currentMonthEl = document.getElementById('currentMonth');
     if (currentMonthEl) currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+
     const firstDay = new Date(year, month, 1);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
+
     const calendarDays = document.getElementById('calendarDays');
     if (!calendarDays) return;
     calendarDays.innerHTML = '';
+
     for (let i = 0; i < 42; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
       const dayElement = document.createElement('div');
       dayElement.className = 'calendar-day';
       dayElement.textContent = date.getDate().toString();
+
       if (date.getMonth() !== month) {
         dayElement.classList.add('other-month');
       }
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      // Marcar el día seleccionado
+
       if (
         this.selectedDate &&
         date.getDate() === this.selectedDate.getDate() &&
@@ -146,6 +160,7 @@ export class FormularioComponent implements AfterViewInit {
       ) {
         dayElement.classList.add('selected');
       }
+
       if (date < today) {
         dayElement.style.opacity = '0.3';
         dayElement.style.cursor = 'not-allowed';
@@ -162,34 +177,6 @@ export class FormularioComponent implements AfterViewInit {
       }
       calendarDays.appendChild(dayElement);
     }
-    // Listeners para cambiar de mes
-    const prevMonth = document.getElementById('prevMonth');
-    if (prevMonth) {
-      prevMonth.onclick = () => {
-        this.currentDate.setMonth(this.currentDate.getMonth() - 1);
-        this.generateCalendar();
-      };
-    }
-    const nextMonth = document.getElementById('nextMonth');
-    if (nextMonth) {
-      nextMonth.onclick = () => {
-        this.currentDate.setMonth(this.currentDate.getMonth() + 1);
-        this.generateCalendar();
-      };
-    }
-  }
-
-  selectDate(date: Date, element: HTMLElement) {
-    document.querySelectorAll('.calendar-day.selected').forEach((day) => {
-      day.classList.remove('selected');
-    });
-    element.classList.add('selected');
-    this.selectedDate = date;
-    const options: Intl.DateTimeFormatOptions = {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    };
-    const selectedDateText = document.getElementById('selectedDateText');
-    if (selectedDateText) selectedDateText.textContent = date.toLocaleDateString('es-ES', options);
   }
 
   selectTimeSlot(element: HTMLElement) {
@@ -221,14 +208,78 @@ export class FormularioComponent implements AfterViewInit {
 
   processReservation() {
     const loadingMessage = document.createElement('div');
+    loadingMessage.id = 'loadingOverlay';
     loadingMessage.style.cssText = `
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; z-index: 999;`;
-    loadingMessage.textContent = 'Procesando tu reserva...';
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: flex; align-items: center;
+      justify-content: center; color: white; font-size: 18px; z-index: 999;
+      flex-direction: column; gap: 20px;
+    `;
+    loadingMessage.innerHTML = `
+      <div style="font-size: 40px;">⏳</div>
+      <div>Procesando tu reserva...</div>
+      <div style="font-size: 14px; opacity: 0.8;">Enviando correo de confirmación</div>
+    `;
     document.body.appendChild(loadingMessage);
-    setTimeout(() => {
-      document.body.removeChild(loadingMessage);
-      this.showConfirmationModal();
-    }, 2000);
+
+    const appointmentData = {
+      nombre: this.formData.fullName,
+      email: this.formData.email,
+      tipo_documento: this.formData.docType,
+      numero_documento: this.formData.docNumber,
+      fecha_nacimiento: this.formData.birthDate,
+      numero_telefono: this.formData.phone,
+      tipo_cita: this.formData.appointmentType,
+      personal_servicio: this.formData.staff,
+      fecha_cita: this.formatDate(this.formData.date),
+      hora_cita: this.formData.time,
+      nota: this.formData.observations || '',
+      negocios_id: 1,
+      servicios_id: 1,
+      tiempo_estimado: 60
+    };
+
+    console.log('📤 Enviando a la API:', appointmentData);
+
+    this.appointmentsService.createFromForm(appointmentData).subscribe({
+      next: (response: any) => {
+        console.log('✅ Respuesta de la API:', response);
+
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) document.body.removeChild(overlay);
+
+        if (response.email_sent) {
+          console.log('📧 Correo enviado exitosamente');
+        } else {
+          console.warn('⚠️ Cita creada pero el correo no se pudo enviar:', response.email_error);
+        }
+
+        this.showConfirmationModal();
+      },
+      error: (error: any) => {
+        console.error('❌ Error al crear la cita:', error);
+
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) document.body.removeChild(overlay);
+
+        let errorMessage = 'Ocurrió un error al procesar tu reserva. Por favor intenta nuevamente.';
+
+        if (error.error?.message) {
+          errorMessage = error.error.message;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        alert('❌ ' + errorMessage);
+      }
+    });
+  }
+
+  formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   showConfirmationModal() {
@@ -257,7 +308,6 @@ export class FormularioComponent implements AfterViewInit {
   }
 }
 
-// Modal helpers for template
 export function closeConfirmationModal() {
   const modal = document.getElementById('confirmationModal');
   if (modal) modal.classList.add('hidden');

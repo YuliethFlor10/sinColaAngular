@@ -54,7 +54,7 @@ export class AppointmentsService {
   }
 
   /**
-   * POST /api/appointments (MÉTODO ORIGINAL - Usando interface Appointment)
+   * POST /api/appointments
    */
   create(appointment: Appointment): Observable<Appointment> {
     const payload = this.buildPayload(appointment);
@@ -66,28 +66,6 @@ export class AppointmentsService {
       map(response => {
         console.log('✅ Cita creada:', response);
         return this.mapToFrontend(response);
-      }),
-      catchError(error => this.handleError(error))
-    );
-  }
-
-  /**
-   * 🔥 POST /api/appointments (NUEVO - Desde formulario directo)
-   * Este método envía los datos directamente sin transformación
-   * Y retorna la respuesta completa incluyendo email_sent
-   */
-  createFromForm(formData: any): Observable<any> {
-    console.log('➕ POST /api/appointments (desde formulario)');
-    console.log('📤 Datos del formulario:', formData);
-
-    return this.http.post<any>(this.apiUrl, formData, this.httpOptions).pipe(
-      tap(response => {
-        console.log('✅ Respuesta completa de la API:', response);
-        if (response.email_sent) {
-          console.log('📧 Correo enviado exitosamente a:', formData.email);
-        } else if (response.email_error) {
-          console.warn('⚠️ Error al enviar correo:', response.email_error);
-        }
       }),
       catchError(error => this.handleError(error))
     );
@@ -173,21 +151,20 @@ export class AppointmentsService {
     );
   }
 
-  /**
-   * GET /api/appointments/{id}
-   */
-  getById(id: string | number): Observable<Appointment> {
-    console.log(`📖 GET /api/appointments/${id}`);
+/**
+ * GET /api/appointments/{id}
+ */
+getById(id: string | number): Observable<Appointment> {
+  console.log(`📖 GET /api/appointments/${id}`);
 
-    return this.http.get<any>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
-      map(response => {
-        console.log('✅ Cita obtenida:', response);
-        return this.mapToFrontend(response);
-      }),
-      catchError(error => this.handleError(error))
-    );
-  }
-
+  return this.http.get<any>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
+    map(response => {
+      console.log('✅ Cita obtenida:', response);
+      return this.mapToFrontend(response);
+    }),
+    catchError(error => this.handleError(error))
+  );
+}
   // ============================================
   // MÉTODOS AUXILIARES
   // ============================================
@@ -282,7 +259,7 @@ export class AppointmentsService {
     console.error('❌ Error HTTP:', error);
 
     if (error.status === 0) {
-      errorMessage = 'No se puede conectar con el servidor. Verifica que Laravel esté corriendo en http://localhost:8000';
+      errorMessage = 'No se puede conectar con el servidor';
     } else if (error.status === 404) {
       errorMessage = 'Endpoint no encontrado (404)';
     } else if (error.status === 422) {
