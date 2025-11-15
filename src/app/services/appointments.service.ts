@@ -47,7 +47,7 @@ export class AppointmentsService {
    */
   getAll(): Observable<Appointment[]> {
     console.log('📋 GET /api/appointments');
-    
+
     return this.http.get<any[]>(this.apiUrl, this.httpOptions).pipe(
       map(response => {
         console.log('✅ Respuesta:', response);
@@ -62,10 +62,10 @@ export class AppointmentsService {
    */
   create(appointment: Appointment): Observable<Appointment> {
     const payload = this.buildPayload(appointment);
-    
+
     console.log('➕ POST /api/appointments');
     console.log('📤 Payload:', payload);
-    
+
     return this.http.post<any>(this.apiUrl, payload, this.httpOptions).pipe(
       map(response => {
         console.log('✅ Cita creada:', response);
@@ -80,10 +80,10 @@ export class AppointmentsService {
    */
   update(id: number, appointment: Appointment): Observable<Appointment> {
     const payload = this.buildPayload(appointment);
-    
+
     console.log(`✏️ PUT /api/appointments/${id}`);
     console.log('📤 Payload:', payload);
-    
+
     return this.http.put<any>(`${this.apiUrl}/${id}`, payload, this.httpOptions).pipe(
       map(response => {
         console.log('✅ Cita actualizada:', response);
@@ -98,7 +98,7 @@ export class AppointmentsService {
    */
   delete(id: number): Observable<void> {
     console.log(`🗑️ DELETE /api/appointments/${id}`);
-    
+
     return this.http.delete<void>(`${this.apiUrl}/${id}`, this.httpOptions).pipe(
       tap(() => console.log('✅ Cita eliminada')),
       catchError(error => this.handleError(error))
@@ -110,7 +110,7 @@ export class AppointmentsService {
    */
   changeStatus(id: number, status: string): Observable<Appointment> {
     console.log(`🔄 Cambiando estado de cita ${id} a: ${status}`);
-    
+
     const estadosMap: { [key: string]: number } = {
       'reserved': 1,
       'pendiente': 1,
@@ -166,11 +166,11 @@ export class AppointmentsService {
       'MAYO': '05', 'JUNIO': '06', 'JULIO': '07', 'AGOSTO': '08',
       'SEPTIEMBRE': '09', 'OCTUBRE': '10', 'NOVIEMBRE': '11', 'DICIEMBRE': '12'
     };
-    
+
     const monthNum = months[appointment.monthName?.toUpperCase()] || '01';
     const dayNum = String(appointment.day || 1).padStart(2, '0');
     const fecha_cita = `${year}-${monthNum}-${dayNum}`;
-    
+
     // Obtener el negocio_id del usuario logueado
     const negocioId = this.authService.getCurrentBusinessId();
 
@@ -229,7 +229,7 @@ export class AppointmentsService {
     let day = 1;
     let monthName = 'ENERO';
     let time = '09:00';
-    
+
     if (apt.fecha) {
       try {
         const fecha = new Date(apt.fecha);
@@ -271,11 +271,11 @@ export class AppointmentsService {
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Error desconocido';
-    
+
     console.error('❌ Error HTTP:', error);
     console.error('Status:', error.status);
     console.error('Error Body:', error.error);
-    
+
     if (error.status === 0) {
       errorMessage = 'No se puede conectar con el servidor';
     } else if (error.status === 401) {
@@ -306,7 +306,7 @@ export class AppointmentsService {
     } else if (error.error?.errors) {
       errorMessage = JSON.stringify(error.error.errors);
     }
-    
+
     console.error('Final Error Message:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }
