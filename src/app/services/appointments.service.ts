@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 export interface Appointment {
   id?: number;
@@ -34,7 +35,10 @@ export class AppointmentsService {
     })
   };
 
-  constructor(private http: HttpClient) {
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) {
     console.log('🚀 AppointmentsService inicializado');
   }
 
@@ -204,20 +208,46 @@ export class AppointmentsService {
     const dayNum = String(appointment.day || 1).padStart(2, '0');
     const fecha_cita = `${year}-${monthNum}-${dayNum}`;
 
+    // Obtener el negocio_id del usuario logueado
+    const negocioId = this.authService.getCurrentBusinessId();
+
+    // Dividir el nombre completo en nombres y apellidos cuando sea posible
+    const fullName = (appointment.clientName || '').trim();
+    let nombres = fullName;
+    let apellidos = '';
+    if (fullName) {
+      const parts = fullName.split(' ');
+      if (parts.length === 1) {
+        nombres = parts[0];
+      } else {
+        nombres = parts.slice(0, parts.length - 1).join(' ');
+        apellidos = parts.slice(-1).join(' ');
+      }
+    }
+
+    // Mapear tipo de documento a id que espera el backend
+    const tipoMap: { [key: string]: number } = { 'CC': 1, 'CE': 2, 'TI': 3, 'NIT': 4, 'RUT': 5 };
+    const tipoIdentificacionId = tipoMap[(appointment.clientDocType || '').toUpperCase()] || 1;
+
     return {
-      nombre: appointment.clientName,
+      // Datos del cliente/usuario que el backend espera para crear o vincular
+      nombres: nombres || 'Cliente',
+      apellidos: apellidos || '',
       email: appointment.clientEmail || 'sin-email@ejemplo.com',
-      tipo_documento: appointment.clientDocType || 'CC',
-      numero_documento: appointment.clientDocNumber || '0000000000',
-      fecha_nacimiento: appointment.clientBirthDate || '2000-01-01',
-      numero_telefono: appointment.clientPhone || '3000000000',
+      celular: appointment.clientPhone || '3000000000',
+      roles_id: 3,
+      tipo_identificacion_id: tipoIdentificacionId,
+      identificacion: appointment.clientDocNumber || '0000000000',
+
+      // Datos de la cita
       tipo_cita: appointment.serviceName,
       personal_servicio: appointment.staffName || 'Sin asignar',
       fecha_cita: fecha_cita,
       hora_cita: appointment.time,
       nota: appointment.nota || '',
-      negocios_id: 1,
+      negocios_id: negocioId,
       servicios_id: 1,
+      estados_id: 1,
       tiempo_estimado: 60
     };
   }
@@ -279,25 +309,41 @@ export class AppointmentsService {
     let errorMessage = 'Error desconocido';
 
     console.error('❌ Error HTTP:', error);
+    console.error('Status:', error.status);
+    console.error('Error Body:', error.error);
 
     if (error.status === 0) {
-      errorMessage = 'No se puede conectar con el servidor. Verifica que Laravel esté corriendo en http://localhost:8000';
+      errorMessage = 'No se puede conectar con el servidor';
+    } else if (error.status === 401) {
+      errorMessage = 'No autorizado. Inicia sesión nuevamente.';
     } else if (error.status === 404) {
       errorMessage = 'Endpoint no encontrado (404)';
     } else if (error.status === 422) {
-      errorMessage = 'Error de validación';
+      errorMessage = 'Error de validación en los datos:';
       if (error.error?.errors) {
-        const firstError = Object.values(error.error.errors)[0];
-        if (Array.isArray(firstError)) {
-          errorMessage += `: ${firstError[0]}`;
-        }
+        console.error('Errores de validación:', error.error.errors);
+        const errorMessages = Object.entries(error.error.errors)
+          .map(([field, messages]: [string, any]) => {
+            const msgs = Array.isArray(messages) ? messages.join(', ') : messages;
+            return `${field}: ${msgs}`;
+          })
+          .join(' | ');
+        errorMessage += ` ${errorMessages}`;
+      } else if (error.error?.message) {
+        errorMessage += ` ${error.error.message}`;
       }
     } else if (error.status === 500) {
-      errorMessage = 'Error interno del servidor';
+      errorMessage = 'Error interno del servidor (500)';
+      if (error.error?.message) {
+        errorMessage += `: ${error.error.message}`;
+      }
     } else if (error.error?.message) {
       errorMessage = error.error.message;
+    } else if (error.error?.errors) {
+      errorMessage = JSON.stringify(error.error.errors);
     }
 
+    console.error('Final Error Message:', errorMessage);
     return throwError(() => new Error(errorMessage));
   }
 }
