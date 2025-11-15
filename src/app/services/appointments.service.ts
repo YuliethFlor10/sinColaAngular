@@ -72,9 +72,8 @@ export class AppointmentsService {
   }
 
   /**
-   * 🔥 POST /api/appointments (NUEVO - Desde formulario directo)
-   * Este método envía los datos directamente sin transformación
-   * Y retorna la respuesta completa incluyendo email_sent
+   * POST /api/appointments (desde formulario - envía datos directos del backend)
+   * Retorna la respuesta completa incluyendo email_sent y email_error
    */
   createFromForm(formData: any): Observable<any> {
     console.log('➕ POST /api/appointments (desde formulario)');
@@ -83,8 +82,9 @@ export class AppointmentsService {
     return this.http.post<any>(this.apiUrl, formData, this.httpOptions).pipe(
       tap(response => {
         console.log('✅ Respuesta completa de la API:', response);
+
         if (response.email_sent) {
-          console.log('📧 Correo enviado exitosamente a:', formData.email);
+          console.log('📧 Correo enviado exitosamente');
         } else if (response.email_error) {
           console.warn('⚠️ Error al enviar correo:', response.email_error);
         }
@@ -257,7 +257,6 @@ export class AppointmentsService {
       4: 'completed'
     };
 
-    // 🔥 PRIORIZAR LOS DATOS GUARDADOS EN LA CITA
     return {
       id: apt.id,
       clientName: apt.cliente_nombre || 'Cliente',

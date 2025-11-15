@@ -1,0 +1,133 @@
+<div class="confirmation-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Cargando información de tu cita...</p>
+    <p class="loading-detail">Por favor espera un momento</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!loading && error" class="error-container">
+    <div class="icon-error"></div>
+    <h1>Ups, algo salió mal</h1>
+    <p class="error-message">{{ error }}</p>
+
+    <div class="error-actions">
+      <button (click)="volverAlInicio()" class="btn btn-primary">
+        🏠 Volver al Inicio
+      </button>
+      <button (click)="contactarSoporte()" class="btn btn-secondary">
+        📞 Contactar Soporte
+      </button>
+    </div>
+  </div>
+
+  <!-- Success State -->
+  <div *ngIf="!loading && !error && citaData" class="success-container">
+    <!-- Icon dinámico -->
+    <div class="icon-success" *ngIf="!alreadyConfirmed"></div>
+    <div class="icon-info" *ngIf="alreadyConfirmed"></div>
+
+    <!-- Título dinámico -->
+    <h1 *ngIf="!alreadyConfirmed">¡Cita Confirmada!</h1>
+    <h1 *ngIf="alreadyConfirmed">Cita Ya Confirmada</h1>
+
+    <!-- Mensaje principal -->
+    <p class="message" *ngIf="confirmacionExitosa && !alreadyConfirmed">
+      ✅ Tu cita ha sido confirmada exitosamente. Te esperamos en la fecha y hora acordada.
+    </p>
+
+    <p class="message" *ngIf="alreadyConfirmed">
+      ℹ️ Esta cita ya había sido confirmada anteriormente. No es necesario confirmarla nuevamente.
+    </p>
+
+    <!-- Datos de la cita -->
+    <div class="info-card">
+      <h3>📋 Detalles de tu cita</h3>
+
+      <div class="info-row">
+        <span class="label">👤 Cliente:</span>
+        <span class="value">{{ citaData.cliente_nombre || 'No disponible' }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">📧 Email:</span>
+        <span class="value">{{ citaData.cliente_email || 'No disponible' }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.cliente_telefono">
+        <span class="label">📱 Teléfono:</span>
+        <span class="value">{{ citaData.cliente_telefono }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">💅 Servicio:</span>
+        <span class="value">{{ citaData.tipo_servicio || 'No disponible' }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.personal_asignado">
+        <span class="label">👩‍💼 Personal:</span>
+        <span class="value">{{ citaData.personal_asignado }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">📅 Fecha y Hora:</span>
+        <span class="value">{{ formatearFecha(citaData.fecha) }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.tiempo_estimado">
+        <span class="label">⏱️ Duración:</span>
+        <span class="value">{{ citaData.tiempo_estimado }} minutos</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.direccion">
+        <span class="label">📍 Dirección:</span>
+        <span class="value">{{ citaData.direccion }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.nota">
+        <span class="label">📝 Observaciones:</span>
+        <span class="value">{{ citaData.nota }}</span>
+      </div>
+
+      <div class="info-row status-row">
+        <span class="label">✨ Estado:</span>
+        <span class="value status-badge status-confirmed">
+          {{ citaData.estado === 'confirmada' ? 'CONFIRMADA' : citaData.estado.toUpperCase() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <p><strong>📅 Próximos pasos:</strong></p>
+      <p>✓ Recibirás un recordatorio por correo 24 horas antes de tu cita</p>
+      <p>✓ Te recomendamos llegar 5-10 minutos antes de la hora programada</p>
+      <p>✓ Si necesitas cancelar, puedes hacerlo desde el enlace en tu correo</p>
+      <p>✓ Trae una identificación válida el día de tu cita</p>
+    </div>
+
+    <!-- Alert Info -->
+    <div class="alert-info">
+      💡 <strong>Importante:</strong> Si tienes alguna pregunta o necesitas realizar cambios, no dudes en contactarnos directamente.
+    </div>
+
+    <!-- Acciones -->
+    <div class="btn-group">
+      <button (click)="volverAlInicio()" class="btn btn-primary">
+        🏠 Volver al Inicio
+      </button>
+      <button (click)="contactarSoporte()" class="btn btn-secondary">
+        💬 Contactar por WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- Estado vacío (no debería ocurrir) -->
+  <div *ngIf="!loading && !error && !citaData" class="error-container">
+    <div class="icon-error"></div>
+    <h1>No se encontraron datos</h1>
+    <p class="error-message">No se pudo cargar la información de la cita.</p>
+    <button (click)="volverAlInicio()" class="btn btn-primary">Volver al Inicio</button>
+  </div>
+</div>

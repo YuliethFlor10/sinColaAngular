@@ -19,9 +19,7 @@ export const routes: Routes = [
   { path: 'plan', component: PlanComponent },
   { path: 'inicio-sesion', component: InicioSesionComponent },
   { path: 'lista-servicio', component: ServiciosComponent },
-  // Ruta eliminada: registra-negocio
 
-  // rutas admin web
   {
     path: 'admin',
     component: AdminWeb,
@@ -33,12 +31,11 @@ export const routes: Routes = [
      { path: 'informe', component: InformeComponent, data: { title: 'Generación de informes.'} },
      { path: 'plan', component: PlanComponent, data: { title: 'Gestión de planes.'} },
      { path: '', redirectTo: 'citas', pathMatch: 'full' }
-  ]
+    ]
   },
 
   {
     path: 'cliente-final',
     loadChildren: () => import('./cliente-final/cliente-final-module').then(m => m.ClienteFinalModule)
-  },
-
+  }
 ];
