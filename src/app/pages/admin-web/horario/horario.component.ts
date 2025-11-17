@@ -20,10 +20,10 @@ import { ScheduleService, DaySchedule, Staff } from '../../../services/schedule.
 export class HorarioComponent implements OnInit {
   sidebarOpen = false;
   selectedPerson = 'empresa';
-  
+
   // Lista de personal disponible
   staffList: Staff[] = [];
-  
+
   // Configuración de horarios por día
   weekSchedule: DaySchedule[] = [];
 
@@ -36,10 +36,10 @@ export class HorarioComponent implements OnInit {
 
   ngOnInit() {
     console.log('Componente de horarios inicializado');
-    
+
     // Cargar lista de personal
     this.staffList = this.scheduleService.getStaffList();
-    
+
     // Cargar horarios del personal seleccionado por defecto
     this.loadScheduleForSelectedPerson();
   }
@@ -57,14 +57,14 @@ export class HorarioComponent implements OnInit {
   private loadScheduleForSelectedPerson() {
     this.isLoading = true;
     this.errorMessage = '';
-    
+
     this.scheduleService.getScheduleByStaff(this.selectedPerson).subscribe({
-      next: (schedules) => {
+      next: (schedules: DaySchedule[]) => {
         this.weekSchedule = schedules;
         this.isLoading = false;
         console.log(`Horarios cargados para ${this.selectedPerson}`, schedules);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.errorMessage = `Error al cargar horarios: ${err.message}`;
         this.isLoading = false;
         console.error('Error cargando horarios:', err);
@@ -97,10 +97,10 @@ export class HorarioComponent implements OnInit {
    */
   openTimePicker(dayId: string, shiftType: 'firstShift' | 'secondShift', timeType: 'start' | 'end') {
     console.log(`Abriendo selector de tiempo para: ${dayId} - ${shiftType} - ${timeType}`);
-    
+
     const currentTime = this.getCurrentTimeForSlot(dayId, shiftType, timeType);
     const newTime = prompt(`Ingrese la nueva hora (formato: 8:00 AM o 14:30 PM):`, currentTime);
-    
+
     if (newTime && this.isValidTimeFormat(newTime)) {
       this.updateTimeSlot(dayId, shiftType, timeType, newTime);
     } else if (newTime) {
@@ -125,8 +125,8 @@ export class HorarioComponent implements OnInit {
   private isValidTimeFormat(time: string): boolean {
     // Acepta formato 12 horas (8:00 AM) y 24 horas (14:30)
     const time12Regex = /^(1[0-2]|[1-9]):[0-5][0-9]\s?(AM|PM)$/i;
-     const time24Regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    
+    const time24Regex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/;
+
     return time12Regex.test(time.trim()) || time24Regex.test(time.trim());
   }
 
@@ -151,14 +151,14 @@ export class HorarioComponent implements OnInit {
    */
   private parseTime(timeString: string): any | null {
     const trimmed = timeString.trim();
-    
+
     // Intenta formato 12 horas (8:00 AM)
     const match12 = trimmed.match(/^(\d{1,2}):(\d{2})\s?(AM|PM)$/i);
     if (match12) {
       let hour = parseInt(match12[1]);
       const minute = parseInt(match12[2]);
       const ampm = match12[3].toUpperCase() as 'AM' | 'PM';
-      
+
       // Convierte a hora de 24 horas para almacenamiento interno
       let hour24 = hour;
       if (ampm === 'PM' && hour !== 12) {
@@ -166,7 +166,7 @@ export class HorarioComponent implements OnInit {
       } else if (ampm === 'AM' && hour === 12) {
         hour24 = 0;
       }
-      
+
       return {
         hour: hour24,
         minute: minute,
@@ -174,18 +174,18 @@ export class HorarioComponent implements OnInit {
         display: `${hour}:${minute.toString().padStart(2, '0')} ${ampm}`
       };
     }
-    
+
     // Intenta formato 24 horas (14:30)
     const match24 = trimmed.match(/^(\d{1,2}):(\d{2})$/);
     if (match24) {
       const hour24 = parseInt(match24[1]);
       const minute = parseInt(match24[2]);
-      
+
       // Convierte a formato 12 horas para display
       let hour12 = hour24 % 12;
       if (hour12 === 0) hour12 = 12;
       const ampm = hour24 >= 12 ? 'PM' : 'AM';
-      
+
       return {
         hour: hour24,
         minute: minute,
@@ -193,7 +193,7 @@ export class HorarioComponent implements OnInit {
         display: `${hour12}:${minute.toString().padStart(2, '0')} ${ampm}`
       };
     }
-    
+
     return null;
   }
 
@@ -217,15 +217,15 @@ export class HorarioComponent implements OnInit {
     });
 
     this.scheduleService.saveSchedule(this.selectedPerson, this.weekSchedule).subscribe({
-      next: (result) => {
+      next: (result: any) => {
         this.successMessage = `✔ Horarios de ${this.getStaffDisplayName()} guardados exitosamente`;
         this.isLoading = false;
         console.log('Horarios guardados:', result);
-        
+
         // Limpiar mensaje después de 5 segundos
         setTimeout(() => this.successMessage = '', 5000);
       },
-      error: (err) => {
+      error: (err: any) => {
         this.errorMessage = `⚠ Error al guardar horarios: ${err.message}`;
         this.isLoading = false;
         console.error('Error guardando horarios:', err);

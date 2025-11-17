@@ -18,6 +18,21 @@ export interface User {
   estados_id?: number;
   roles_id?: number;
   negocios_id?: number;
+  business?: any;
+  role?: any;
+  status?: any;
+}
+
+// 🔥 NUEVA: Interfaz para la suscripción
+export interface Subscription {
+  id: number;
+  plan: any;
+  fecha_inicio: string;
+  fecha_fin: string;
+  dias_restantes: number;
+  estado: string;
+  notificaciones_usadas: number;
+  notificaciones_totales: number;
 }
 
 @Injectable({
@@ -63,16 +78,12 @@ export class AuthService {
     );
   }
 
-  // Login con credenciales por defecto
-  loginWithDefaultCredentials(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/login`, {
-      email: 'admin@admin.com',
-      password: '12345678'
+  // 🔥 NUEVO: Obtener datos del usuario autenticado + suscripción
+  getMe(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/me`, {
+      headers: this.getAuthHeaders()
     }).pipe(
       tap((response: any) => {
-        if (response.access_token) {
-          this.saveToken(response.access_token);
-        }
         if (response.user) {
           this.saveUser(response.user);
         }
@@ -149,8 +160,14 @@ export class AuthService {
   }
 
   // ✅ Logout actualizado
-  logout(): void {
-    this.removeToken();
+  logout(): Observable<any> {
+    return this.http.post(`${this.apiUrl}/logout`, {}, {
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(() => {
+        this.removeToken();
+      })
+    );
   }
 
   // Verificar si está autenticado
@@ -159,12 +176,13 @@ export class AuthService {
     return token !== null && token !== '';
   }
 
-  // Métodos de gestión de Business ID (sin cambios)
+  // 🔥 NUEVO: Obtener negocio_id del usuario autenticado
   getCurrentBusinessId(): number {
-    const businessId = localStorage.getItem('currentBusinessId');
-    return businessId ? parseInt(businessId) : 1;
+    const user = this.getCurrentUser();
+    return user?.negocios_id || 1;
   }
 
+  // Métodos de gestión de Business ID (legacy - mantener por compatibilidad)
   setCurrentBusinessId(businessId: number): void {
     localStorage.setItem('currentBusinessId', businessId.toString());
   }
@@ -174,7 +192,8 @@ export class AuthService {
     const token = this.getToken();
     return new HttpHeaders({
       'Authorization': `Bearer ${token}`,
-      'Accept': 'application/json'
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
     });
   }
 

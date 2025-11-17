@@ -49,7 +49,7 @@
             <!-- BOTÓN RECARGAR -->
             <div class="filter-group">
               <button type="button" class="reload-btn" (click)="reloadData()" [disabled]="isLoading">
-                <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i> 
+                <i class="fa fa-refresh" [class.fa-spin]="isLoading"></i>
                 {{ isLoading ? 'Cargando...' : 'Recargar' }}
               </button>
             </div>
@@ -124,45 +124,45 @@
                 <div class="appointment-service">{{ appointment.serviceName }}</div>
                 <div class="appointment-staff">Atendido por: {{ appointment.staffName }}</div>
               </div>
-             
+
               <div class="appointment-actions">
                 <!-- Botón del menú -->
-                <button class="appointment-menu-btn" 
+                <button class="appointment-menu-btn"
                         type="button"
                         (click)="toggleMenu($event, appointment)">
-                  <img src="assets/iconos/menu_puntos.svg" 
+                  <img src="assets/iconos/menu_puntos.svg"
                        alt="Menú"
                        class="menu-icon">
                 </button>
-                
+
                 <!-- MENÚ -->
-                <div class="appointment-menu" 
+                <div class="appointment-menu"
                      [class.show]="appointment.showMenu"
                      (click)="$event.stopPropagation()">
-                  
+
                   <!-- Confirmar - solo si está reservada -->
-                  <button *ngIf="appointment.status === 'reserved'" 
+                  <button *ngIf="appointment.status === 'reserved'"
                           type="button"
                           class="menu-action confirm-btn"
                           (click)="confirmAppointment(appointment)">
                     <i class="fa fa-check"></i> Confirmar cita
                   </button>
-                  
+
                   <!-- Editar -->
                   <button type="button"
                           class="menu-action edit-btn"
                           (click)="editAppointment(appointment)">
                     <i class="fa fa-edit"></i> Editar
                   </button>
-                  
+
                   <!-- Cancelar - solo si no está cancelada -->
-                  <button *ngIf="appointment.status !== 'cancelled'" 
+                  <button *ngIf="appointment.status !== 'cancelled'"
                           type="button"
                           class="menu-action cancel-btn"
                           (click)="cancelAppointment(appointment)">
                     <i class="fa fa-times"></i> Cancelar cita
                   </button>
-                  
+
                   <!-- Eliminar -->
                   <button type="button"
                           class="menu-action delete-btn"
@@ -198,6 +198,8 @@
       <div class="card-content">
         <form class="appointment-form" (ngSubmit)="onSubmit()">
           <div class="form-section">
+
+            <!-- ✅ FORM-ROW 1: Tipo de documento, Número, Nombre -->
             <div class="form-row">
               <div class="form-group">
                 <label for="clientDocType">Tipo de documento</label>
@@ -222,6 +224,7 @@
               </div>
             </div>
 
+            <!-- ✅ FORM-ROW 2: Email, Fecha de nacimiento, Teléfono -->
             <div class="form-row">
               <div class="form-group">
                 <label for="clientEmail">Email</label>
@@ -243,39 +246,39 @@
               </div>
             </div>
 
+            <!-- ✅ FORM-ROW 3: Servicio y Personal (DINÁMICOS) -->
             <div class="form-row">
+              <!-- 🔥 SELECT DE SERVICIOS DINÁMICO -->
               <div class="form-group">
                 <label for="appointmentService">Tipo de cita *</label>
                 <select id="appointmentService" name="appointmentService"
                         [(ngModel)]="form.appointmentService"
                         (ngModelChange)="onServiceChange()" required>
                   <option value="">Procedimiento a realizar</option>
-                  <option value="manicure">Manicure Clásico</option>
-                  <option value="pedicure">Pedicure Spa</option>
-                  <option value="gelish">Uñas en Gelish</option>
-                  <option value="acrilicas">Uñas Acrílicas</option>
-                  <option value="pestanas">Pestañas</option>
+                  <option *ngFor="let service of availableServices" [value]="service.id">
+                    {{ service.nombre }} - ${{ service.precio.toLocaleString('es-CO') }} - {{ service.duracion_formato }}
+                  </option>
                 </select>
                 <div *ngIf="selectedService" class="service-info">
-                  <span class="price">Valor: $ {{ selectedService.price }}</span>
+                  <span class="price">Valor: ${{ selectedService.price.toLocaleString('es-CO') }}</span>
                   <span class="duration">Duración: {{ selectedService.duration }}</span>
-                  <span class="recommendation">Recomendación: {{ selectedService.recommendation }}</span>
+                  <span class="recommendation">{{ selectedService.recommendation }}</span>
                 </div>
               </div>
 
-              <!-- 🔥 SELECTOR DE PERSONAL CONECTADO CON HORARIOS -->
+              <!-- 🔥 SELECT DE PERSONAL DINÁMICO -->
               <div class="form-group">
                 <label for="appointmentStaff">Personal que realiza el servicio *</label>
                 <select id="appointmentStaff" name="appointmentStaff"
                         [(ngModel)]="form.appointmentStaff"
                         (change)="onStaffChange()" required>
                   <option value="">Seleccione al personal de preferencia</option>
-                  <option *ngFor="let staff of staffList" [value]="staff.id">
-                    {{ staff.displayName }}
+                  <option *ngFor="let staff of availableStaff" [value]="staff.id">
+                    {{ staff.nombre_completo }} - {{ staff.rol }}
                   </option>
+                  <option value="cualquiera">Cualquier especialista disponible</option>
                 </select>
                 <small class="form-hint">Seleccione primero el personal para ver sus horarios disponibles</small>
-                <div class="error-message"></div>
               </div>
             </div>
 
@@ -288,7 +291,9 @@
               <strong>⚠️</strong> Este personal no tiene horarios configurados. Por favor, configure los horarios primero.
             </div>
 
+            <!-- SECCIÓN DE FECHA Y HORA -->
             <div class="datetime-section">
+              <!-- CALENDARIO -->
               <div class="date-section">
                 <div class="section-header">
                   <i class="fa fa-calendar"></i>
@@ -323,12 +328,13 @@
                 </div>
               </div>
 
+              <!-- HORARIOS -->
               <div class="time-section">
                 <div class="section-header">
                   <i class="fa fa-clock-o"></i>
                   <span>Selecciona la hora</span>
                 </div>
-                
+
                 <!-- 🔥 MENSAJES DE ADVERTENCIA -->
                 <div class="warning-message" *ngIf="!form.appointmentStaff" style="margin-bottom: 1rem;">
                   <strong>⚠️</strong> Seleccione primero el personal para ver los horarios disponibles
@@ -362,6 +368,7 @@
               </div>
             </div>
 
+            <!-- OBSERVACIONES -->
             <div class="form-group">
               <label for="appointmentObservations">Observaciones o peticiones</label>
               <textarea id="appointmentObservations" name="appointmentObservations"
@@ -370,6 +377,7 @@
             </div>
           </div>
 
+          <!-- BOTONES DE ACCIÓN -->
           <div class="form-actions">
             <!-- Para crear nueva cita -->
             <button

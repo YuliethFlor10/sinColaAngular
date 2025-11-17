@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, BehaviorSubject, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { map, catchError, delay } from 'rxjs/operators';
 
-// 📌 Interface para los slots de tiempo
+// 📌 Interfaz para slots de tiempo
 export interface TimeSlot {
   hour: number;
   minute: number;
@@ -11,310 +11,344 @@ export interface TimeSlot {
   display: string;
 }
 
-// 📌 Interface para el horario de un día
-export interface DaySchedule {
-  name: string;
-  id: string;
-  isOpen: boolean;
-  firstShift: {
-    start: TimeSlot;
-    end: TimeSlot;
-  };
-  secondShift: {
-    start: TimeSlot;
-    end: TimeSlot;
-    enabled: boolean;
-  };
+// 📌 Interfaz para turnos
+export interface Shift {
+  enabled: boolean;
+  start: TimeSlot;
+  end: TimeSlot;
 }
 
-// 📌 Interface para el personal/trabajador
+// 📌 Interfaz para horario de un día (UI Component)
+export interface DaySchedule {
+  id: string;
+  name: string;
+  isOpen: boolean;
+  firstShift: Shift;
+  secondShift: Shift;
+}
+
+// 📌 Interfaz para personal
 export interface Staff {
   id: string;
   name: string;
   displayName: string;
-  schedules?: DaySchedule[];
+  email?: string;
+  role?: string;
 }
 
-// 📌 Interface para horarios guardados
-export interface ScheduleData {
-  staffId: string;
-  staffName: string;
-  schedules: DaySchedule[];
-  updatedAt?: string;
+// 📌 Interfaz para Schedule (Backend API)
+export interface Schedule {
+  id: number;
+  staff_id: string;
+  day_of_week: string;
+  start_time: string;
+  end_time: string;
+  is_available: boolean;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class ScheduleService {
-  private apiUrl = 'http://localhost:8000/api/schedules';
-  
-  private httpOptions = {
-    headers: new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    })
+  private baseUrl = 'http://127.0.0.1:8000/api';
+
+  // 🔥 DATOS TEMPORALES - Mientras se implementa en backend
+  private mockStaffList: Staff[] = [
+    { id: 'empresa', name: 'Empresa', displayName: 'Horario de la Empresa', role: 'Administrador' },
+    { id: '1', name: 'Yulieth', displayName: 'Yulieth - Especialista en Uñas', email: 'yulieth@ejemplo.com', role: 'Empleado' },
+    { id: '2', name: 'Juanita', displayName: 'Juanita - Especialista en Pestañas', email: 'juanita@ejemplo.com', role: 'Empleado' },
+    { id: '3', name: 'Pablito', displayName: 'Pablito - Barbero', email: 'pablito@ejemplo.com', role: 'Empleado' }
+  ];
+
+  private mockSchedules: { [staffId: string]: string[] } = {
+    'empresa': ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'],
+    '1': ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'],
+    '2': ['lunes', 'miercoles', 'viernes', 'sabado'],
+    '3': ['martes', 'jueves', 'sabado']
   };
 
-  // 🔥 ACTUALIZADO: Lista del personal con los nombres correctos
-  private staffListSubject = new BehaviorSubject<Staff[]>([
-    { id: 'pepita', name: 'Pepita Perez', displayName: 'Pepita Perez' },
-    { id: 'luna', name: 'Luna Lunera', displayName: 'Luna Lunera' },
-    { id: 'patricia', name: 'Patricia Fernandez', displayName: 'Patricia Fernandez' }
-  ]);
-
-  // 📌 Horarios en memoria (cache local)
-  private schedulesCache = new Map<string, DaySchedule[]>();
-
-  public staffList$ = this.staffListSubject.asObservable();
+  private mockTimeSlots: { [staffId: string]: { [day: string]: string[] } } = {
+    'empresa': {
+      'lunes': ['08:00', '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+      'martes': ['08:00', '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+      'miercoles': ['08:00', '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+      'jueves': ['08:00', '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+      'viernes': ['08:00', '09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00', '18:00'],
+      'sabado': ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00']
+    },
+    '1': {
+      'lunes': ['09:00', '09:30', '10:00', '10:30', '11:00', '14:00', '14:30', '15:00', '15:30', '16:00'],
+      'martes': ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00'],
+      'miercoles': ['09:00', '09:30', '10:00', '10:30', '11:00', '14:00', '14:30', '15:00'],
+      'jueves': ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'],
+      'viernes': ['09:00', '09:30', '10:00', '10:30', '11:00', '11:30', '14:00', '14:30', '15:00']
+    },
+    '2': {
+      'lunes': ['10:00', '11:00', '12:00', '15:00', '16:00', '17:00'],
+      'miercoles': ['10:00', '11:00', '12:00', '15:00', '16:00'],
+      'viernes': ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00'],
+      'sabado': ['09:00', '10:00', '11:00', '12:00']
+    },
+    '3': {
+      'martes': ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00', '17:00'],
+      'jueves': ['09:00', '10:00', '11:00', '12:00', '14:00', '15:00', '16:00'],
+      'sabado': ['09:00', '10:00', '11:00', '12:00', '14:00']
+    }
+  };
 
   constructor(private http: HttpClient) {
-    this.initializeDefaultSchedules();
+    console.log('ScheduleService inicializado');
+  }
+
+  private getHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
   }
 
   /**
    * 📌 Obtener lista de personal
    */
   getStaffList(): Staff[] {
-    return this.staffListSubject.value;
+    return this.mockStaffList;
   }
 
   /**
-   * 📌 Obtener horarios de un trabajador específico
+   * 📌 Obtener horarios por personal (formato DaySchedule para UI)
    */
   getScheduleByStaff(staffId: string): Observable<DaySchedule[]> {
-    // Primero intenta desde cache
-    if (this.schedulesCache.has(staffId)) {
-      return of(this.schedulesCache.get(staffId)!);
-    }
+    console.log(`📅 Cargando horarios para: ${staffId}`);
 
-    // Intenta desde API
-    return this.http.get<any>(`${this.apiUrl}/${staffId}`, this.httpOptions)
-      .pipe(
-        map(response => {
-          const schedules = response?.data?.schedules || this.getDefaultSchedule();
-          this.schedulesCache.set(staffId, schedules);
-          return schedules;
-        }),
-        catchError(error => {
-          console.warn(`No se pudo cargar horario de ${staffId}, usando predeterminado`, error);
-          const defaultSchedule = this.getDefaultSchedule();
-          this.schedulesCache.set(staffId, defaultSchedule);
-          return of(defaultSchedule);
-        })
-      );
+    // Simular carga desde backend
+    const schedules = this.getDefaultSchedule();
+
+    // Simular delay de red
+    return of(schedules).pipe(delay(500));
   }
 
   /**
-   * 📌 Guardar horarios de un trabajador
+   * 📌 Guardar horarios (formato DaySchedule desde UI)
    */
-  saveSchedule(staffId: string, schedules: DaySchedule[]): Observable<ScheduleData> {
-    const payload: ScheduleData = {
-      staffId,
-      staffName: this.getStaffName(staffId),
-      schedules,
-      updatedAt: new Date().toISOString()
+  saveSchedule(staffId: string, schedules: DaySchedule[]): Observable<any> {
+    console.log('💾 Guardando horarios:', { staffId, schedules });
+
+    // Simular guardado en backend
+    const result = {
+      success: true,
+      message: 'Horarios guardados exitosamente',
+      staffId: staffId,
+      timestamp: new Date().toISOString()
     };
 
-    // Actualiza cache local
-    this.schedulesCache.set(staffId, schedules);
-
-    // Intenta guardar en API
-    return this.http.post<any>(this.apiUrl, payload, this.httpOptions)
-      .pipe(
-        map(response => response.data || payload),
-        catchError(error => {
-          console.warn('Error guardando en API, guardado en cache local', error);
-          // Aunque falle la API, mantiene el cache local
-          return of(payload);
-        })
-      );
+    // Simular delay de red
+    return of(result).pipe(delay(800));
   }
 
   /**
-   * 📌 Verificar si un trabajador está disponible en un día/hora específica
-   */
-  isStaffAvailable(staffId: string, dayName: string, time: string): Observable<boolean> {
-    return this.getScheduleByStaff(staffId).pipe(
-      map(schedules => {
-        const daySchedule = schedules.find(s => 
-          s.name.toLowerCase() === dayName.toLowerCase() || 
-          s.id === dayName.toLowerCase()
-        );
-
-        if (!daySchedule || !daySchedule.isOpen) {
-          return false;
-        }
-
-        // Convierte el tiempo a minutos desde medianoche
-        const timeMinutes = this.timeToMinutes(time);
-        
-        // Verifica primer turno
-        const firstStart = this.timeSlotToMinutes(daySchedule.firstShift.start);
-        const firstEnd = this.timeSlotToMinutes(daySchedule.firstShift.end);
-        
-        if (timeMinutes >= firstStart && timeMinutes <= firstEnd) {
-          return true;
-        }
-
-        // Verifica segundo turno si está habilitado
-        if (daySchedule.secondShift.enabled) {
-          const secondStart = this.timeSlotToMinutes(daySchedule.secondShift.start);
-          const secondEnd = this.timeSlotToMinutes(daySchedule.secondShift.end);
-          
-          if (timeMinutes >= secondStart && timeMinutes <= secondEnd) {
-            return true;
-          }
-        }
-
-        return false;
-      })
-    );
-  }
-
-  /**
-   * 📌 Obtener días laborables de un trabajador
+   * 🔥 Obtener días laborables de un miembro del personal
+   * @param staffId ID del empleado
+   * @returns Observable con array de días en español (ej: ['lunes', 'martes'])
    */
   getWorkingDays(staffId: string): Observable<string[]> {
-    return this.getScheduleByStaff(staffId).pipe(
-      map(schedules => 
-        schedules
-          .filter(s => s.isOpen)
-          .map(s => s.name)
-      )
-    );
+    console.log('📅 Obteniendo días laborables para staff:', staffId);
+
+    // 🔥 TEMPORAL: Retornar datos mock
+    const days = this.mockSchedules[staffId] || [];
+    return of(days);
+
+    // TODO: Implementar llamada real cuando el endpoint esté disponible
+    // return this.http.get<any>(`${this.baseUrl}/schedules/staff/${staffId}/working-days`, {
+    //   headers: this.getHeaders()
+    // }).pipe(
+    //   map(response => response.days || []),
+    //   catchError(error => {
+    //     console.error('Error obteniendo días laborables:', error);
+    //     return of([]);
+    //   })
+    // );
   }
 
   /**
-   * 📌 Obtener horarios disponibles para un día específico
+   * 🔥 Obtener horarios disponibles para un día específico
+   * @param staffId ID del empleado
+   * @param dayName Nombre del día en español (ej: 'lunes')
+   * @returns Observable con array de horarios (ej: ['09:00', '10:00'])
    */
   getAvailableTimeSlotsForDay(staffId: string, dayName: string): Observable<string[]> {
-    return this.getScheduleByStaff(staffId).pipe(
-      map(schedules => {
-        const daySchedule = schedules.find(s => 
-          s.name.toLowerCase() === dayName.toLowerCase()
-        );
+    console.log(`⏰ Obteniendo horarios para ${staffId} el día ${dayName}`);
 
-        if (!daySchedule || !daySchedule.isOpen) {
-          return [];
-        }
+    // 🔥 TEMPORAL: Retornar datos mock
+    const slots = this.mockTimeSlots[staffId]?.[dayName] || [];
+    return of(slots);
 
-        const slots: string[] = [];
-        
-        // Genera slots del primer turno (cada 30 minutos)
-        const firstStart = this.timeSlotToMinutes(daySchedule.firstShift.start);
-        const firstEnd = this.timeSlotToMinutes(daySchedule.firstShift.end);
-        
-        for (let m = firstStart; m < firstEnd; m += 30) {
-          slots.push(this.minutesToTimeString(m));
-        }
+    // TODO: Implementar llamada real cuando el endpoint esté disponible
+    // return this.http.get<any>(`${this.baseUrl}/schedules/staff/${staffId}/slots`, {
+    //   headers: this.getHeaders(),
+    //   params: { day: dayName }
+    // }).pipe(
+    //   map(response => response.slots || []),
+    //   catchError(error => {
+    //     console.error('Error obteniendo horarios:', error);
+    //     return of([]);
+    //   })
+    // );
+  }
 
-        // Genera slots del segundo turno si está habilitado
-        if (daySchedule.secondShift.enabled) {
-          const secondStart = this.timeSlotToMinutes(daySchedule.secondShift.start);
-          const secondEnd = this.timeSlotToMinutes(daySchedule.secondShift.end);
-          
-          for (let m = secondStart; m < secondEnd; m += 30) {
-            slots.push(this.minutesToTimeString(m));
-          }
-        }
-
-        return slots;
+  /**
+   * 🔥 Obtener todos los horarios de un empleado (formato Schedule API)
+   * @param staffId ID del empleado
+   */
+  getStaffSchedules(staffId: string): Observable<Schedule[]> {
+    return this.http.get<Schedule[]>(`${this.baseUrl}/schedules/staff/${staffId}`, {
+      headers: this.getHeaders()
+    }).pipe(
+      catchError(error => {
+        console.error('Error obteniendo horarios:', error);
+        return of([]);
       })
     );
   }
 
   /**
-   * 📌 Obtener nombre del personal por ID
+   * 🔥 Crear nuevo horario (formato Schedule API)
    */
-  private getStaffName(staffId: string): string {
-    const staff = this.staffListSubject.value.find(s => s.id === staffId);
-    return staff?.name || staffId;
-  }
-
-  /**
-   * 📌 Convertir TimeSlot a minutos desde medianoche
-   */
-  private timeSlotToMinutes(slot: TimeSlot): number {
-    let hours = slot.hour;
-    
-    // Ajusta para formato 24 horas
-    if (slot.ampm === 'PM' && hours !== 12) {
-      hours += 12;
-    } else if (slot.ampm === 'AM' && hours === 12) {
-      hours = 0;
-    }
-    
-    return hours * 60 + slot.minute;
-  }
-
-  /**
-   * 📌 Convertir string de tiempo (HH:MM) a minutos
-   */
-  private timeToMinutes(time: string): number {
-    const [hours, minutes] = time.split(':').map(Number);
-    return hours * 60 + minutes;
-  }
-
-  /**
-   * 📌 Convertir minutos a string de tiempo (HH:MM)
-   */
-  private minutesToTimeString(minutes: number): string {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-  }
-
-  /**
-   * 📌 Obtener horario predeterminado (8AM-12PM y 1PM-8PM)
-   */
-  private getDefaultSchedule(): DaySchedule[] {
-    const days = [
-      'Domingo', 'Lunes', 'Martes', 'Miércoles', 
-      'Jueves', 'Viernes', 'Sábado'
-    ];
-
-    return days.map((name, index) => ({
-      name,
-      id: name.toLowerCase(),
-      isOpen: index !== 0, // Domingo cerrado por defecto
-      firstShift: {
-        start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
-        end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
-      },
-      secondShift: {
-        start: { hour: 13, minute: 0, ampm: 'PM', display: '1:00 PM' },
-        end: { hour: 20, minute: 0, ampm: 'PM', display: '8:00 PM' },
-        enabled: true
-      }
-    }));
-  }
-
-  /**
-   * 📌 Inicializar horarios predeterminados en cache
-   */
-  private initializeDefaultSchedules(): void {
-    const staff = this.getStaffList();
-    staff.forEach(s => {
-      if (!this.schedulesCache.has(s.id)) {
-        this.schedulesCache.set(s.id, this.getDefaultSchedule());
-      }
+  createSchedule(scheduleData: any): Observable<any> {
+    return this.http.post(`${this.baseUrl}/schedules`, scheduleData, {
+      headers: this.getHeaders()
     });
   }
 
   /**
-   * 📌 Manejo de errores
+   * 🔥 Actualizar horario existente (formato Schedule API)
    */
-  private handleError(error: HttpErrorResponse): Observable<never> {
-    let errorMessage = 'Ocurrió un error desconocido';
-    
-    if (error.error instanceof ErrorEvent) {
-      errorMessage = `Error: ${error.error.message}`;
-    } else {
-      console.error('Error HTTP:', error);
-      errorMessage = error.error?.message || error.message || `Error del servidor (${error.status})`;
-    }
-    
-    return throwError(() => ({ message: errorMessage }));
+  updateSchedule(id: number, scheduleData: any): Observable<any> {
+    return this.http.put(`${this.baseUrl}/schedules/${id}`, scheduleData, {
+      headers: this.getHeaders()
+    });
+  }
+
+  /**
+   * 🔥 Eliminar horario (formato Schedule API)
+   */
+  deleteSchedule(id: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/schedules/${id}`, {
+      headers: this.getHeaders()
+    });
+  }
+
+  /**
+   * 📌 Obtener horario por defecto (formato DaySchedule)
+   */
+  private getDefaultSchedule(): DaySchedule[] {
+    return [
+      {
+        id: 'monday',
+        name: 'Lunes',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'tuesday',
+        name: 'Martes',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'wednesday',
+        name: 'Miércoles',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'thursday',
+        name: 'Jueves',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'friday',
+        name: 'Viernes',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'saturday',
+        name: 'Sábado',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 9, minute: 0, ampm: 'AM', display: '9:00 AM' },
+          end: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' }
+        },
+        secondShift: {
+          enabled: false,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'sunday',
+        name: 'Domingo',
+        isOpen: false,
+        firstShift: {
+          enabled: false,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: false,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      }
+    ];
   }
 }

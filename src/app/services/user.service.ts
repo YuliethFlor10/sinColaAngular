@@ -23,13 +23,13 @@ export class UserService {
       email: userData.email || '',
       clave: userData.clave || userData.password || '', // MANTENER como 'clave'
       celular: userData.celular || userData.phone || '',
-      telefono: userData.telefono || userData.celular || userData.phone || '', // Agregar telefono
-      direccion: userData.direccion || userData.address || '', // Agregar direccion
-      identificacion: userData.identificacion || userData.docNumber || '', // Agregar identificacion
-      tipo_identificacion_id: userData.tipo_identificacion_id || 1, // Agregar tipo_identificacion_id
+      telefono: userData.telefono || userData.celular || userData.phone || '',
+      direccion: userData.direccion || userData.address || '',
+      identificacion: userData.identificacion || userData.docNumber || '',
+      tipo_identificacion_id: userData.tipo_identificacion_id || 1,
       roles_id: userData.roles_id || userData.roleId || 2, // Cliente por defecto
-      estados_id: userData.estados_id || 1, // Agregar estados_id
-      negocios_id: userData.negocios_id || userData.businessId || 1
+      estados_id: userData.estados_id || 1,
+      negocios_id: userData.negocios_id || userData.businessId || null // 🔥 Puede ser null
     };
 
     console.log('Datos formateados:', formattedData);
@@ -75,7 +75,7 @@ export class UserService {
       );
   }
 
-  // Obtener usuario actual (requiere token)
+  // 🔥 CORREGIDO: Obtener usuario actual (usa /me en lugar de /user)
   getCurrentUser(): Observable<any> {
     const token = localStorage.getItem('token');
     const headers = new HttpHeaders({
@@ -84,7 +84,7 @@ export class UserService {
       'Authorization': `Bearer ${token}`
     });
 
-    return this.http.get(`${this.apiUrl}/user`, { headers })
+    return this.http.get(`${this.apiUrl}/me`, { headers })
       .pipe(
         catchError((error: HttpErrorResponse) => {
           console.error('Error al obtener usuario:', error);

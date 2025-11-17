@@ -1,5 +1,7 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { AppointmentsService } from '../../../services/appointments.service';
+import { ServicesService } from '../../../services/services.service';
+import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-formulario',
@@ -14,15 +16,120 @@ export class FormularioComponent implements AfterViewInit {
   selectedTime: string | null = null;
   formData: any = {};
 
+  // 🔥 NEGOCIO SINCOLA - ID FIJO
+  private readonly SINCOLA_BUSINESS_ID = 6;
+
+  // 🔥 SERVICIOS Y PERSONAL DINÁMICOS
+  serviciosDisponibles: any[] = [];
+  personalDisponible: any[] = [];
+
   @ViewChild('personalForm', { static: false }) personalForm!: ElementRef<HTMLFormElement>;
   @ViewChild('appointmentForm', { static: false }) appointmentForm!: ElementRef<HTMLFormElement>;
 
-  constructor(private appointmentsService: AppointmentsService) {}
+  constructor(
+    private appointmentsService: AppointmentsService,
+    private servicesService: ServicesService,
+    private usersService: UsersService
+  ) {}
 
   ngAfterViewInit() {
     this.setupEventListeners();
     this.generateCalendar();
+    this.cargarServiciosYPersonal(); // 🔥 Cargar datos de SinCola
   }
+
+  // ============================================
+  // 🔥 CARGAR SERVICIOS Y PERSONAL DE SINCOLA
+  // ============================================
+
+  cargarServiciosYPersonal() {
+    console.log(`📡 Cargando servicios y personal del negocio SinCola (ID: ${this.SINCOLA_BUSINESS_ID})...`);
+
+    // Cargar servicios activos de SinCola
+    this.servicesService.getAll().subscribe({
+      next: (response: any) => {
+        console.log('✅ Servicios recibidos:', response);
+
+        let servicios = Array.isArray(response) ? response : (response?.data || []);
+
+        // 🔥 Filtrar SOLO servicios de SinCola (ID: 6)
+        this.serviciosDisponibles = servicios.filter((s: any) =>
+          s.negocios_id === this.SINCOLA_BUSINESS_ID &&
+          (s.estados_id === 1 || s.status?.nombre === 'Activo')
+        );
+
+        console.log(`✅ ${this.serviciosDisponibles.length} servicios disponibles de SinCola:`, this.serviciosDisponibles);
+        this.poblarSelectServicios();
+      },
+      error: (err) => console.error('❌ Error cargando servicios:', err)
+    });
+
+    // Cargar personal de SinCola (Admins + Empleados)
+    this.usersService.getStaffForServices().subscribe({
+      next: (response: any) => {
+        console.log('✅ Personal recibido:', response);
+
+        let usuarios = Array.isArray(response) ? response : (response?.data || []);
+
+        // 🔥 Filtrar SOLO personal de SinCola (ID: 6)
+        this.personalDisponible = usuarios.filter((u: any) =>
+          u.negocios_id === this.SINCOLA_BUSINESS_ID &&
+          (u.roles_id === 1 || u.roles_id === 3) && // 1=Admin, 3=Empleado
+          (u.estados_id === 1 || u.status?.nombre === 'Activo')
+        );
+
+        console.log(`✅ ${this.personalDisponible.length} miembros del staff de SinCola:`, this.personalDisponible);
+        this.poblarSelectPersonal();
+      },
+      error: (err) => console.error('❌ Error cargando personal:', err)
+    });
+  }
+
+  // 🔥 Poblar select de servicios
+  poblarSelectServicios() {
+    const select = document.getElementById('appointmentType') as HTMLSelectElement;
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Procedimiento a realizar</option>';
+
+    this.serviciosDisponibles.forEach(servicio => {
+      const option = document.createElement('option');
+      option.value = servicio.id.toString();
+      option.textContent = servicio.nombre;
+      option.setAttribute('data-precio', servicio.precio);
+      option.setAttribute('data-duracion', servicio.tiempo_estimado);
+      select.appendChild(option);
+    });
+
+    console.log(`✅ ${this.serviciosDisponibles.length} servicios agregados al select`);
+  }
+
+  // 🔥 Poblar select de personal
+  poblarSelectPersonal() {
+    const select = document.getElementById('staff') as HTMLSelectElement;
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Seleccione al personal de preferencia</option>';
+
+    this.personalDisponible.forEach(usuario => {
+      const option = document.createElement('option');
+      option.value = usuario.id.toString();
+      option.textContent = `${usuario.nombres} ${usuario.apellidos}`.trim();
+      select.appendChild(option);
+    });
+
+    // Agregar opción "cualquier disponible"
+    const anyOption = document.createElement('option');
+    anyOption.value = 'cualquiera';
+    anyOption.textContent = 'Cualquier especialista disponible';
+    select.appendChild(anyOption);
+
+    console.log(`✅ ${this.personalDisponible.length} miembros del staff agregados al select`);
+  }
+
+  // ============================================
+  // EVENT LISTENERS
+  // ============================================
 
   setupEventListeners() {
     const personalForm = document.getElementById('personalForm');
@@ -32,6 +139,7 @@ export class FormularioComponent implements AfterViewInit {
         this.handleStep1Submit();
       });
     }
+
     const appointmentForm = document.getElementById('appointmentForm');
     if (appointmentForm) {
       appointmentForm.addEventListener('submit', (e) => {
@@ -39,6 +147,7 @@ export class FormularioComponent implements AfterViewInit {
         this.handleStep2Submit();
       });
     }
+
     const prevMonth = document.getElementById('prevMonth');
     if (prevMonth) {
       prevMonth.addEventListener('click', () => {
@@ -46,6 +155,7 @@ export class FormularioComponent implements AfterViewInit {
         this.generateCalendar();
       });
     }
+
     const nextMonth = document.getElementById('nextMonth');
     if (nextMonth) {
       nextMonth.addEventListener('click', () => {
@@ -53,7 +163,9 @@ export class FormularioComponent implements AfterViewInit {
         this.generateCalendar();
       });
     }
+
     this.setupTimeSlotListeners();
+
     const appointmentType = document.getElementById('appointmentType');
     if (appointmentType) {
       appointmentType.addEventListener('change', (e: any) => {
@@ -70,12 +182,17 @@ export class FormularioComponent implements AfterViewInit {
     });
   }
 
+  // ============================================
+  // PASO 1: DATOS PERSONALES
+  // ============================================
+
   handleStep1Submit() {
     const form = document.getElementById('personalForm') as HTMLFormElement;
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
     }
+
     this.formData.docType = (document.getElementById('docType') as HTMLSelectElement).value;
     this.formData.docNumber = (document.getElementById('docNumber') as HTMLInputElement).value;
     this.formData.fullName = (document.getElementById('fullName') as HTMLInputElement).value;
@@ -87,124 +204,62 @@ export class FormularioComponent implements AfterViewInit {
     this.goToStep(2);
   }
 
+  // ============================================
+  // PASO 2: DATOS DE LA CITA
+  // ============================================
+
   handleStep2Submit() {
     const form = document.getElementById('appointmentForm') as HTMLFormElement;
     if (!form.checkValidity()) {
       form.reportValidity();
       return;
     }
+
     if (!this.selectedDate) {
       alert('Por favor selecciona una fecha');
       return;
     }
+
     if (!this.selectedTime) {
       alert('Por favor selecciona una hora');
       return;
     }
 
-    this.formData.appointmentType = (document.getElementById('appointmentType') as HTMLSelectElement).value;
-    this.formData.staff = (document.getElementById('staff') as HTMLSelectElement).value;
+    const servicioId = (document.getElementById('appointmentType') as HTMLSelectElement).value;
+    const staffId = (document.getElementById('staff') as HTMLSelectElement).value;
+
+    if (!servicioId) {
+      alert('Por favor selecciona un servicio');
+      return;
+    }
+
+    if (!staffId) {
+      alert('Por favor selecciona el personal');
+      return;
+    }
+
+    // 🔥 Buscar datos completos del servicio y personal
+    const servicioSeleccionado = this.serviciosDisponibles.find(s => s.id.toString() === servicioId);
+    const personalSeleccionado = this.personalDisponible.find(p => p.id.toString() === staffId);
+
+    this.formData.appointmentType = servicioId;
+    this.formData.serviceName = servicioSeleccionado?.nombre || 'Servicio';
+    this.formData.staffId = staffId === 'cualquiera' ? null : parseInt(staffId);
+    this.formData.staffName = personalSeleccionado
+      ? `${personalSeleccionado.nombres} ${personalSeleccionado.apellidos}`.trim()
+      : 'Cualquier especialista';
     this.formData.date = this.selectedDate;
     this.formData.time = this.selectedTime;
     this.formData.observations = (document.getElementById('observations') as HTMLTextAreaElement).value;
+    this.formData.servicioData = servicioSeleccionado;
 
     console.log('✅ Paso 2 completado:', this.formData);
     this.processReservation();
   }
 
-  goToStep(step: number) {
-    const currentStepEl = document.getElementById(`step${this.currentStep}`);
-    if (currentStepEl) currentStepEl.classList.remove('active');
-    const nextStepEl = document.getElementById(`step${step}`);
-    if (nextStepEl) nextStepEl.classList.add('active');
-    this.currentStep = step;
-  }
-
-  generateCalendar() {
-    const year = this.currentDate.getFullYear();
-    const month = this.currentDate.getMonth();
-    const monthNames = [
-      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
-      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
-    ];
-    const currentMonthEl = document.getElementById('currentMonth');
-    if (currentMonthEl) currentMonthEl.textContent = `${monthNames[month]} ${year}`;
-
-    const firstDay = new Date(year, month, 1);
-    const startDate = new Date(firstDay);
-    startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
-
-    const calendarDays = document.getElementById('calendarDays');
-    if (!calendarDays) return;
-    calendarDays.innerHTML = '';
-
-    for (let i = 0; i < 42; i++) {
-      const date = new Date(startDate);
-      date.setDate(startDate.getDate() + i);
-      const dayElement = document.createElement('div');
-      dayElement.className = 'calendar-day';
-      dayElement.textContent = date.getDate().toString();
-
-      if (date.getMonth() !== month) {
-        dayElement.classList.add('other-month');
-      }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (
-        this.selectedDate &&
-        date.getDate() === this.selectedDate.getDate() &&
-        date.getMonth() === this.selectedDate.getMonth() &&
-        date.getFullYear() === this.selectedDate.getFullYear()
-      ) {
-        dayElement.classList.add('selected');
-      }
-
-      if (date < today) {
-        dayElement.style.opacity = '0.3';
-        dayElement.style.cursor = 'not-allowed';
-      } else {
-        dayElement.addEventListener('click', () => {
-          this.selectedDate = date;
-          this.generateCalendar();
-          const options: Intl.DateTimeFormatOptions = {
-            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-          };
-          const selectedDateText = document.getElementById('selectedDateText');
-          if (selectedDateText) selectedDateText.textContent = date.toLocaleDateString('es-ES', options);
-        });
-      }
-      calendarDays.appendChild(dayElement);
-    }
-  }
-
-  selectTimeSlot(element: HTMLElement) {
-    document.querySelectorAll('.time-slot.selected').forEach((slot) => {
-      slot.classList.remove('selected');
-    });
-    element.classList.add('selected');
-    this.selectedTime = element.getAttribute('data-time');
-  }
-
-  updateServiceInfo(serviceType: string) {
-    const serviceInfo: any = {
-      manicure: { price: '$ 35.000', duration: '45 min' },
-      pedicure: { price: '$ 45.000', duration: '1 H' },
-      gelish: { price: '$ 50.000', duration: '1 H' },
-      acrilicas: { price: '$ 65.000', duration: '1.5 H' },
-      decoracion: { price: '$ 25.000', duration: '30 min' },
-    };
-    const info = serviceInfo[serviceType] || { price: '$ 50.000', duration: '1 H' };
-    const serviceInfoElement = document.querySelector('.service-info');
-    if (serviceInfoElement) {
-      serviceInfoElement.innerHTML = `
-        <span class="price">Valor: ${info.price}</span>
-        <span class="duration">Duración: ${info.duration}</span>
-        <span class="recommendation">Recomendación: para el procedimiento a realizar</span>
-      `;
-    }
-  }
+  // ============================================
+  // PROCESAR RESERVA
+  // ============================================
 
   processReservation() {
     const loadingMessage = document.createElement('div');
@@ -222,6 +277,7 @@ export class FormularioComponent implements AfterViewInit {
     `;
     document.body.appendChild(loadingMessage);
 
+    // 🔥 DATOS CORRECTOS PARA LA API - NEGOCIO SINCOLA (ID: 6)
     const appointmentData = {
       nombre: this.formData.fullName,
       email: this.formData.email,
@@ -229,17 +285,18 @@ export class FormularioComponent implements AfterViewInit {
       numero_documento: this.formData.docNumber,
       fecha_nacimiento: this.formData.birthDate,
       numero_telefono: this.formData.phone,
-      tipo_cita: this.formData.appointmentType,
-      personal_servicio: this.formData.staff,
+      tipo_cita: this.formData.serviceName,
+      personal_servicio: this.formData.staffName,
       fecha_cita: this.formatDate(this.formData.date),
       hora_cita: this.formData.time,
       nota: this.formData.observations || '',
-      negocios_id: 1,
-      servicios_id: 1,
-      tiempo_estimado: 60
+      negocios_id: this.SINCOLA_BUSINESS_ID, // 🔥 SINCOLA FIJO
+      servicios_id: parseInt(this.formData.appointmentType),
+      tiempo_estimado: this.formData.servicioData?.tiempo_estimado || 60,
+      estados_id: 1 // Reservada
     };
 
-    console.log('📤 Enviando a la API:', appointmentData);
+    console.log('📤 Enviando cita a SinCola:', appointmentData);
 
     this.appointmentsService.createFromForm(appointmentData).subscribe({
       next: (response: any) => {
@@ -275,6 +332,135 @@ export class FormularioComponent implements AfterViewInit {
     });
   }
 
+  // ============================================
+  // NAVEGACIÓN ENTRE PASOS
+  // ============================================
+
+  goToStep(step: number) {
+    const currentStepEl = document.getElementById(`step${this.currentStep}`);
+    if (currentStepEl) currentStepEl.classList.remove('active');
+
+    const nextStepEl = document.getElementById(`step${step}`);
+    if (nextStepEl) nextStepEl.classList.add('active');
+
+    this.currentStep = step;
+  }
+
+  // ============================================
+  // CALENDARIO
+  // ============================================
+
+  generateCalendar() {
+    const year = this.currentDate.getFullYear();
+    const month = this.currentDate.getMonth();
+
+    const monthNames = [
+      'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+      'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+    ];
+
+    const currentMonthEl = document.getElementById('currentMonth');
+    if (currentMonthEl) currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+
+    const firstDay = new Date(year, month, 1);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay() + 1);
+
+    const calendarDays = document.getElementById('calendarDays');
+    if (!calendarDays) return;
+
+    calendarDays.innerHTML = '';
+
+    for (let i = 0; i < 42; i++) {
+      const date = new Date(startDate);
+      date.setDate(startDate.getDate() + i);
+
+      const dayElement = document.createElement('div');
+      dayElement.className = 'calendar-day';
+      dayElement.textContent = date.getDate().toString();
+
+      if (date.getMonth() !== month) {
+        dayElement.classList.add('other-month');
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (
+        this.selectedDate &&
+        date.getDate() === this.selectedDate.getDate() &&
+        date.getMonth() === this.selectedDate.getMonth() &&
+        date.getFullYear() === this.selectedDate.getFullYear()
+      ) {
+        dayElement.classList.add('selected');
+      }
+
+      if (date < today) {
+        dayElement.style.opacity = '0.3';
+        dayElement.style.cursor = 'not-allowed';
+      } else {
+        dayElement.addEventListener('click', () => {
+          this.selectedDate = date;
+          this.generateCalendar();
+
+          const options: Intl.DateTimeFormatOptions = {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+          };
+
+          const selectedDateText = document.getElementById('selectedDateText');
+          if (selectedDateText) {
+            selectedDateText.textContent = date.toLocaleDateString('es-ES', options);
+          }
+        });
+      }
+
+      calendarDays.appendChild(dayElement);
+    }
+  }
+
+  // ============================================
+  // SELECCIÓN DE HORA
+  // ============================================
+
+  selectTimeSlot(element: HTMLElement) {
+    document.querySelectorAll('.time-slot.selected').forEach((slot) => {
+      slot.classList.remove('selected');
+    });
+
+    element.classList.add('selected');
+    this.selectedTime = element.getAttribute('data-time');
+  }
+
+  // ============================================
+  // ACTUALIZAR INFO DEL SERVICIO
+  // ============================================
+
+  updateServiceInfo(serviceId: string) {
+    const servicio = this.serviciosDisponibles.find(s => s.id.toString() === serviceId);
+
+    if (!servicio) return;
+
+    const serviceInfoElement = document.querySelector('.service-info');
+    if (serviceInfoElement) {
+      const duracionHoras = Math.floor(servicio.tiempo_estimado / 60);
+      const duracionMinutos = servicio.tiempo_estimado % 60;
+      let duracionTexto = '';
+
+      if (duracionHoras > 0) duracionTexto += `${duracionHoras} H `;
+      if (duracionMinutos > 0) duracionTexto += `${duracionMinutos} min`;
+
+      serviceInfoElement.innerHTML = `
+        <span class="price">Valor: $${servicio.precio.toLocaleString('es-CO')}</span>
+        <span class="duration">Duración: ${duracionTexto}</span>
+        <span class="recommendation">Recomendación: para el procedimiento a realizar</span>
+      `;
+    }
+  }
+
+  // ============================================
+  // UTILIDADES
+  // ============================================
+
   formatDate(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -297,21 +483,26 @@ export class FormularioComponent implements AfterViewInit {
     this.selectedDate = null;
     this.selectedTime = null;
     this.formData = {};
+
     document.querySelectorAll('.calendar-day.selected').forEach((day) => {
       day.classList.remove('selected');
     });
+
     document.querySelectorAll('.time-slot.selected').forEach((slot) => {
       slot.classList.remove('selected');
     });
+
     const selectedDateText = document.getElementById('selectedDateText');
     if (selectedDateText) selectedDateText.textContent = 'Día seleccionado';
   }
 }
 
+// Función global para cerrar el modal
 export function closeConfirmationModal() {
   const modal = document.getElementById('confirmationModal');
   if (modal) modal.classList.add('hidden');
   document.body.style.overflow = 'auto';
+
   const comp = (window as any).formularioComponentInstance;
   if (comp) comp.resetForm();
 }

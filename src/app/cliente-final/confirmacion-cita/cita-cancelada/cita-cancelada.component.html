@@ -1,6 +1,13 @@
 <div class="cancellation-container">
   <!-- Loading State -->
   <div *ngIf="loading" class="loading">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
     <div class="spinner"></div>
     <p>Procesando tu solicitud...</p>
     <p class="loading-detail">Por favor espera un momento</p>
@@ -8,6 +15,13 @@
 
   <!-- Error State -->
   <div *ngIf="!loading && error" class="error-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
     <div class="icon-error"></div>
     <h1>Ups, algo salió mal</h1>
     <p class="error-message">{{ error }}</p>
@@ -24,6 +38,13 @@
 
   <!-- Success State -->
   <div *ngIf="!loading && !error && citaData" class="cancel-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
     <!-- Icon dinámico -->
     <div class="icon-cancel" *ngIf="!alreadyCancelled"></div>
     <div class="icon-info" *ngIf="alreadyCancelled"></div>
@@ -128,6 +149,13 @@
 
   <!-- Estado vacío (no debería ocurrir) -->
   <div *ngIf="!loading && !error && !citaData" class="error-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
     <div class="icon-error"></div>
     <h1>No se encontraron datos</h1>
     <p class="error-message">No se pudo cargar la información de la cita.</p>
