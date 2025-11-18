@@ -1,20 +1,22 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
-interface CitaDetalle {
+interface CitaData {
   id: number;
   cliente_nombre: string;
   cliente_email: string;
-  tipo_servicio: string;
-  fecha: string;
-  estado: string;
-  personal_asignado?: string;
-  tiempo_estimado?: number;
-  nota?: string;
   cliente_telefono?: string;
+  tipo_servicio: string;
+  personal_asignado?: string;
+  fecha: string;
+  tiempo_estimado?: number;
   direccion?: string;
+  nota?: string;
+  estado: string;
+  negocio_nombre?: string;
+  negocio_telefono?: string;
 }
 
 @Component({
@@ -25,19 +27,14 @@ interface CitaDetalle {
   styleUrls: ['./cita-confirmada.component.css']
 })
 export class CitaConfirmadaComponent implements OnInit {
-  loading = true;
-  success = false;
-  error = false;
-  errorMessage = '';
-  citaData: CitaDetalle | null = null;
-  citaId: string | null = null;
+  loading: boolean = false; // ⚡ Cambiado a false para evitar spinner innecesario
+  error: string = '';
+  citaData: CitaData | null = null;
+  confirmacionExitosa: boolean = false;
+  alreadyConfirmed: boolean = false;
 
-  // 🔥 Propiedades que usa el HTML
-  alreadyConfirmed = false;
-  confirmacionExitosa = false;
-
-  // 🔥 URL de tu API Laravel
-  private apiUrl = 'http://localhost:8000/api/appointments';
+  private apiUrl = 'http://127.0.0.1:8000/api';
+  private token: string = '';
 
   constructor(
     private route: ActivatedRoute,
@@ -46,117 +43,144 @@ export class CitaConfirmadaComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // 🔥 Obtener ID desde la ruta /cliente-final/cita-confirmada/:id
-    this.citaId = this.route.snapshot.paramMap.get('id');
+    console.log('🚀 CitaConfirmadaComponent inicializado');
 
-    // 🔥 Verificar si viene el parámetro status=already
-    const status = this.route.snapshot.queryParamMap.get('status');
-    if (status === 'already') {
-      this.alreadyConfirmed = true;
-    }
+    // Obtener token y ID de la cita desde la URL
+    this.route.queryParams.subscribe(params => {
+      this.token = params['token'] || '';
+      const citaId = params['id'] || '';
 
-    console.log('✅ Componente cita-confirmada cargado');
-    console.log('📋 ID de cita:', this.citaId);
-    console.log('📋 Status:', status);
+      console.log('📋 Parámetros recibidos:', {
+        token: this.token ? '✅ Presente' : '❌ Ausente',
+        citaId: citaId || '❌ Ausente'
+      });
 
-    if (!this.citaId) {
-      this.error = true;
-      this.errorMessage = 'ID de cita no válido';
-      this.loading = false;
-      return;
-    }
+      // ✅ SI NO HAY PARÁMETROS, NO HACER NADA (no mostrar error)
+      if (!this.token || !citaId) {
+        console.log('⚠️ Accediendo sin parámetros - esperando enlace válido');
+        this.error = 'Por favor, utiliza el enlace de confirmación que recibiste en tu correo electrónico.';
+        this.loading = false;
+        return;
+      }
 
-    // Obtener los detalles de la cita
-    this.obtenerDatosCita();
+      // ✅ SI HAY PARÁMETROS, PROCESAR LA CONFIRMACIÓN
+      this.loading = true;
+      this.confirmarCita(citaId);
+    });
   }
 
-  obtenerDatosCita(): void {
-    console.log(`📡 GET ${this.apiUrl}/${this.citaId}`);
+  /**
+   * 🔥 CONFIRMAR LA CITA
+   */
+  private confirmarCita(citaId: string): void {
+    console.log(`✅ Confirmando cita ID: ${citaId}`);
 
-    this.http.get<any>(`${this.apiUrl}/${this.citaId}`).subscribe({
-      next: (data) => {
-        console.log('✅ Datos recibidos:', data);
-        console.log('🔍 Estado recibido:', data.estados_id, data.estado);
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    });
 
-        // Mapear datos del backend al frontend
-        this.citaData = {
-          id: data.id,
-          cliente_nombre: data.cliente_nombre || data.nombre,
-          cliente_email: data.cliente_email || data.email,
-          tipo_servicio: data.tipo_servicio || data.tipo_cita,
-          fecha: data.fecha || data.fecha_cita,
-          estado: this.mapEstado(data.estados_id || data.estado),
-          personal_asignado: data.personal_asignado || data.personal_servicio,
-          tiempo_estimado: data.tiempo_estimado,
-          nota: data.nota,
-          cliente_telefono: data.cliente_telefono || data.numero_telefono,
-          direccion: data.direccion
-        };
+    // Endpoint para confirmar cita con token
+    const url = `${this.apiUrl}/appointments/${citaId}/confirm?token=${this.token}`;
 
-        console.log('✅ Estado mapeado:', this.citaData.estado);
+    this.http.post(url, {}, { headers }).subscribe({
+      next: (response: any) => {
+        console.log('✅ Respuesta del servidor:', response);
 
-        // 🔥 Si no venía el parámetro status=already, marcar como exitosa
-        if (!this.alreadyConfirmed) {
-          this.confirmacionExitosa = true;
-        }
-
-        this.success = true;
-        this.error = false;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('❌ Error:', err);
-        this.error = true;
+        this.citaData = this.mapearDatosCita(response.data || response);
         this.loading = false;
 
-        if (err.status === 0) {
-          this.errorMessage = 'No se puede conectar con el servidor';
-        } else if (err.status === 404) {
-          this.errorMessage = 'Cita no encontrada';
+        // Verificar si ya estaba confirmada
+        if (response.message?.includes('ya había sido confirmada') ||
+            response.message?.includes('already confirmed')) {
+          this.alreadyConfirmed = true;
+          this.confirmacionExitosa = false;
         } else {
-          this.errorMessage = err.error?.message || 'Error al cargar la cita';
+          this.confirmacionExitosa = true;
+          this.alreadyConfirmed = false;
+        }
+      },
+      error: (error) => {
+        console.error('❌ Error al confirmar cita:', error);
+        this.loading = false;
+
+        if (error.status === 404) {
+          this.error = 'Cita no encontrada. El enlace puede haber expirado.';
+        } else if (error.status === 400 || error.status === 403) {
+          this.error = 'El enlace de confirmación no es válido o ha expirado. Por favor, solicita un nuevo enlace.';
+        } else if (error.error?.message) {
+          this.error = error.error.message;
+        } else {
+          this.error = 'No se pudo confirmar la cita. Por favor, intenta nuevamente o contacta soporte.';
         }
       }
     });
   }
 
-  // Mapear el estados_id del backend a texto
-  private mapEstado(estadoId: number | string): string {
-    if (typeof estadoId === 'string') return estadoId;
-
-    const estados: { [key: number]: string } = {
-      1: 'reservada',
-      2: 'confirmada',
-      3: 'cancelada',
-      4: 'completada'
+  /**
+   * 📋 MAPEAR DATOS DE LA CITA
+   */
+  private mapearDatosCita(data: any): CitaData {
+    return {
+      id: data.id,
+      cliente_nombre: data.client?.nombre_completo || data.cliente_nombre || 'Cliente',
+      cliente_email: data.client?.email || data.cliente_email || '',
+      cliente_telefono: data.client?.telefono || data.cliente_telefono,
+      tipo_servicio: data.service?.nombre || data.tipo_servicio || 'Servicio',
+      personal_asignado: data.staff?.nombre_completo || data.personal_asignado,
+      fecha: data.fecha_hora || data.fecha,
+      tiempo_estimado: data.service?.tiempo_estimado || data.tiempo_estimado,
+      direccion: data.business?.direccion || data.direccion,
+      nota: data.observaciones || data.nota,
+      estado: data.status?.nombre || data.estado || 'confirmada',
+      negocio_nombre: data.business?.nombre,
+      negocio_telefono: data.business?.telefono
     };
-    return estados[estadoId] || 'reservada';
   }
 
-  volverAlInicio(): void {
-    this.router.navigate(['/cliente-final/personalizacion']);
-  }
-
-  contactarSoporte(): void {
-    // 🔥 Cambia este número por el de tu negocio
-    window.open('https://wa.me/573214782368', '_blank');
-  }
-
+  /**
+   * 📅 FORMATEAR FECHA
+   */
   formatearFecha(fecha: string): string {
     if (!fecha) return 'Fecha no disponible';
 
     try {
       const date = new Date(fecha);
-      return date.toLocaleDateString('es-ES', {
+      const opciones: Intl.DateTimeFormatOptions = {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric',
         hour: '2-digit',
-        minute: '2-digit'
-      });
+        minute: '2-digit',
+        hour12: true
+      };
+
+      return date.toLocaleDateString('es-ES', opciones);
     } catch (error) {
+      console.error('Error al formatear fecha:', error);
       return fecha;
     }
+  }
+
+  /**
+   * 🏠 VOLVER AL INICIO
+   */
+  volverAlInicio(): void {
+    console.log('🏠 Redirigiendo al inicio...');
+    window.location.href = '/';
+  }
+
+  /**
+   * 💬 CONTACTAR SOPORTE VÍA WHATSAPP
+   */
+  contactarSoporte(): void {
+    console.log('💬 Abriendo WhatsApp...');
+
+    const telefono = this.citaData?.negocio_telefono || '573001234567'; // Número por defecto
+    const mensaje = `Hola, tengo una consulta sobre mi cita confirmada (ID: ${this.citaData?.id || 'N/A'})`;
+    const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+
+    window.open(url, '_blank');
   }
 }

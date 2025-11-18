@@ -1,13 +1,31 @@
 <div class="confirmation-container">
-  <!-- Loading State -->
+  <!-- ========================================
+       🔄 ESTADO DE CARGA
+  ========================================= -->
   <div *ngIf="loading" class="loading">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
     <div class="spinner"></div>
-    <p>Cargando información de tu cita...</p>
+    <p>Procesando tu confirmación...</p>
     <p class="loading-detail">Por favor espera un momento</p>
   </div>
 
-  <!-- Error State -->
+  <!-- ========================================
+       ❌ ESTADO DE ERROR
+  ========================================= -->
   <div *ngIf="!loading && error" class="error-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
     <div class="icon-error"></div>
     <h1>Ups, algo salió mal</h1>
     <p class="error-message">{{ error }}</p>
@@ -22,8 +40,17 @@
     </div>
   </div>
 
-  <!-- Success State -->
+  <!-- ========================================
+       ✅ ESTADO DE ÉXITO
+  ========================================= -->
   <div *ngIf="!loading && !error && citaData" class="success-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
     <!-- Icon dinámico -->
     <div class="icon-success" *ngIf="!alreadyConfirmed"></div>
     <div class="icon-info" *ngIf="alreadyConfirmed"></div>
@@ -123,11 +150,37 @@
     </div>
   </div>
 
-  <!-- Estado vacío (no debería ocurrir) -->
+  <!-- ========================================
+       ⚠️ ESTADO INICIAL (Sin parámetros)
+  ========================================= -->
   <div *ngIf="!loading && !error && !citaData" class="error-container">
-    <div class="icon-error"></div>
-    <h1>No se encontraron datos</h1>
-    <p class="error-message">No se pudo cargar la información de la cita.</p>
-    <button (click)="volverAlInicio()" class="btn btn-primary">Volver al Inicio</button>
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
+    <div class="icon-info"></div>
+    <h1>Enlace de Confirmación Requerido</h1>
+    <p class="error-message">
+      Para confirmar tu cita, debes utilizar el enlace que recibiste en tu correo electrónico.
+    </p>
+
+    <div class="info-box" style="margin-top: 20px;">
+      <p><strong>📧 ¿No recibiste el correo?</strong></p>
+      <p>• Revisa tu carpeta de spam o correos no deseados</p>
+      <p>• Verifica que el correo sea el correcto</p>
+      <p>• Contacta soporte para reenviar el enlace</p>
+    </div>
+
+    <div class="btn-group" style="margin-top: 30px;">
+      <button (click)="volverAlInicio()" class="btn btn-primary">
+        🏠 Volver al Inicio
+      </button>
+      <button (click)="contactarSoporte()" class="btn btn-secondary">
+        📞 Contactar Soporte
+      </button>
+    </div>
   </div>
 </div>
