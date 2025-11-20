@@ -100,6 +100,15 @@ export class ScheduleService {
     console.log('ScheduleService inicializado');
   }
 
+  /**
+   * 🔥 NUEVO: Actualizar lista de personal desde el componente de citas
+   * Este método permite sincronizar el personal del negocio actual
+   */
+  setStaffList(staffList: Staff[]): void {
+    console.log('📋 Actualizando lista de personal en ScheduleService:', staffList);
+    this.mockStaffList = staffList;
+  }
+
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
     return new HttpHeaders({
@@ -155,20 +164,23 @@ export class ScheduleService {
   getWorkingDays(staffId: string): Observable<string[]> {
     console.log('📅 Obteniendo días laborables para staff:', staffId);
 
-    // 🔥 TEMPORAL: Retornar datos mock
-    const days = this.mockSchedules[staffId] || [];
-    return of(days);
-
-    // TODO: Implementar llamada real cuando el endpoint esté disponible
-    // return this.http.get<any>(`${this.baseUrl}/schedules/staff/${staffId}/working-days`, {
-    //   headers: this.getHeaders()
-    // }).pipe(
-    //   map(response => response.days || []),
-    //   catchError(error => {
-    //     console.error('Error obteniendo días laborables:', error);
-    //     return of([]);
-    //   })
-    // );
+    // 🔥 PRIMERO: Intentar obtener desde la configuración del personal
+    return this.getScheduleByStaff(staffId).pipe(
+      map((schedules: DaySchedule[]) => {
+        const workingDays = schedules
+          .filter(day => day.isOpen)
+          .map(day => day.name.toLowerCase());
+        
+        console.log('✅ Días laborables encontrados:', workingDays);
+        return workingDays;
+      }),
+      catchError(error => {
+        console.warn('⚠️ Error obteniendo horarios, usando datos mock:', error);
+        // Fallback a datos mock si hay error
+        const days = this.mockSchedules[staffId] || [];
+        return of(days);
+      })
+    );
   }
 
   /**
@@ -180,21 +192,66 @@ export class ScheduleService {
   getAvailableTimeSlotsForDay(staffId: string, dayName: string): Observable<string[]> {
     console.log(`⏰ Obteniendo horarios para ${staffId} el día ${dayName}`);
 
-    // 🔥 TEMPORAL: Retornar datos mock
-    const slots = this.mockTimeSlots[staffId]?.[dayName] || [];
-    return of(slots);
+    // 🔥 PRIMERO: Intentar generar desde DaySchedule
+    return this.getScheduleByStaff(staffId).pipe(
+      map((schedules: DaySchedule[]) => {
+        const daySchedule = schedules.find(
+          d => d.name.toLowerCase() === dayName.toLowerCase()
+        );
 
-    // TODO: Implementar llamada real cuando el endpoint esté disponible
-    // return this.http.get<any>(`${this.baseUrl}/schedules/staff/${staffId}/slots`, {
-    //   headers: this.getHeaders(),
-    //   params: { day: dayName }
-    // }).pipe(
-    //   map(response => response.slots || []),
-    //   catchError(error => {
-    //     console.error('Error obteniendo horarios:', error);
-    //     return of([]);
-    //   })
-    // );
+        if (!daySchedule || !daySchedule.isOpen) {
+          console.log('⚠️ Día no disponible o cerrado');
+          return [];
+        }
+
+        const slots: string[] = [];
+
+        // Primer turno
+        if (daySchedule.firstShift && daySchedule.firstShift.enabled) {
+          const firstSlots = this.generateTimeSlots(
+            daySchedule.firstShift.start,
+            daySchedule.firstShift.end
+          );
+          slots.push(...firstSlots);
+        }
+
+        // Segundo turno
+        if (daySchedule.secondShift?.enabled) {
+          const secondSlots = this.generateTimeSlots(
+            daySchedule.secondShift.start,
+            daySchedule.secondShift.end
+          );
+          slots.push(...secondSlots);
+        }
+
+        console.log('✅ Slots generados:', slots);
+        return slots;
+      }),
+      catchError(error => {
+        console.warn('⚠️ Error generando slots, usando datos mock:', error);
+        // Fallback a datos mock
+        const slots = this.mockTimeSlots[staffId]?.[dayName] || [];
+        return of(slots);
+      })
+    );
+  }
+
+  /**
+   * 🔥 Generar slots de 30 minutos entre dos horas
+   */
+  private generateTimeSlots(start: TimeSlot, end: TimeSlot): string[] {
+    const slots: string[] = [];
+    let current = start.hour * 60 + start.minute;
+    const endMinutes = end.hour * 60 + end.minute;
+
+    while (current < endMinutes) {
+      const hour = Math.floor(current / 60);
+      const minute = current % 60;
+      slots.push(`${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`);
+      current += 30; // Slots de 30 minutos
+    }
+
+    return slots;
   }
 
   /**

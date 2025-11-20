@@ -140,7 +140,7 @@ export class HorarioComponent implements OnInit {
       if (timeObj) {
         day[shiftType][timeType] = timeObj;
         console.log(`Tiempo actualizado para ${dayId} ${shiftType} ${timeType}: ${newTime}`);
-        this.successMessage = `✔ Hora actualizada para ${day.name}`;
+        this.successMessage = `✓ Hora actualizada para ${day.name}`;
         setTimeout(() => this.successMessage = '', 3000);
       }
     }
@@ -218,7 +218,7 @@ export class HorarioComponent implements OnInit {
 
     this.scheduleService.saveSchedule(this.selectedPerson, this.weekSchedule).subscribe({
       next: (result: any) => {
-        this.successMessage = `✔ Horarios de ${this.getStaffDisplayName()} guardados exitosamente`;
+        this.successMessage = `✓ Horarios de ${this.getStaffDisplayName()} guardados exitosamente`;
         this.isLoading = false;
         console.log('Horarios guardados:', result);
 

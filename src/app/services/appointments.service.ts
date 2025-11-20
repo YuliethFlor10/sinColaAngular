@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
-import { Observable, throwError, of } from 'rxjs';
-import { catchError, tap, map, switchMap } from 'rxjs/operators';
+import { Observable, throwError } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
 export interface Appointment {
@@ -39,18 +39,6 @@ export interface AppointmentFormData {
   tiempo_estimado?: number;
 }
 
-export interface ApiAppointmentRequest {
-  usuarios_id?: number;
-  negocios_id: number;
-  servicios_id: number;
-  personal_servicio: string;
-  fecha_cita: string;
-  hora_cita: string;
-  tiempo_estimado: number;
-  nota?: string;
-  estados_id: number;
-}
-
 @Injectable({
   providedIn: 'root'
 })
@@ -73,22 +61,15 @@ export class AppointmentsService {
     });
   }
 
-  /**
-   * 🔥 OBTENER NEGOCIO_ID DEL USUARIO AUTENTICADO
-   */
   private getCurrentBusinessId(): number {
     const user = this.authService.getCurrentUser();
     return user?.negocios_id || 1;
   }
 
-  /**
-   * 🔥 CREAR CITA DESDE FORMULARIO PÚBLICO
-   */
   createFromForm(formData: AppointmentFormData): Observable<any> {
     console.log('➕ POST /api/appointments (desde formulario público)');
     console.log('📤 Datos del formulario:', formData);
 
-    // 🔥 ASEGURAR QUE TENGA negocios_id
     if (!formData.negocios_id) {
       console.error('❌ ERROR: No se proporcionó negocios_id');
       return throwError(() => new Error('Se requiere el ID del negocio'));
@@ -106,7 +87,7 @@ export class AppointmentsService {
       fecha_cita: formData.fecha_cita,
       hora_cita: formData.hora_cita,
       nota: formData.nota || '',
-      negocios_id: formData.negocios_id, // 🔥 CRÍTICO
+      negocios_id: formData.negocios_id,
       servicios_id: formData.servicios_id || 1,
       tiempo_estimado: formData.tiempo_estimado || 60
     };
@@ -128,9 +109,6 @@ export class AppointmentsService {
     );
   }
 
-  /**
-   * 📋 OBTENER TODAS LAS CITAS (filtradas por negocio automáticamente en backend)
-   */
   getAll(): Observable<Appointment[]> {
     console.log('📋 GET /api/appointments');
     return this.http.get<any>(`${this.baseUrl}/appointments`, {
@@ -151,24 +129,35 @@ export class AppointmentsService {
     );
   }
 
-  /**
-   * ➕ CREAR CITA DESDE ADMIN (con autenticación)
-   */
   create(appointment: Appointment): Observable<any> {
     console.log('➕ POST /api/appointments (desde admin)');
+    console.log('📥 Appointment recibido:', appointment);
 
-    const apiData: ApiAppointmentRequest = {
-      negocios_id: this.getCurrentBusinessId(), // 🔥 OBTENER DEL USUARIO
-      servicios_id: 1, // TODO: Obtener del formulario
+    const apiData = {
+      nombre: appointment.clientName,
+      nombres: appointment.clientName.split(' ')[0] || appointment.clientName,
+      apellidos: appointment.clientName.split(' ').slice(1).join(' ') || 'Cliente',
+      email: appointment.clientEmail || 'cliente@ejemplo.com',
+      tipo_documento: appointment.clientDocType || 'CC',
+      tipo_identificacion_id: this.getDocTypeId(appointment.clientDocType || 'CC'),
+      numero_documento: appointment.clientDocNumber || '0000000000',
+      identificacion: appointment.clientDocNumber || '0000000000',
+      fecha_nacimiento: appointment.clientBirthDate || '2000-01-01',
+      nacimiento: appointment.clientBirthDate || '2000-01-01',
+      numero_telefono: appointment.clientPhone || '3000000000',
+      celular: appointment.clientPhone || '3000000000',
+      negocios_id: this.getCurrentBusinessId(),
+      servicios_id: 1,
+      tipo_cita: appointment.serviceName,
       personal_servicio: appointment.staffName || '',
-      fecha_cita: `2025-${this.getMonthNumber(appointment.monthName)}-${appointment.day.toString().padStart(2, '0')}`,
+      fecha_cita: this.buildDateString(appointment),
       hora_cita: appointment.time,
       tiempo_estimado: 60,
       nota: appointment.nota || '',
       estados_id: this.mapStatusToId(appointment.status)
     };
 
-    console.log('📤 Creando cita con datos:', apiData);
+    console.log('📤 Creando cita con datos completos:', apiData);
 
     return this.http.post<any>(`${this.baseUrl}/appointments`, apiData, {
       headers: this.getHeaders()
@@ -180,12 +169,46 @@ export class AppointmentsService {
     );
   }
 
-  /**
-   * ✏️ ACTUALIZAR CITA
-   */
+  private buildDateString(appointment: Appointment): string {
+    const currentYear = new Date().getFullYear();
+    const monthNumber = this.getMonthNumber(appointment.monthName);
+    const dayNumber = appointment.day.toString().padStart(2, '0');
+    return `${currentYear}-${monthNumber}-${dayNumber}`;
+  }
+
+  private getDocTypeId(docType: string): number {
+    const docTypeMap: { [key: string]: number } = {
+      'CC': 1,
+      'cedula': 1,
+      'pasaporte': 2,
+      'TI': 3,
+      'tarjeta': 3
+    };
+    return docTypeMap[docType] || 1;
+  }
+
   update(id: number, appointment: Appointment): Observable<any> {
     console.log(`✏️ PUT /api/appointments/${id}`);
-    const apiData = this.transformFrontendToApi(appointment);
+    
+    const apiData = {
+      nombre: appointment.clientName,
+      nombres: appointment.clientName.split(' ')[0] || appointment.clientName,
+      apellidos: appointment.clientName.split(' ').slice(1).join(' ') || 'Cliente',
+      email: appointment.clientEmail || 'cliente@ejemplo.com',
+      tipo_documento: appointment.clientDocType || 'CC',
+      numero_documento: appointment.clientDocNumber || '0000000000',
+      fecha_nacimiento: appointment.clientBirthDate || '2000-01-01',
+      numero_telefono: appointment.clientPhone || '3000000000',
+      tipo_cita: appointment.serviceName,
+      personal_servicio: appointment.staffName || '',
+      fecha_cita: this.buildDateString(appointment),
+      hora_cita: appointment.time,
+      nota: appointment.nota || '',
+      estados_id: this.mapStatusToId(appointment.status)
+    };
+
+    console.log('📤 Actualizando cita con datos:', apiData);
+
     return this.http.put<any>(`${this.baseUrl}/appointments/${id}`, apiData, {
       headers: this.getHeaders()
     }).pipe(
@@ -196,9 +219,6 @@ export class AppointmentsService {
     );
   }
 
-  /**
-   * 🗑️ ELIMINAR CITA
-   */
   delete(id: number): Observable<any> {
     console.log(`🗑️ DELETE /api/appointments/${id}`);
     return this.http.delete<any>(`${this.baseUrl}/appointments/${id}`, {
@@ -211,26 +231,23 @@ export class AppointmentsService {
     );
   }
 
-  /**
-   * ✅ CAMBIAR ESTADO DE CITA
-   */
   changeStatus(id: number, status: string): Observable<any> {
-    console.log(`✅ PATCH /api/appointments/${id}/status`);
+    console.log(`✅ PATCH /api/appointments/${id} - cambiar estado a: ${status}`);
+    
+    const estadoId = this.mapStatusToId(status);
+    
     return this.http.patch<any>(
-      `${this.baseUrl}/appointments/${id}/status`,
-      { status },
+      `${this.baseUrl}/appointments/${id}`,
+      { estados_id: estadoId },
       { headers: this.getHeaders() }
     ).pipe(
       tap(() => {
-        console.log(`✅ Estado cambiado a: ${status}`);
+        console.log(`✅ Estado cambiado a: ${status} (ID: ${estadoId})`);
       }),
       catchError((error) => this.handleError(error))
     );
   }
 
-  /**
-   * ❌ CANCELAR CITA
-   */
   cancel(id: number, motivo?: string): Observable<any> {
     console.log(`❌ POST /api/appointments/${id}/cancel`);
     return this.http.post<any>(
@@ -245,9 +262,6 @@ export class AppointmentsService {
     );
   }
 
-  /**
-   * 🔄 TRANSFORMAR DATOS DE API A FRONTEND
-   */
   private transformApiToFrontend(apiData: any): Appointment {
     const fecha = apiData.fecha ? new Date(apiData.fecha) : new Date();
     const monthNames = ['ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
@@ -271,25 +285,6 @@ export class AppointmentsService {
     };
   }
 
-  /**
-   * 🔄 TRANSFORMAR DATOS DE FRONTEND A API
-   */
-  private transformFrontendToApi(appointment: Appointment): any {
-    return {
-      negocios_id: this.getCurrentBusinessId(), // 🔥 SIEMPRE INCLUIR
-      servicios_id: 1,
-      personal_servicio: appointment.staffName || '',
-      fecha_cita: `2025-${this.getMonthNumber(appointment.monthName)}-${appointment.day.toString().padStart(2, '0')}`,
-      hora_cita: appointment.time,
-      tiempo_estimado: 60,
-      nota: appointment.nota || '',
-      estados_id: this.mapStatusToId(appointment.status)
-    };
-  }
-
-  /**
-   * 🗺️ MAPEAR ESTADO DE API A FRONTEND
-   */
   private mapApiStatus(status: any): 'reserved' | 'confirmed' | 'cancelled' {
     if (typeof status === 'string') {
       const statusMap: { [key: string]: 'reserved' | 'confirmed' | 'cancelled' } = {
@@ -303,7 +298,6 @@ export class AppointmentsService {
       return statusMap[status?.toLowerCase()] || 'reserved';
     }
 
-    // Si es un número (estado_id)
     const statusIdMap: { [key: number]: 'reserved' | 'confirmed' | 'cancelled' } = {
       1: 'reserved',
       2: 'confirmed',
@@ -314,9 +308,6 @@ export class AppointmentsService {
     return statusIdMap[status] || 'reserved';
   }
 
-  /**
-   * 🗺️ MAPEAR ESTADO DE FRONTEND A ID
-   */
   private mapStatusToId(status: string): number {
     const statusMap: { [key: string]: number } = {
       'reserved': 3,
@@ -326,9 +317,6 @@ export class AppointmentsService {
     return statusMap[status] || 3;
   }
 
-  /**
-   * 📅 OBTENER NÚMERO DE MES
-   */
   private getMonthNumber(monthName: string): string {
     const months: { [key: string]: string } = {
       'ENERO': '01', 'FEBRERO': '02', 'MARZO': '03', 'ABRIL': '04',
@@ -338,9 +326,6 @@ export class AppointmentsService {
     return months[monthName] || '01';
   }
 
-  /**
-   * ❌ MANEJO DE ERRORES
-   */
   private handleError(error: HttpErrorResponse): Observable<never> {
     console.error('❌ Error HTTP:', error);
     console.error('Status:', error.status);
