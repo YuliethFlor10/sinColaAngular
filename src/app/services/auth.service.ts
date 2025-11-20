@@ -18,9 +18,21 @@ export interface User {
   estados_id?: number;
   roles_id?: number;
   negocios_id?: number;
-  business?: any;
-  role?: any;
-  status?: any;
+  business?: {
+    id: number;
+    nombre: string;
+    nit?: string;
+    direccion?: string;
+    telefono?: string;
+  };
+  role?: {
+    id: number;
+    nombre: string;
+  };
+  status?: {
+    id: number;
+    nombre: string;
+  };
 }
 
 // 🔥 NUEVA: Interfaz para la suscripción
@@ -113,6 +125,7 @@ export class AuthService {
       try {
         return JSON.parse(userStr);
       } catch (e) {
+        console.error('Error parseando usuario desde localStorage:', e);
         return null;
       }
     }
@@ -156,6 +169,7 @@ export class AuthService {
   removeToken(): void {
     localStorage.removeItem('token');
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('currentBusinessId'); // Limpiar también businessId legacy
     this.currentUserSubject.next(null);
   }
 
@@ -180,6 +194,30 @@ export class AuthService {
   getCurrentBusinessId(): number {
     const user = this.getCurrentUser();
     return user?.negocios_id || 1;
+  }
+
+  // 🔥 NUEVO: Obtener nombre del negocio actual
+  getCurrentBusinessName(): string {
+    const user = this.getCurrentUser();
+    return user?.business?.nombre || `Negocio ${user?.negocios_id || 1}`;
+  }
+
+  // 🔥 NUEVO: Verificar si es administrador
+  isAdmin(): boolean {
+    const user = this.getCurrentUser();
+    return user?.roles_id === 1;
+  }
+
+  // 🔥 NUEVO: Verificar si es empleado
+  isEmployee(): boolean {
+    const user = this.getCurrentUser();
+    return user?.roles_id === 3;
+  }
+
+  // 🔥 NUEVO: Verificar si es cliente
+  isClient(): boolean {
+    const user = this.getCurrentUser();
+    return user?.roles_id === 2;
   }
 
   // Métodos de gestión de Business ID (legacy - mantener por compatibilidad)

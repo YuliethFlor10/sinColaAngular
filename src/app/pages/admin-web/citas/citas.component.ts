@@ -119,27 +119,39 @@ export class CitasComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    console.log('🚀 ========================================');
     console.log('🚀 CitasComponent inicializado');
+    console.log('🚀 ========================================');
 
+    // Obtener información del negocio actual
     const user = this.authService.getCurrentUser();
     if (user?.negocios_id) {
       this.currentBusinessId = user.negocios_id;
       this.currentBusinessName = user.business?.nombre || `Negocio ${this.currentBusinessId}`;
       console.log(`🏢 Negocio actual: ${this.currentBusinessName} (ID: ${this.currentBusinessId})`);
+    } else {
+      console.warn('⚠️ No se pudo obtener el negocio actual del usuario');
     }
 
+    console.log('📋 Inicializando calendarios...');
     this.initCalendars();
+    
+    console.log('📡 Cargando datos iniciales...');
     this.loadServicesAndStaff();
     this.loadAppointments();
+    
+    console.log('✅ Inicialización completada');
   }
 
   // ============================================
-  // 🔥 CARGAR SERVICIOS Y PERSONAL
+  // 🔥 CARGAR SERVICIOS Y PERSONAL DEL NEGOCIO
   // ============================================
 
   private loadServicesAndStaff(): void {
-    console.log('📡 Cargando servicios y personal...');
+    console.log('📡 Cargando servicios y personal del negocio...');
+    console.log('🏢 Negocio actual:', this.currentBusinessName, '(ID:', this.currentBusinessId, ')');
 
+    // 1️⃣ Cargar SERVICIOS del negocio actual
     this.servicesService.getAll().subscribe({
       next: (response: any) => {
         let services = Array.isArray(response) ? response : (response.data || []);
@@ -157,37 +169,48 @@ export class CitasComponent implements OnInit {
             duracion_formato: this.formatDuration(s.tiempo_estimado)
           }));
 
-        console.log(`✅ ${this.availableServices.length} servicios cargados`);
+        console.log(`✅ ${this.availableServices.length} servicios cargados del negocio`);
       },
       error: (err) => {
-        console.error('❌ Error:', err);
+        console.error('❌ Error cargando servicios:', err);
         this.showError('Error al cargar servicios');
       }
     });
 
-    this.usersService.getStaffForServices().subscribe({
-      next: (response: any) => {
-        let users = Array.isArray(response) ? response : (response.data || []);
+    // 2️⃣ Cargar PERSONAL del negocio actual (empleados + administradores)
+    this.usersService.getStaffByBusiness(this.currentBusinessId).subscribe({
+      next: (staffData: any) => {
+        console.log('📥 Personal recibido del negocio:', staffData);
 
-        this.availableStaff = users
-          .filter((u: any) =>
-            u.negocios_id === this.currentBusinessId &&
-            (u.roles_id === 1 || u.roles_id === 3) &&
-            (u.estados_id === 1 || u.status?.nombre === 'Activo')
-          )
-          .map((u: any) => ({
-            id: u.id,
-            nombre: u.nombres,
-            apellidos: u.apellidos,
-            nombre_completo: `${u.nombres} ${u.apellidos}`.trim(),
-            rol: u.role?.nombre || (u.roles_id === 1 ? 'Administrador' : 'Empleado')
-          }));
+      // Transformar datos del personal
+        this.availableStaff = staffData.map((u: any) => ({
+          id: u.id,
+          nombre: u.nombre.split(' ')[0] || '',
+          apellidos: u.nombre.split(' ').slice(1).join(' ') || '',
+          nombre_completo: u.nombre,
+          rol: u.rol?.nombre || 'Personal'
+        }));
 
-        console.log(`✅ ${this.availableStaff.length} staff cargados`);
+        console.log(`✅ ${this.availableStaff.length} personal cargado:`, this.availableStaff);
+
+        // 3️⃣ Preparar lista para ScheduleService (formato Staff)
+        this.staffList = this.availableStaff.map(staff => ({
+          id: staff.id.toString(),
+          name: staff.nombre_completo,
+          displayName: staff.nombre_completo,
+          role: staff.rol
+        }));
+
+        console.log('📋 Lista de personal para horarios:', this.staffList);
+
+        // 4️⃣ Actualizar el ScheduleService con el personal del negocio
+        this.scheduleService.setStaffList(this.staffList);
       },
       error: (err) => {
-        console.error('❌ Error:', err);
-        this.showError('Error al cargar personal');
+        console.error('❌ Error cargando personal del negocio:', err);
+        this.showError('Error al cargar personal del negocio');
+        this.availableStaff = [];
+        this.staffList = [];
       }
     });
   }
@@ -515,24 +538,38 @@ export class CitasComponent implements OnInit {
   onStaffChange(): void {
     const staffId = this.form.appointmentStaff;
 
+    console.log('👤 Personal seleccionado:', staffId);
+
     if (!staffId) {
+      console.log('⚠️ No hay personal seleccionado, mostrando todos los horarios');
       this.availableTimeSlots = [...this.allTimeSlots];
       this.workingDays = [];
       this.formCalendarDays.forEach(d => d.disabled = false);
       return;
     }
 
+    // Obtener información del personal seleccionado
+    const selectedStaff = this.availableStaff.find(s => s.id.toString() === staffId);
+    if (selectedStaff) {
+      console.log('✅ Personal encontrado:', selectedStaff.nombre_completo, '- Rol:', selectedStaff.rol);
+    }
+
+    // Cargar días laborables del personal
+    console.log('📅 Cargando días laborables...');
     this.scheduleService.getWorkingDays(staffId).subscribe({
       next: (days: string[]) => {
+        console.log('✅ Días laborables recibidos:', days);
         this.workingDays = days;
         this.markDisabledDays(days);
 
         if (this.form.selectedDay) {
+          console.log('🔄 Actualizando horarios para el día seleccionado:', this.form.selectedDay);
           this.updateTimeSlotsForDay(this.form.selectedDay);
         }
       },
       error: (err: any) => {
-        console.error('❌ Error:', err);
+        console.error('❌ Error cargando días laborables:', err);
+        this.showError('No se pudieron cargar los horarios del personal');
         this.workingDays = [];
       }
     });
