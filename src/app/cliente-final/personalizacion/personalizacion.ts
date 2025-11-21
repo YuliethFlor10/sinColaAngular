@@ -1,13 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ViewEncapsulation } from '@angular/core';
+import { Router } from '@angular/router';
 import { CustomizationsService } from '../../services/customizations.service';
 import { AuthService } from '../../services/auth.service';
 import { BrandingConfig } from '../branding-config.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-personalizacion',
-  imports: [ReactiveFormsModule],
+  standalone: true,
+  imports: [ReactiveFormsModule, CommonModule],
   templateUrl: './personalizacion.html',
   styleUrls: ['./personalizacion.css'],
   encapsulation: ViewEncapsulation.None
@@ -22,7 +25,8 @@ export class Personalizacion implements OnInit {
   constructor(
     private fb: FormBuilder,
     private customizationsService: CustomizationsService,
-    private authService: AuthService
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit() {
@@ -133,13 +137,15 @@ export class Personalizacion implements OnInit {
       operation.subscribe({
         next: (response) => {
           this.isSaving = false;
-          this.successMessage = 'Configuración guardada exitosamente';
+          this.successMessage = 'Configuración guardada exitosamente. Redirigiendo...';
           this.brandingForm.patchValue({ id: response.id });
 
-          // Limpiar mensaje después de 3 segundos
+          console.log('✅ Personalización guardada exitosamente');
+
+          // Redirigir a citas después de 2 segundos
           setTimeout(() => {
-            this.successMessage = '';
-          }, 3000);
+            this.router.navigate(['/admin/citas']);
+          }, 2000);
         },
         error: (error) => {
           this.isSaving = false;
@@ -156,6 +162,12 @@ export class Personalizacion implements OnInit {
       this.markFormGroupTouched();
       this.errorMessage = 'Por favor, completa todos los campos requeridos correctamente.';
     }
+  }
+
+  // 🔥 NUEVO: Método para omitir la personalización
+  omitirPersonalizacion() {
+    console.log('⏭️ Omitiendo personalización, redirigiendo a citas...');
+    this.router.navigate(['/admin/citas']);
   }
 
   private markFormGroupTouched() {

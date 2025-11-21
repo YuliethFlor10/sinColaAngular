@@ -8,6 +8,7 @@ import { InicioSesionComponent } from './pages/inicio-sesion/inicio-sesion.compo
 import { ServiciosComponent } from './pages/admin-web/lista-servicio/lista-servicio.component';
 import { PaginaInicioComponent } from './pages/pagina-inicio/pagina-inicio.component';
 import { AdminWeb } from './pages/admin-web/admin-web';
+import { Personalizacion } from './cliente-final/personalizacion/personalizacion';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'pagina-inicio', pathMatch: 'full' },
@@ -19,6 +20,7 @@ export const routes: Routes = [
   { path: 'plan', component: PlanComponent },
   { path: 'inicio-sesion', component: InicioSesionComponent },
   { path: 'lista-servicio', component: ServiciosComponent },
+  { path: 'personalizacion', component: Personalizacion }, // Nueva ruta agregada
 
   {
     path: 'admin',

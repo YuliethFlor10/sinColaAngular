@@ -1,4 +1,3 @@
-
 <div class="container">
 	<!-- Lado izquierdo con logo e información -->
 	<div class="left-section">
@@ -117,13 +116,20 @@
 							<input type="color" formControlName="color_letra_branding" />
 						</div>
 					</div>
-					<button type="submit" class="continue-btn" [disabled]="isSaving">
-						@if (isSaving) {
-							<span>Guardando...</span>
-						} @else {
-							<span>Guardar</span>
-						}
-					</button>
+
+					<!-- Botones de acción -->
+					<div class="button-group">
+						<button type="button" class="skip-btn" (click)="omitirPersonalizacion()" [disabled]="isSaving">
+							Omitir por ahora
+						</button>
+						<button type="submit" class="continue-btn" [disabled]="isSaving">
+							@if (isSaving) {
+								<span>Guardando...</span>
+							} @else {
+								<span>Guardar y continuar</span>
+							}
+						</button>
+					</div>
 			</form>
 		}
 	</div>

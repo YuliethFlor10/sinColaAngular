@@ -38,7 +38,7 @@ export class InicioSesionComponent implements OnInit {
       clave: ['', [Validators.required, Validators.minLength(6)]],
     });
 
-    // 🔥 CORREGIDO: Registro incluye datos del negocio
+    // Registro incluye datos del negocio
     this.registroForm = this.fb.group({
       // Datos del usuario
       nombres: ['', [Validators.required, Validators.minLength(3)]],
@@ -53,7 +53,7 @@ export class InicioSesionComponent implements OnInit {
       identificacion: ['', Validators.required],
       terminos_condiciones: [true, Validators.required],
 
-      // 🔥 NUEVO: Datos del negocio
+      // Datos del negocio
       nombre_negocio: ['', Validators.required],
       nit_negocio: ['', Validators.required],
       tipo_servicio_id: [1, Validators.required],
@@ -92,7 +92,7 @@ export class InicioSesionComponent implements OnInit {
         }
         this.loginError = '';
 
-        // ✅ CORREGIDO: Redirigir a una ruta que SÍ existe
+        // Redirigir a admin
         this.router.navigate(['/admin/citas']);
       },
       error: (err) => {
@@ -126,7 +126,7 @@ export class InicioSesionComponent implements OnInit {
     this.loadingRegister = true;
 
     try {
-      // 🔥 USAR EL ENDPOINT DE REGISTRO QUE CREA USUARIO + NEGOCIO + SUSCRIPCIÓN
+      // Usar el endpoint de registro que crea usuario + negocio + suscripción
       const response = await this.auth.register(this.registroForm.value).toPromise();
 
       if (response && response.access_token) {
@@ -143,12 +143,12 @@ export class InicioSesionComponent implements OnInit {
           this.auth.saveUser(response.user);
         }
 
-        this.registroExito = '¡Usuario y negocio registrados exitosamente! Redirigiendo...';
+        this.registroExito = '¡Usuario y negocio registrados exitosamente! Redirigiendo a personalización...';
         this.loadingRegister = false;
 
-        // ✅ CORREGIDO: Redirigir a una ruta que SÍ existe
+        // 🔥 CAMBIO AQUÍ: Redirigir a personalización después del registro
         setTimeout(() => {
-          this.router.navigate(['/admin/citas']);
+          this.router.navigate(['/personalizacion']);
         }, 2000);
       } else {
         this.loadingRegister = false;
