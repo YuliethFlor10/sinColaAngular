@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError, delay } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 // 📌 Interfaz para slots de tiempo
 export interface TimeSlot {
@@ -50,7 +51,7 @@ export interface Schedule {
   providedIn: 'root'
 })
 export class ScheduleService {
-  private baseUrl = 'http://127.0.0.1:8000/api';
+private baseUrl = environment.apiUrl;
 
   // 🔥 DATOS TEMPORALES - Mientras se implementa en backend
   private mockStaffList: Staff[] = [
@@ -170,7 +171,7 @@ export class ScheduleService {
         const workingDays = schedules
           .filter(day => day.isOpen)
           .map(day => day.name.toLowerCase());
-        
+
         console.log('✅ Días laborables encontrados:', workingDays);
         return workingDays;
       }),

@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface Service {
   id?: number;
@@ -18,7 +19,7 @@ export interface Service {
 
 @Injectable({ providedIn: 'root' })
 export class ServicesService {
-  private baseUrl = 'http://127.0.0.1:8000/api/services';
+  private baseUrl = `${environment.apiUrl}/services`;
 
   constructor(
     private http: HttpClient,

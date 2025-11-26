@@ -8,6 +8,9 @@ import { ScheduleService, Staff } from '../../../services/schedule.service';
 import { ServicesService } from '../../../services/services.service';
 import { UsersService } from '../../../services/users.service';
 import { AuthService } from '../../../services/auth.service';
+import { NotificationService } from '../../../services/notification.service';
+
+
 
 interface CalendarDay {
   number: number;
@@ -110,13 +113,14 @@ export class CitasComponent implements OnInit {
 
   private currentMonthDate = new Date();
 
-  constructor(
-    private appointmentsService: AppointmentsService,
-    private scheduleService: ScheduleService,
-    private servicesService: ServicesService,
-    private usersService: UsersService,
-    private authService: AuthService
-  ) {}
+ constructor(
+  private appointmentsService: AppointmentsService,
+  private scheduleService: ScheduleService,
+  private servicesService: ServicesService,
+  private usersService: UsersService,
+  private authService: AuthService,
+  private notificationService: NotificationService // 🔥 AGREGAR ESTA LÍNEA
+) {}
 
   ngOnInit(): void {
     console.log('🚀 ========================================');
@@ -135,11 +139,11 @@ export class CitasComponent implements OnInit {
 
     console.log('📋 Inicializando calendarios...');
     this.initCalendars();
-    
+
     console.log('📡 Cargando datos iniciales...');
     this.loadServicesAndStaff();
     this.loadAppointments();
-    
+
     console.log('✅ Inicialización completada');
   }
 
@@ -247,89 +251,117 @@ export class CitasComponent implements OnInit {
     });
   }
 
-  onSubmit(): void {
-    console.log('📤 Enviando formulario...');
+onSubmit(): void {
+  console.log('📤 Enviando formulario...');
 
-    if (!this.form.clientName?.trim()) {
-      this.showError('El nombre es obligatorio');
-      return;
-    }
-    if (!this.form.clientEmail?.trim()) {
-      this.showError('El email es obligatorio');
-      return;
-    }
-    if (!this.validateEmail(this.form.clientEmail)) {
-      this.showError('Email inválido');
-      return;
-    }
-    if (!this.form.appointmentService) {
-      this.showError('Seleccione un servicio');
-      return;
-    }
-    if (!this.form.appointmentStaff) {
-      this.showError('Seleccione el personal');
-      return;
-    }
-    if (!this.form.selectedDay) {
-      this.showError('Seleccione una fecha');
-      return;
-    }
-    if (!this.form.selectedTime) {
-      this.showError('Seleccione una hora');
-      return;
-    }
-
-    const selectedService = this.availableServices.find(s => s.id.toString() === this.form.appointmentService);
-    const selectedStaff = this.availableStaff.find(st => st.id.toString() === this.form.appointmentStaff);
-
-    if (!selectedService || !selectedStaff) {
-      this.showError('Datos inválidos');
-      return;
-    }
-
-    const appointment: Appointment = {
-      clientName: this.form.clientName.trim(),
-      clientEmail: this.form.clientEmail.trim(),
-      clientDocType: this.form.clientDocType || 'CC',
-      clientDocNumber: this.form.clientDocNumber || '0000000000',
-      clientBirthDate: this.form.clientBirthDate || '2000-01-01',
-      clientPhone: this.form.clientPhone || '3000000000',
-      serviceName: selectedService.nombre,
-      staffName: selectedStaff.nombre_completo,
-      day: this.form.selectedDay,
-      monthName: this.form.selectedMonth,
-      time: this.form.selectedTime,
-      status: 'reserved',
-      nota: this.form.appointmentObservations || ''
-    };
-
-    this.isLoading = true;
-
-    if (this.isEditing && this.editingId) {
-      appointment.id = this.editingId;
-      this.appointmentsService.update(this.editingId, appointment).subscribe({
-        next: () => {
-          this.showSuccess('✅ Cita actualizada');
-          this.resetAndGoToList();
-        },
-        error: (err: any) => {
-          this.showError(`Error: ${err.message}`);
-          this.isLoading = false;
-        }
-      });
-    } else {
-      this.appointmentsService.create(appointment).subscribe({
-        next: () => {
-          this.showSuccess('✅ Cita creada');
-          this.resetAndGoToList();
-        },
-        error: (err: any) => {
-          this.showError(`Error: ${err.message}`);
-          this.isLoading = false;
-        }
-      });
-    }
+  if (!this.form.clientName?.trim()) {
+    this.showError('El nombre es obligatorio');
+    return;
   }
+  if (!this.form.clientEmail?.trim()) {
+    this.showError('El email es obligatorio');
+    return;
+  }
+  if (!this.validateEmail(this.form.clientEmail)) {
+    this.showError('Email inválido');
+    return;
+  }
+  if (!this.form.appointmentService) {
+    this.showError('Seleccione un servicio');
+    return;
+  }
+  if (!this.form.appointmentStaff) {
+    this.showError('Seleccione el personal');
+    return;
+  }
+  if (!this.form.selectedDay) {
+    this.showError('Seleccione una fecha');
+    return;
+  }
+  if (!this.form.selectedTime) {
+    this.showError('Seleccione una hora');
+    return;
+  }
+
+  const selectedService = this.availableServices.find(s => s.id.toString() === this.form.appointmentService);
+  const selectedStaff = this.availableStaff.find(st => st.id.toString() === this.form.appointmentStaff);
+
+  if (!selectedService || !selectedStaff) {
+    this.showError('Datos inválidos');
+    return;
+  }
+
+  const appointment: Appointment = {
+    clientName: this.form.clientName.trim(),
+    clientEmail: this.form.clientEmail.trim(),
+    clientDocType: this.form.clientDocType || 'CC',
+    clientDocNumber: this.form.clientDocNumber || '0000000000',
+    clientBirthDate: this.form.clientBirthDate || '2000-01-01',
+    clientPhone: this.form.clientPhone || '3000000000',
+    serviceName: selectedService.nombre,
+    staffName: selectedStaff.nombre_completo,
+    day: this.form.selectedDay,
+    monthName: this.form.selectedMonth,
+    time: this.form.selectedTime,
+    status: 'reserved',
+    nota: this.form.appointmentObservations || ''
+  };
+
+  this.isLoading = true;
+
+  if (this.isEditing && this.editingId) {
+    appointment.id = this.editingId;
+    this.appointmentsService.update(this.editingId, appointment).subscribe({
+      next: async () => {
+        // 🔥 NOTIFICACIÓN AL ACTUALIZAR
+        await this.notificationService.mostrarNotificacion(
+          '✏️ Cita actualizada',
+          `La cita de ${appointment.clientName} ha sido modificada`
+        );
+
+        this.showSuccess('✅ Cita actualizada');
+        this.resetAndGoToList();
+      },
+      error: (err: any) => {
+        this.showError(`Error: ${err.message}`);
+        this.isLoading = false;
+      }
+    });
+  } else {
+    this.appointmentsService.create(appointment).subscribe({
+      next: async (response: any) => {
+        // 🔥 NOTIFICACIÓN AL CREAR CITA
+        await this.notificationService.mostrarNotificacion(
+          '✅ Cita creada exitosamente',
+          `Cita para ${appointment.clientName} el día ${appointment.day} a las ${appointment.time}`
+        );
+
+        // 🔥 PROGRAMAR RECORDATORIO (15 minutos antes)
+        const fechaCita = this.buildAppointmentDate(
+          appointment.day,
+          appointment.monthName,
+          appointment.time
+        );
+
+        if (fechaCita) {
+          await this.notificationService.notificarCitaConRecordatorio(
+            `Cita: ${selectedService.nombre}`,
+            `Cliente: ${appointment.clientName} con ${selectedStaff.nombre_completo}`,
+            fechaCita
+          );
+          console.log('📅 Recordatorio programado para:', fechaCita);
+        }
+
+        this.showSuccess('✅ Cita creada');
+        this.resetAndGoToList();
+      },
+      error: (err: any) => {
+        this.showError(`Error: ${err.message}`);
+        this.isLoading = false;
+      }
+    });
+  }
+}
 
   editAppointment(apt: Appointment): void {
     console.log('✏️ Editando:', apt);
@@ -362,7 +394,32 @@ export class CitasComponent implements OnInit {
 
     this.switchView('create');
   }
+private buildAppointmentDate(day: number, monthName: string, time: string): Date | null {
+  try {
+    const months: { [key: string]: number } = {
+      'ENERO': 0, 'FEBRERO': 1, 'MARZO': 2, 'ABRIL': 3,
+      'MAYO': 4, 'JUNIO': 5, 'JULIO': 6, 'AGOSTO': 7,
+      'SEPTIEMBRE': 8, 'OCTUBRE': 9, 'NOVIEMBRE': 10, 'DICIEMBRE': 11
+    };
 
+    const month = months[monthName.toUpperCase()];
+    if (month === undefined) return null;
+
+    const year = new Date().getFullYear();
+    const [hours, minutes] = time.split(':').map(Number);
+
+    const appointmentDate = new Date(year, month, day, hours, minutes);
+
+    if (appointmentDate.getTime() > Date.now()) {
+      return appointmentDate;
+    }
+
+    return null;
+  } catch (error) {
+    console.error('❌ Error construyendo fecha:', error);
+    return null;
+  }
+}
   deleteAppointment(apt: Appointment): void {
     if (!apt.id) return;
     apt.showMenu = false;
@@ -370,11 +427,17 @@ export class CitasComponent implements OnInit {
     if (!confirm(`¿Eliminar cita de ${apt.clientName}?`)) return;
 
     this.isLoading = true;
-    this.appointmentsService.delete(apt.id).subscribe({
-      next: () => {
-        this.showSuccess(`✅ Cita eliminada`);
-        this.loadAppointments();
-      },
+  this.appointmentsService.delete(apt.id).subscribe({
+  next: async () => {
+    // 🔥 NOTIFICACIÓN AL ELIMINAR
+    await this.notificationService.mostrarNotificacion(
+      '🗑️ Cita eliminada',
+      `La cita de ${apt.clientName} ha sido eliminada`
+    );
+
+    this.showSuccess(`✅ Cita eliminada`);
+    this.loadAppointments();
+  },
       error: (err: any) => {
         this.showError(`Error: ${err.message}`);
         this.isLoading = false;
@@ -382,41 +445,53 @@ export class CitasComponent implements OnInit {
     });
   }
 
-  confirmAppointment(apt: Appointment): void {
-    if (!apt.id) return;
-    apt.showMenu = false;
+ confirmAppointment(apt: Appointment): void {
+  if (!apt.id) return;
+  apt.showMenu = false;
 
-    this.isLoading = true;
-    this.appointmentsService.changeStatus(apt.id, 'confirmed').subscribe({
-      next: () => {
-        this.showSuccess('✅ Cita confirmada');
-        this.loadAppointments();
-      },
-      error: (err: any) => {
-        this.showError(`Error: ${err.message}`);
-        this.isLoading = false;
-      }
-    });
-  }
+  this.isLoading = true;
+  this.appointmentsService.changeStatus(apt.id, 'confirmed').subscribe({
+    next: async () => {
+      // 🔥 NOTIFICACIÓN AL CONFIRMAR
+      await this.notificationService.mostrarNotificacion(
+        '✅ Cita confirmada',
+        `La cita de ${apt.clientName} está confirmada para el ${apt.day} a las ${apt.time}`
+      );
 
-  cancelAppointment(apt: Appointment): void {
-    if (!apt.id) return;
-    apt.showMenu = false;
+      this.showSuccess('✅ Cita confirmada');
+      this.loadAppointments();
+    },
+    error: (err: any) => {
+      this.showError(`Error: ${err.message}`);
+      this.isLoading = false;
+    }
+  });
+}
 
-    const motivo = prompt('Motivo de cancelación (opcional):');
+cancelAppointment(apt: Appointment): void {
+  if (!apt.id) return;
+  apt.showMenu = false;
 
-    this.isLoading = true;
-    this.appointmentsService.cancel(apt.id, motivo || undefined).subscribe({
-      next: () => {
-        this.showSuccess('✅ Cita cancelada');
-        this.loadAppointments();
-      },
-      error: (err: any) => {
-        this.showError(`Error: ${err.message}`);
-        this.isLoading = false;
-      }
-    });
-  }
+  const motivo = prompt('Motivo de cancelación (opcional):');
+
+  this.isLoading = true;
+  this.appointmentsService.cancel(apt.id, motivo || undefined).subscribe({
+    next: async () => {
+      // 🔥 NOTIFICACIÓN AL CANCELAR
+      await this.notificationService.mostrarNotificacion(
+        '❌ Cita cancelada',
+        `La cita de ${apt.clientName} ha sido cancelada${motivo ? ': ' + motivo : ''}`
+      );
+
+      this.showSuccess('✅ Cita cancelada');
+      this.loadAppointments();
+    },
+    error: (err: any) => {
+      this.showError(`Error: ${err.message}`);
+      this.isLoading = false;
+    }
+  });
+}
 
   // ============================================
   // CALENDARIO

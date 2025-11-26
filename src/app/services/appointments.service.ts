@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http
 import { Observable, throwError } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { environment } from '../../environments/environment';
 
 export interface Appointment {
   id?: number;
@@ -43,7 +44,7 @@ export interface AppointmentFormData {
   providedIn: 'root'
 })
 export class AppointmentsService {
-  private baseUrl = 'http://127.0.0.1:8000/api';
+private baseUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
@@ -189,7 +190,7 @@ export class AppointmentsService {
 
   update(id: number, appointment: Appointment): Observable<any> {
     console.log(`✏️ PUT /api/appointments/${id}`);
-    
+
     const apiData = {
       nombre: appointment.clientName,
       nombres: appointment.clientName.split(' ')[0] || appointment.clientName,
@@ -233,9 +234,9 @@ export class AppointmentsService {
 
   changeStatus(id: number, status: string): Observable<any> {
     console.log(`✅ PATCH /api/appointments/${id} - cambiar estado a: ${status}`);
-    
+
     const estadoId = this.mapStatusToId(status);
-    
+
     return this.http.patch<any>(
       `${this.baseUrl}/appointments/${id}`,
       { estados_id: estadoId },

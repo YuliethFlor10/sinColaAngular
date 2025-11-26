@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class CategoriesService {
-  private baseUrl = 'http://localhost:8000/api/categories';
+  private baseUrl = `${environment.apiUrl}/categories`; 
 
   constructor(private http: HttpClient) {}
 

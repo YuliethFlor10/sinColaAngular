@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BusinessService {
-  private baseUrl = 'http://127.0.0.1:8000/api/businesses';
+  private baseUrl = `${environment.apiUrl}/businesses`;
 
   constructor(private http: HttpClient) {}
 
@@ -48,7 +49,7 @@ export class BusinessService {
    */
   registerBusiness(businessData: any): Observable<any> {
     // 🔥 Este método usa el endpoint de registro que ya existe
-    return this.http.post('http://127.0.0.1:8000/api/register', businessData, {
+   return this.http.post(`${environment.apiUrl}/register`, businessData, {
       headers: new HttpHeaders({
         'Content-Type': 'application/json',
         'Accept': 'application/json'
