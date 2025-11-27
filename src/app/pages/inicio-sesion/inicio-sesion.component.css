@@ -21,6 +21,7 @@ body {
   background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
   padding: 0.3rem 20px;
   padding-bottom: 0.3rem;
+  padding-top: calc(0.3rem + env(safe-area-inset-top));
   color: white;
   gap: 8px;
   flex-wrap: wrap;
@@ -29,7 +30,7 @@ body {
   position: relative;
   width: 100%;
   /* El header comienza justo debajo de la barra de estado */
-  margin-top: env(safe-area-inset-top);
+  margin-top: 0;
 }
 
 .titulo {
@@ -370,12 +371,14 @@ body {
   /* Header más compacto - OCULTAR BIENVENIDO */
   .header {
     padding: 0.4rem 0.2rem;
+    padding-top: calc(0.4rem + env(safe-area-inset-top));
     gap: 0.2rem;
     flex-wrap: wrap;
     min-height: auto;
     overflow-x: hidden;
     box-sizing: border-box;
     width: 100%;
+    margin-top: 0;
   }
 
   .titulo {
@@ -522,7 +525,9 @@ body {
 @media (max-width: 450px) {
   .header {
     padding: 0.45rem 0.25rem;
+    padding-top: calc(0.45rem + env(safe-area-inset-top));
     gap: 0.25rem;
+    margin-top: 0;
   }
 
   .titulo {
@@ -615,6 +620,8 @@ body {
 @media (max-width: 360px) {
   .header {
     padding: 0.4rem 0.2rem;
+    padding-top: calc(0.4rem + env(safe-area-inset-top));
+    margin-top: 0;
   }
 
   .titulo {
@@ -690,6 +697,8 @@ body {
 @media (max-height: 500px) and (orientation: landscape) {
   .header {
     padding: 0.5rem 1rem;
+    padding-top: calc(0.5rem + env(safe-area-inset-top));
+    margin-top: 0;
   }
 
   .titulo {

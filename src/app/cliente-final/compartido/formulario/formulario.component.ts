@@ -1,10 +1,13 @@
 import { Component, ElementRef, AfterViewInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { AppointmentsService } from '../../../services/appointments.service';
 import { ServicesService } from '../../../services/services.service';
 import { UsersService } from '../../../services/users.service';
 
 @Component({
   selector: 'app-formulario',
+  standalone: true,
+  imports: [CommonModule],
   templateUrl: './formulario.component.html',
   styleUrls: ['./formulario.component.css'],
   encapsulation: ViewEncapsulation.None

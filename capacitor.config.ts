@@ -5,7 +5,9 @@ const config: CapacitorConfig = {
   appName: 'sinCola',
   webDir: 'dist/sinColaAngular/browser',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    cleartext: true,
+    allowNavigation: ['*']
   },
   plugins: {
     LocalNotifications: {
