@@ -7,7 +7,8 @@
   justify-content: space-between;
   align-items: center;
   position: fixed;
-  top: 0;
+  /* El header comienza justo debajo de la barra de estado */
+  top: env(safe-area-inset-top);
   left: 0;
   right: 0;
   z-index: 1000;
@@ -31,7 +32,8 @@
   justify-content: center;
   font-weight: bold;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-top: 7px;
+  margin-top: 0;
+  padding-top: 0.5rem;
 }
 
 .menu-toggle {

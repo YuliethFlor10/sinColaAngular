@@ -50,6 +50,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Asegurar que el scroll respete el safe area */
+  scroll-padding-top: env(safe-area-inset-top);
 }
 
 body {
@@ -70,7 +72,8 @@ body {
 /* Header */
 .modern-header {
   position: fixed;
-  top: 0;
+  /* El header comienza justo debajo de la barra de estado */
+  top: env(safe-area-inset-top);
   left: 0;
   right: 0;
   z-index: 1000;
@@ -90,9 +93,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.3rem;
+  padding: 0.3rem 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 70px;
 }
 
 .logo-section {
@@ -287,7 +291,10 @@ body {
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding-top: 100px;
+  /* El hero-section comienza después del header (que está en top: env(safe-area-inset-top)) */
+  /* Añadir padding-top que incluya espacio adicional para evitar que el contenido se superponga con la barra de estado al hacer scroll */
+  padding-top: calc(100px + env(safe-area-inset-top) * 1.5);
+  margin-top: 0;
   background: var(--primary-gradient);
 }
 

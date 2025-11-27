@@ -12,11 +12,23 @@
     box-sizing: border-box;
   }
 
+  html {
+    /* Respetar safe area en dispositivos móviles */
+    padding-top: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
   body {
     font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: #f5f5f5;
     color: #333;
     line-height: 1.6;
+    /* Asegurar que el scroll respete el safe area */
+    scroll-padding-top: env(safe-area-inset-top);
+    /* Añadir padding-top mínimo para evitar que el contenido se superponga con la barra de estado al hacer scroll */
+    padding-top: env(safe-area-inset-top);
   }
 
   /* ========================================
@@ -140,13 +152,13 @@
   }
 
   .main-container {
-    margin-top: 80px;
+    margin-top: calc(80px + env(safe-area-inset-top));
   }
 
   .sidebar {
     transform: translateX(-100%);
-    top: 80px;
-    height: calc(100vh - 80px);
+    top: calc(80px + env(safe-area-inset-top));
+    height: calc(100vh - 80px - env(safe-area-inset-top));
   }
 
   .sidebar.open {
@@ -296,12 +308,12 @@
   }
 
   .main-container {
-    margin-top: 70px;
+    margin-top: calc(70px + env(safe-area-inset-top));
   }
 
   .sidebar {
-    top: 70px;
-    height: calc(100vh - 70px);
+    top: calc(70px + env(safe-area-inset-top));
+    height: calc(100vh - 70px - env(safe-area-inset-top));
   }
 
   .form-row {

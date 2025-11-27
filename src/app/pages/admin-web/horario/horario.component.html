@@ -18,15 +18,15 @@
       </div>
 
       <p class="horario-description">
-        Define los horarios específicos de atención del personal encargado de atender los servicios agendados. 
+        Define los horarios específicos de atención del personal encargado de atender los servicios agendados.
         Estos horarios determinarán qué días y horas están disponibles para agendar citas.
       </p>
-      
+
       <div class="person-select-container">
         <label for="personSelect" class="person-label">Seleccione personal</label>
-        <select 
-          id="personSelect" 
-          class="person-select" 
+        <select
+          id="personSelect"
+          class="person-select"
           [(ngModel)]="selectedPerson"
           (change)="onPersonChange()">
           <option *ngFor="let staff of staffList" [value]="staff.id">
@@ -45,18 +45,18 @@
       <div class="schedule-grid" *ngIf="!isLoading">
         <div class="day-schedule" *ngFor="let day of weekSchedule">
           <h2>{{ day.name }}</h2>
-          
+
           <div class="status-toggle">
             <label class="switch">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 [id]="day.id + 'Toggle'"
                 [(ngModel)]="day.isOpen"
                 (change)="onDayToggle(day)">
               <span class="slider round"></span>
             </label>
-            <span 
-              class="status-text" 
+            <span
+              class="status-text"
               [ngClass]="{'closed-status': !day.isOpen}">
               {{ day.isOpen ? 'Abierto' : 'Cerrado' }}
             </span>
@@ -67,17 +67,17 @@
             <div class="turno">
               <label>Primer turno</label>
               <div class="time-inputs">
-                <input 
-                  type="text" 
-                  class="time-input" 
+                <input
+                  type="text"
+                  class="time-input"
                   [value]="day.firstShift.start.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'firstShift', 'start')"
                   placeholder="Inicio"
                   readonly>
-                <input 
-                  type="text" 
-                  class="time-input" 
+                <input
+                  type="text"
+                  class="time-input"
                   [value]="day.firstShift.end.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'firstShift', 'end')"
@@ -87,8 +87,8 @@
             </div>
 
             <!-- Botón toggle segundo turno -->
-            <button 
-              type="button" 
+            <button
+              type="button"
               class="toggle-turno-btn"
               (click)="toggleSecondShift(day)"
               [disabled]="!day.isOpen">
@@ -99,17 +99,17 @@
             <div class="turno" *ngIf="day.secondShift.enabled">
               <label>Segundo turno</label>
               <div class="time-inputs">
-                <input 
-                  type="text" 
-                  class="time-input" 
+                <input
+                  type="text"
+                  class="time-input"
                   [value]="day.secondShift.start.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'secondShift', 'start')"
                   placeholder="Inicio"
                   readonly>
-                <input 
-                  type="text" 
-                  class="time-input" 
+                <input
+                  type="text"
+                  class="time-input"
                   [value]="day.secondShift.end.display"
                   [disabled]="!day.isOpen"
                   (click)="openTimePicker(day.id, 'secondShift', 'end')"
@@ -123,9 +123,9 @@
 
       <!-- Botones de acción -->
       <div class="form-actions" *ngIf="!isLoading">
-        <button 
-          type="button" 
-          class="btn-create" 
+        <button
+          type="button"
+          class="btn-create"
           (click)="saveSchedule()"
           [disabled]="!hasOpenDays() || isLoading">
           {{ isLoading ? 'Guardando...' : 'Guardar horarios' }}
