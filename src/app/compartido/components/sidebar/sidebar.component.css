@@ -6,7 +6,7 @@
   transition: transform 0.3s ease;
   position: fixed;
   left: 0;
-  /* El sidebar comienza justo debajo del header (que está en top: env(safe-area-inset-top)) */
+  /* El sidebar comienza justo debajo del header (que cubre la barra de estado desde top: 0) */
   top: calc(80px + env(safe-area-inset-top));
   height: calc(100vh - 80px - env(safe-area-inset-top));
   overflow-y: auto;

@@ -3,16 +3,18 @@
   background: linear-gradient(135deg,#fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
   color: white;
   padding: 1.5rem 1.5rem;
+  /* El header cubre la barra de estado, padding-top incluye safe-area */
+  padding-top: calc(1.5rem + env(safe-area-inset-top));
   display: flex;
   justify-content: space-between;
   align-items: center;
   position: fixed;
-  /* El header comienza justo debajo de la barra de estado */
-  top: env(safe-area-inset-top);
+  /* El header comienza desde arriba para cubrir la barra de estado */
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
-  height: 80px;
+  height: calc(80px + env(safe-area-inset-top));
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
@@ -77,7 +79,8 @@
 @media (max-width: 768px) {
   .header {
     padding: 1rem 1.5rem;
-    height: 80px;
+    padding-top: calc(1rem + env(safe-area-inset-top));
+    height: calc(80px + env(safe-area-inset-top));
   }
   .logo {
     width: 48px;
@@ -93,7 +96,8 @@
 @media (max-width: 480px) {
   .header {
     padding: 0.75rem 1rem;
-    height: 70px;
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
+    height: calc(70px + env(safe-area-inset-top));
   }
   .header-left {
     gap: 1rem;

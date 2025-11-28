@@ -19,9 +19,10 @@ body {
   justify-content: space-between;
   align-items: center;
   background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
-  padding: 0.3rem 20px;
+  padding: 2.3rem 20px;
   padding-bottom: 0.3rem;
-  padding-top: calc(0.3rem + env(safe-area-inset-top));
+  /* El header cubre la barra de estado, padding-top incluye safe-area */
+  padding-top: calc(2.3rem + env(safe-area-inset-top));
   color: white;
   gap: 8px;
   flex-wrap: wrap;
@@ -29,13 +30,14 @@ body {
   max-width: 100vw;
   position: relative;
   width: 100%;
-  /* El header comienza justo debajo de la barra de estado */
+  /* El header comienza desde arriba para cubrir la barra de estado */
   margin-top: 0;
+  z-index: 100;
 }
 
 .titulo {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   white-space: nowrap;
   line-height: 1.2;
 }
@@ -52,7 +54,7 @@ body {
 }
 
 .login-form input {
-  padding: 0.4rem;
+  padding: 1.4rem;
   border-radius: 5px;
   border: none;
   width: 200px;
@@ -63,7 +65,7 @@ body {
 .boton-redireccion {
   background-color: black;
   color: white;
-  padding: 0.4rem 0.9rem;
+  padding: 1.4rem 0.9rem;
   border: none;
   border-radius: 5px;
   cursor: pointer;

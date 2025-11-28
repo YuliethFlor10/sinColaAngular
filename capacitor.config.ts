@@ -17,8 +17,8 @@ const config: CapacitorConfig = {
     },
     StatusBar: {
       style: 'light', // Texto oscuro para fondo blanco
-      backgroundColor: '#ffffff', // Fondo blanco
-      overlaysWebView: false // No superponer sobre el contenido
+      backgroundColor: '#ffffff', // Fondo blanco sólido
+      overlaysWebView: true // La barra de estado cubre el contenido para evitar que se vea por detrás
     }
   }
 };

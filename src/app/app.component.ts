@@ -38,8 +38,8 @@ export class AppComponent implements OnInit {
         await StatusBar.setBackgroundColor({ color: '#ffffff' });
         // Mostrar la barra de estado
         await StatusBar.show();
-        // Asegurar que la barra de estado no se superponga con el contenido
-        await StatusBar.setOverlaysWebView({ overlay: false });
+        // La barra de estado cubre el contenido con fondo sólido para evitar que se vea por detrás
+        await StatusBar.setOverlaysWebView({ overlay: true });
       } catch (error) {
         console.log('Error configurando StatusBar:', error);
       }
