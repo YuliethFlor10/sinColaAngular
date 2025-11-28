@@ -19,8 +19,8 @@ export class FormularioComponent implements AfterViewInit {
   selectedTime: string | null = null;
   formData: any = {};
 
-  // 🔥 NEGOCIO SINCOLA - ID FIJO
-  private readonly SINCOLA_BUSINESS_ID = 6;
+  // 🔥 TU NEGOCIO - ID 8
+  private readonly MI_NEGOCIO_ID = 8;
 
   // 🔥 SERVICIOS Y PERSONAL DINÁMICOS
   serviciosDisponibles: any[] = [];
@@ -38,53 +38,59 @@ export class FormularioComponent implements AfterViewInit {
   ngAfterViewInit() {
     this.setupEventListeners();
     this.generateCalendar();
-    this.cargarServiciosYPersonal(); // 🔥 Cargar datos de SinCola
+    this.cargarServiciosYPersonal(); // 🔥 Cargar datos del negocio ID 8
   }
 
   // ============================================
-  // 🔥 CARGAR SERVICIOS Y PERSONAL DE SINCOLA
+  // 🔥 CARGAR SERVICIOS Y PERSONAL DEL NEGOCIO 8
   // ============================================
 
   cargarServiciosYPersonal() {
-    console.log(`📡 Cargando servicios y personal del negocio SinCola (ID: ${this.SINCOLA_BUSINESS_ID})...`);
+    console.log(`🔍 Cargando servicios y personal del negocio ID: ${this.MI_NEGOCIO_ID}...`);
 
-    // Cargar servicios activos de SinCola
+    // Cargar servicios activos del negocio 8
     this.servicesService.getAll().subscribe({
       next: (response: any) => {
         console.log('✅ Servicios recibidos:', response);
 
         let servicios = Array.isArray(response) ? response : (response?.data || []);
 
-        // 🔥 Filtrar SOLO servicios de SinCola (ID: 6)
+        // 🔥 Filtrar SOLO servicios del negocio 8
         this.serviciosDisponibles = servicios.filter((s: any) =>
-          s.negocios_id === this.SINCOLA_BUSINESS_ID &&
+          s.negocios_id === this.MI_NEGOCIO_ID &&
           (s.estados_id === 1 || s.status?.nombre === 'Activo')
         );
 
-        console.log(`✅ ${this.serviciosDisponibles.length} servicios disponibles de SinCola:`, this.serviciosDisponibles);
+        console.log(`✅ ${this.serviciosDisponibles.length} servicios disponibles del negocio 8:`, this.serviciosDisponibles);
         this.poblarSelectServicios();
       },
-      error: (err) => console.error('❌ Error cargando servicios:', err)
+      error: (err) => {
+        console.error('❌ Error cargando servicios:', err);
+        alert('No se pudieron cargar los servicios. Por favor recarga la página.');
+      }
     });
 
-    // Cargar personal de SinCola (Admins + Empleados)
+    // Cargar personal del negocio 8 (Admins + Empleados)
     this.usersService.getStaffForServices().subscribe({
       next: (response: any) => {
         console.log('✅ Personal recibido:', response);
 
         let usuarios = Array.isArray(response) ? response : (response?.data || []);
 
-        // 🔥 Filtrar SOLO personal de SinCola (ID: 6)
+        // 🔥 Filtrar SOLO personal del negocio 8
         this.personalDisponible = usuarios.filter((u: any) =>
-          u.negocios_id === this.SINCOLA_BUSINESS_ID &&
+          u.negocios_id === this.MI_NEGOCIO_ID &&
           (u.roles_id === 1 || u.roles_id === 3) && // 1=Admin, 3=Empleado
           (u.estados_id === 1 || u.status?.nombre === 'Activo')
         );
 
-        console.log(`✅ ${this.personalDisponible.length} miembros del staff de SinCola:`, this.personalDisponible);
+        console.log(`✅ ${this.personalDisponible.length} miembros del staff del negocio 8:`, this.personalDisponible);
         this.poblarSelectPersonal();
       },
-      error: (err) => console.error('❌ Error cargando personal:', err)
+      error: (err) => {
+        console.error('❌ Error cargando personal:', err);
+        alert('No se pudo cargar el personal. Por favor recarga la página.');
+      }
     });
   }
 
@@ -276,11 +282,11 @@ export class FormularioComponent implements AfterViewInit {
     loadingMessage.innerHTML = `
       <div style="font-size: 40px;">⏳</div>
       <div>Procesando tu reserva...</div>
-      <div style="font-size: 14px; opacity: 0.8;">Enviando correo de confirmación</div>
+      <div style="font-size: 14px; opacity: 0.8;">Enviando correo de confirmación al: ${this.formData.email}</div>
     `;
     document.body.appendChild(loadingMessage);
 
-    // 🔥 DATOS CORRECTOS PARA LA API - NEGOCIO SINCOLA (ID: 6)
+    // 🔥 DATOS CORRECTOS PARA LA API - NEGOCIO ID 8
     const appointmentData = {
       nombre: this.formData.fullName,
       email: this.formData.email,
@@ -293,13 +299,13 @@ export class FormularioComponent implements AfterViewInit {
       fecha_cita: this.formatDate(this.formData.date),
       hora_cita: this.formData.time,
       nota: this.formData.observations || '',
-      negocios_id: this.SINCOLA_BUSINESS_ID, // 🔥 SINCOLA FIJO
+      negocios_id: this.MI_NEGOCIO_ID, // 🔥 TU NEGOCIO ID 8
       servicios_id: parseInt(this.formData.appointmentType),
       tiempo_estimado: this.formData.servicioData?.tiempo_estimado || 60,
-      estados_id: 1 // Reservada
+      estados_id: 3 // Reservada
     };
 
-    console.log('📤 Enviando cita a SinCola:', appointmentData);
+    console.log('📤 Enviando cita al negocio 8:', appointmentData);
 
     this.appointmentsService.createFromForm(appointmentData).subscribe({
       next: (response: any) => {
@@ -309,7 +315,7 @@ export class FormularioComponent implements AfterViewInit {
         if (overlay) document.body.removeChild(overlay);
 
         if (response.email_sent) {
-          console.log('📧 Correo enviado exitosamente');
+          console.log('📧 Correo enviado exitosamente a:', this.formData.email);
         } else {
           console.warn('⚠️ Cita creada pero el correo no se pudo enviar:', response.email_error);
         }

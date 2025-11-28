@@ -14,6 +14,7 @@ export interface Appointment {
   clientBirthDate?: string;
   clientPhone?: string;
   serviceName: string;
+  serviceId?: number; // 🔥 AGREGAR ESTO
   staffName?: string;
   day: number;
   monthName: string;
@@ -44,7 +45,7 @@ export interface AppointmentFormData {
   providedIn: 'root'
 })
 export class AppointmentsService {
-private baseUrl = environment.apiUrl;
+  private baseUrl = environment.apiUrl;
 
   constructor(
     private http: HttpClient,
@@ -134,6 +135,12 @@ private baseUrl = environment.apiUrl;
     console.log('➕ POST /api/appointments (desde admin)');
     console.log('📥 Appointment recibido:', appointment);
 
+    // 🔥 VALIDAR QUE VENGA serviceId
+    if (!appointment.serviceId) {
+      console.error('❌ ERROR: No se proporcionó serviceId en el appointment');
+      return throwError(() => new Error('Se requiere el ID del servicio'));
+    }
+
     const apiData = {
       nombre: appointment.clientName,
       nombres: appointment.clientName.split(' ')[0] || appointment.clientName,
@@ -148,7 +155,7 @@ private baseUrl = environment.apiUrl;
       numero_telefono: appointment.clientPhone || '3000000000',
       celular: appointment.clientPhone || '3000000000',
       negocios_id: this.getCurrentBusinessId(),
-      servicios_id: 1,
+      servicios_id: appointment.serviceId, // 🔥 USAR EL ID REAL DEL SERVICIO
       tipo_cita: appointment.serviceName,
       personal_servicio: appointment.staffName || '',
       fecha_cita: this.buildDateString(appointment),
@@ -159,6 +166,9 @@ private baseUrl = environment.apiUrl;
     };
 
     console.log('📤 Creando cita con datos completos:', apiData);
+    console.log('🔍 VALIDACIÓN CRÍTICA:');
+    console.log('  ✓ negocios_id:', apiData.negocios_id);
+    console.log('  ✓ servicios_id:', apiData.servicios_id, '← DEBE SER 15 o 16');
 
     return this.http.post<any>(`${this.baseUrl}/appointments`, apiData, {
       headers: this.getHeaders()
@@ -277,6 +287,7 @@ private baseUrl = environment.apiUrl;
       clientBirthDate: apiData.cliente_fecha_nac || '',
       clientPhone: apiData.cliente_telefono || '',
       serviceName: apiData.service?.nombre || apiData.tipo_servicio || 'Sin servicio',
+      serviceId: apiData.servicios_id || apiData.service?.id, // 🔥 AGREGAR ESTO
       staffName: apiData.personal_asignado || 'Sin personal',
       day: fecha.getDate(),
       monthName: monthNames[fecha.getMonth()],

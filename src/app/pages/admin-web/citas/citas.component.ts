@@ -251,6 +251,9 @@ export class CitasComponent implements OnInit {
     });
   }
 
+// 🔥 REEMPLAZA SOLO ESTE MÉTODO en citas.component.ts
+// Línea aproximada 245-310
+
 onSubmit(): void {
   console.log('📤 Enviando formulario...');
 
@@ -291,6 +294,7 @@ onSubmit(): void {
     return;
   }
 
+  // 🔥 AGREGAR serviceId aquí
   const appointment: Appointment = {
     clientName: this.form.clientName.trim(),
     clientEmail: this.form.clientEmail.trim(),
@@ -299,6 +303,7 @@ onSubmit(): void {
     clientBirthDate: this.form.clientBirthDate || '2000-01-01',
     clientPhone: this.form.clientPhone || '3000000000',
     serviceName: selectedService.nombre,
+    serviceId: selectedService.id, // 🔥 LÍNEA AGREGADA - El ID real del servicio
     staffName: selectedStaff.nombre_completo,
     day: this.form.selectedDay,
     monthName: this.form.selectedMonth,
@@ -306,6 +311,10 @@ onSubmit(): void {
     status: 'reserved',
     nota: this.form.appointmentObservations || ''
   };
+
+  console.log('🔍 VALIDACIÓN ANTES DE ENVIAR:');
+  console.log('  ✓ serviceName:', appointment.serviceName);
+  console.log('  ✓ serviceId:', appointment.serviceId, '← DEBE SER 15 o 16');
 
   this.isLoading = true;
 
