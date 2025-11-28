@@ -5,13 +5,20 @@ const config: CapacitorConfig = {
   appName: 'sinCola',
   webDir: 'dist/sinColaAngular/browser',
   server: {
-    androidScheme: 'https'
+    androidScheme: 'https',
+    cleartext: true,
+    allowNavigation: ['*']
   },
   plugins: {
     LocalNotifications: {
       smallIcon: "ic_stat_icon_config_sample",
       iconColor: "#FF5722",
       sound: "beep.wav"
+    },
+    StatusBar: {
+      style: 'light', // Texto oscuro para fondo blanco
+      backgroundColor: '#ffffff', // Fondo blanco sólido
+      overlaysWebView: true // La barra de estado cubre el contenido para evitar que se vea por detrás
     }
   }
 };

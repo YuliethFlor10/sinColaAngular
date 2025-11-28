@@ -50,6 +50,8 @@
 
 html {
   scroll-behavior: smooth;
+  /* Asegurar que el scroll respete el safe area */
+  scroll-padding-top: env(safe-area-inset-top);
 }
 
 body {
@@ -70,14 +72,28 @@ body {
 /* Header */
 .modern-header {
   position: fixed;
+  /* El header cubre la barra de estado desde arriba */
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
   background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4);
+  padding-top: env(safe-area-inset-top, 24px);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid var(--glass-border);
   transition: all var(--transition);
+  /* Padding-top para que el contenido del header respete la barra de estado */
+
+}
+.modern-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 24px);
+  background-color: #ffffff; /* color sólido de tu header */
+  z-index: -1;
 }
 
 .modern-header.scrolled {
@@ -90,9 +106,11 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.3rem;
+  padding: 0.3rem 1.5rem;
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 70px;
+  /* El header-container ya tiene el padding del modern-header, no necesita más */
 }
 
 .logo-section {
@@ -287,7 +305,9 @@ body {
   display: flex;
   align-items: center;
   overflow: hidden;
-  padding-top: 100px;
+  /* El hero-section comienza después del header que cubre la barra de estado */
+  padding-top: calc(70px + env(safe-area-inset-top));
+  margin-top: 0;
   background: var(--primary-gradient);
 }
 

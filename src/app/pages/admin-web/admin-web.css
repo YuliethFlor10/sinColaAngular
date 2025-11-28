@@ -3,8 +3,9 @@
    ======================================== */
 .main-container {
   display: flex;
-  margin-top: 90px; /* ACTUALIZADO: ajustado al nuevo height del header */
-  min-height: calc(100vh - 90px); /* ACTUALIZADO: ajustado al nuevo height */
+  /* El header es fixed y cubre la barra de estado, el contenido debe empezar después */
+  margin-top: calc(80px + env(safe-area-inset-top));
+  min-height: calc(100vh - 80px - env(safe-area-inset-top));
 }
 /* Tarjeta contenedora del formulario */
 .content-card {
