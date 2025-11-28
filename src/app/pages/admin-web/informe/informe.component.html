@@ -3,120 +3,414 @@
   <app-contenido [title]="'Informe de servicios realizados'">
     
     <div class="container">
-      <!-- Controles del reporte -->
+      <!-- Controles del reporte mejorados -->
       <div class="report-controls">
-        <div class="date-range-selector">
+        <div class="filters-grid">
+          <!-- Selector de tipo de usuario/rol -->
           <div class="form-group">
-            <label for="startDate">Fecha de inicio</label>
+            <label for="roleSelect">🎭 Tipo de Usuario</label>
+            <select 
+              id="roleSelect" 
+              class="role-select"
+              [(ngModel)]="selectedRole"
+              (change)="onRoleChange()">
+              <option value="all">Todos los roles</option>
+              <option value="propietario">Propietarios</option>
+              <option value="empleado">Empleados</option>
+              <option value="administrador">Administradores</option>
+            </select>
+          </div>
+
+          <!-- Selector de periodo predefinido -->
+          <div class="form-group">
+            <label for="periodSelect">📅 Periodo rápido</label>
+            <select 
+              id="periodSelect" 
+              class="period-select"
+              [(ngModel)]="selectedPeriod"
+              (change)="onPeriodChange()">
+              <option value="custom">Personalizado</option>
+              <option value="today">Hoy</option>
+              <option value="week">Esta semana</option>
+              <option value="month">Este mes</option>
+              <option value="last-month">Mes anterior</option>
+              <option value="quarter">Este trimestre</option>
+              <option value="year">Este año</option>
+            </select>
+          </div>
+
+          <!-- Fecha de inicio -->
+          <div class="form-group">
+            <label for="startDate">📆 Fecha de inicio</label>
             <input 
               type="date" 
               id="startDate" 
               class="date-input"
               [(ngModel)]="startDate"
+              [disabled]="selectedPeriod !== 'custom'"
               (change)="onDateChange()">
           </div>
+
+          <!-- Fecha de fin -->
           <div class="form-group">
-            <label for="endDate">Fecha de fin</label>
+            <label for="endDate">📆 Fecha de fin</label>
             <input 
               type="date" 
               id="endDate" 
               class="date-input"
               [(ngModel)]="endDate"
+              [disabled]="selectedPeriod !== 'custom'"
               (change)="onDateChange()">
           </div>
-        </div>
 
-        <div class="person-selector-report form-group">
-          <label for="reportPersonSelect" class="person-label">Seleccione usuario</label>
-          <select 
-            id="reportPersonSelect" 
-            class="person-select"
-            [(ngModel)]="selectedUserId"
-            (change)="onPersonChange()">
-            <option [ngValue]="null">-- Seleccionar usuario --</option>
-            <option *ngFor="let u of users" [ngValue]="u.id">{{u.name || u.full_name || u.username}}</option>
-          </select>
+          <!-- Selector de usuario específico -->
+          <div class="form-group">
+            <label for="reportPersonSelect">👤 Usuario específico</label>
+            <select 
+              id="reportPersonSelect" 
+              class="person-select"
+              [(ngModel)]="selectedUserId"
+              (change)="onPersonChange()">
+              <option [ngValue]="null">Todos los usuarios</option>
+              <option *ngFor="let u of filteredUsers" [ngValue]="u.id">
+                {{u.name || u.full_name || u.username}} ({{u.role || 'Usuario'}})
+              </option>
+            </select>
+          </div>
+
+          <!-- Selector de estado de citas (solo para empleados/administradores) -->
+          <div class="form-group" *ngIf="selectedRole === 'empleado' || selectedRole === 'administrador'">
+            <label for="statusSelect">📊 Estado de Citas</label>
+            <select 
+              id="statusSelect" 
+              class="status-select"
+              [(ngModel)]="selectedStatus"
+              (change)="onStatusChange()">
+              <option value="all">Todas las citas</option>
+              <option value="pending">Pendientes</option>
+              <option value="completed">Completadas</option>
+            </select>
+          </div>
+
+          <!-- Botón de generar -->
+          <button 
+            class="btn-generate-report" 
+            (click)="generateReport()"
+            [disabled]="isGenerating">
+            <span *ngIf="!isGenerating">📊 Generar Informe</span>
+            <span *ngIf="isGenerating">⏳ Generando...</span>
+          </button>
         </div>
-        
-        <button 
-          class="btn-generate-report" 
-          (click)="generateReport()"
-          [disabled]="isGenerating">
-          {{isGenerating ? 'Generando...' : 'Generar Informe'}}
-        </button>
       </div>
 
-      <!-- Resultados del reporte -->
-      <div class="report-results">
-        <div class="chart-container">
-          <canvas 
-            #servicesChart 
-            id="servicesChart"
-            *ngIf="showChart"></canvas>
-          <p 
-            class="no-data-message" 
-            *ngIf="!showChart && !isGenerating">
-            {{noDataMessage}}
-          </p>
-          <div 
-            class="loading-spinner" 
-            *ngIf="isGenerating">
-            <div class="spinner"></div>
-            <p>Generando informe...</p>
+      <!-- Dashboard de estadísticas generales -->
+      <div class="stats-dashboard" *ngIf="showChart">
+        <div class="stat-card">
+          <div class="stat-icon">💰</div>
+          <div class="stat-content">
+            <div class="stat-label">Ingresos totales</div>
+            <div class="stat-value">{{totalValue | currency:'COP':'symbol':'1.0-0'}}</div>
+            <div class="stat-info">Período seleccionado</div>
           </div>
         </div>
 
-        <div class="summary-section">
-          <div class="most-performed-services">
-            <h3>Servicios más realizados</h3>
-            <ul class="summary-list">
-              <li *ngFor="let service of mostPerformedServices; let i = index">
-                {{i + 1}}. {{service.name}} ({{service.count}} veces)
-              </li>
-              <li *ngIf="mostPerformedServices.length === 0">
-                No hay datos para mostrar.
-              </li>
-            </ul>
+        <div class="stat-card" *ngIf="selectedRole === 'propietario' || selectedRole === 'all'">
+          <div class="stat-icon">📋</div>
+          <div class="stat-content">
+            <div class="stat-label">Servicios realizados</div>
+            <div class="stat-value">{{totalRecords}}</div>
+            <div class="stat-info">Promedio: {{averagePerMonth}}/mes</div>
           </div>
-          
-          <div class="total-value-obtained">
-            <h3>Valor total obtenido</h3>
-            <p class="summary-value">{{totalValue | currency:'COP':'symbol':'1.0-0'}}</p>
+        </div>
+
+        <div class="stat-card" *ngIf="selectedRole === 'empleado' || selectedRole === 'administrador' || selectedRole === 'all'">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-content">
+            <div class="stat-label">Citas pendientes</div>
+            <div class="stat-value">{{totalPending}}</div>
+            <div class="stat-info">En espera</div>
           </div>
-          
-          <div class="statistics-section">
-            <h3>Estadísticas</h3>
-            <ul class="stats-list">
-              <li><strong>Mes con mayor actividad:</strong> {{bestMonthLabel || 'No disponible'}}</li>
-              <li><strong>Total de registros:</strong> {{totalRecords}}</li>
-              <li><strong>Promedio por mes:</strong> {{averagePerMonth}}</li>
-            </ul>
+        </div>
+
+        <div class="stat-card" *ngIf="selectedRole === 'empleado' || selectedRole === 'administrador' || selectedRole === 'all'">
+          <div class="stat-icon">✅</div>
+          <div class="stat-content">
+            <div class="stat-label">Citas completadas</div>
+            <div class="stat-value">{{totalCompleted}}</div>
+            <div class="stat-info">Finalizadas</div>
           </div>
         </div>
       </div>
 
       <!-- Mensajes de estado -->
       <div class="message-container">
-        <div 
-          class="success-message" 
-          [class.show]="successMessage"
-          *ngIf="successMessage">
-          {{successMessage}}
+        <div class="success-message" [class.show]="successMessage" *ngIf="successMessage">
+          ✓ {{successMessage}}
         </div>
-        
-        <div 
-          class="error-message-global" 
-          [class.show]="errorMessage"
-          *ngIf="errorMessage">
-          {{errorMessage}}
+        <div class="error-message-global" [class.show]="errorMessage" *ngIf="errorMessage">
+          ✗ {{errorMessage}}
         </div>
-        
-        <div 
-          class="info-message-global" 
-          [class.show]="infoMessage"
-          *ngIf="infoMessage">
-          {{infoMessage}}
+        <div class="info-message-global" [class.show]="infoMessage" *ngIf="infoMessage">
+          ℹ {{infoMessage}}
         </div>
+      </div>
+
+      <!-- SECCIÓN PROPIETARIOS -->
+      <div class="charts-grid" *ngIf="showChart && (selectedRole === 'propietario' || selectedRole === 'all')">
+        <div class="section-title">
+          <h2>👨‍💼 REPORTE DE PROPIETARIOS - Servicios Brindados</h2>
+        </div>
+
+        <!-- Gráfica principal: Distribución de servicios -->
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <h3>📊 Distribución de servicios brindados</h3>
+            <div class="chart-actions">
+              <button class="btn-chart-type" 
+                      [class.active]="mainChartType === 'doughnut'"
+                      (click)="changeMainChartType('doughnut')">🍩</button>
+              <button class="btn-chart-type" 
+                      [class.active]="mainChartType === 'bar'"
+                      (click)="changeMainChartType('bar')">📊</button>
+              <button class="btn-chart-type" 
+                      [class.active]="mainChartType === 'pie'"
+                      (click)="changeMainChartType('pie')">🥧</button>
+            </div>
+          </div>
+          <div class="chart-body">
+            <canvas #servicesChart id="servicesChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Tabla de servicios más realizados -->
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <h3>🏆 Top servicios brindados por propietarios</h3>
+          </div>
+          <div class="chart-body">
+            <div class="services-table-container">
+              <table class="services-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Servicio</th>
+                    <th>Propietario</th>
+                    <th>Cantidad</th>
+                    <th>Valor Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let service of propietarioStats.services; let i = index" 
+                      [class.highlight]="i < 3">
+                    <td class="rank">
+                      <span class="medal" *ngIf="i === 0">🥇</span>
+                      <span class="medal" *ngIf="i === 1">🥈</span>
+                      <span class="medal" *ngIf="i === 2">🥉</span>
+                      <span *ngIf="i > 2">{{i + 1}}</span>
+                    </td>
+                    <td class="service-name">{{service.name}}</td>
+                    <td>{{service.user_name || 'N/A'}}</td>
+                    <td class="count">{{service.count}}</td>
+                    <td class="value">{{service.value | currency:'COP':'symbol':'1.0-0'}}</td>
+                  </tr>
+                  <tr *ngIf="propietarioStats.services.length === 0">
+                    <td colspan="5" class="no-data">No hay datos para mostrar</td>
+                  </tr>
+                </tbody>
+                <tfoot *ngIf="propietarioStats.services.length > 0">
+                  <tr class="total-row">
+                    <td colspan="3"><strong>TOTALES</strong></td>
+                    <td><strong>{{propietarioStats.totalServices}}</strong></td>
+                    <td><strong>{{propietarioStats.totalValue | currency:'COP':'symbol':'1.0-0'}}</strong></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN EMPLEADOS -->
+      <div class="charts-grid" *ngIf="showChart && (selectedRole === 'empleado' || selectedRole === 'all')">
+        <div class="section-title">
+          <h2>👷 REPORTE DE EMPLEADOS - Citas Reservadas</h2>
+        </div>
+
+        <!-- Estadísticas de empleados -->
+        <div class="stats-mini-dashboard">
+          <div class="mini-stat-card">
+            <div class="mini-stat-label">Citas Pendientes</div>
+            <div class="mini-stat-value">{{empleadoStats.pendingAppointments}}</div>
+          </div>
+          <div class="mini-stat-card">
+            <div class="mini-stat-label">Citas Completadas</div>
+            <div class="mini-stat-value">{{empleadoStats.completedAppointments}}</div>
+          </div>
+          <div class="mini-stat-card">
+            <div class="mini-stat-label">Valor Total</div>
+            <div class="mini-stat-value">{{empleadoStats.totalValue | currency:'COP':'symbol':'1.0-0'}}</div>
+          </div>
+          <div class="mini-stat-card highlight">
+            <div class="mini-stat-label">🏆 Mejor Empleado</div>
+            <div class="mini-stat-value">{{empleadoStats.topReserver}}</div>
+          </div>
+        </div>
+
+        <!-- Gráfica de citas por empleado -->
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <h3>📊 Citas reservadas por empleados</h3>
+          </div>
+          <div class="chart-body">
+            <canvas #appointmentsChart id="appointmentsChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Tabla ranking de empleados -->
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <h3>🏆 Ranking de empleados por citas</h3>
+          </div>
+          <div class="chart-body">
+            <div class="services-table-container">
+              <table class="services-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Empleado</th>
+                    <th>Pendientes</th>
+                    <th>Completadas</th>
+                    <th>Total</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let emp of empleadoStats.reservations; let i = index" 
+                      [class.highlight]="i < 3">
+                    <td class="rank">
+                      <span class="medal" *ngIf="i === 0">🥇</span>
+                      <span class="medal" *ngIf="i === 1">🥈</span>
+                      <span class="medal" *ngIf="i === 2">🥉</span>
+                      <span *ngIf="i > 2">{{i + 1}}</span>
+                    </td>
+                    <td class="service-name">{{emp.user_name}}</td>
+                    <td class="count">{{emp.pending_count}}</td>
+                    <td class="count completed">{{emp.completed_count}}</td>
+                    <td class="count"><strong>{{emp.pending_count + emp.completed_count}}</strong></td>
+                    <td class="value">{{emp.total_value | currency:'COP':'symbol':'1.0-0'}}</td>
+                  </tr>
+                  <tr *ngIf="empleadoStats.reservations.length === 0">
+                    <td colspan="6" class="no-data">No hay datos de empleados</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SECCIÓN ADMINISTRADORES -->
+      <div class="charts-grid" *ngIf="showChart && (selectedRole === 'administrador' || selectedRole === 'all')">
+        <div class="section-title">
+          <h2>🔐 REPORTE DE ADMINISTRADORES - Citas Reservadas</h2>
+        </div>
+
+        <!-- Estadísticas de administradores -->
+        <div class="stats-mini-dashboard">
+          <div class="mini-stat-card">
+            <div class="mini-stat-label">Citas Pendientes</div>
+            <div class="mini-stat-value">{{administradorStats.pendingAppointments}}</div>
+          </div>
+          <div class="mini-stat-card">
+            <div class="mini-stat-label">Citas Completadas</div>
+            <div class="mini-stat-value">{{administradorStats.completedAppointments}}</div>
+          </div>
+          <div class="mini-stat-card">
+            <div class="mini-stat-label">Valor Total</div>
+            <div class="mini-stat-value">{{administradorStats.totalValue | currency:'COP':'symbol':'1.0-0'}}</div>
+          </div>
+          <div class="mini-stat-card highlight">
+            <div class="mini-stat-label">🏆 Mejor Administrador</div>
+            <div class="mini-stat-value">{{administradorStats.topReserver}}</div>
+          </div>
+        </div>
+
+        <!-- Tabla ranking de administradores -->
+        <div class="chart-card full-width">
+          <div class="chart-header">
+            <h3>🏆 Ranking de administradores por citas</h3>
+          </div>
+          <div class="chart-body">
+            <div class="services-table-container">
+              <table class="services-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Administrador</th>
+                    <th>Pendientes</th>
+                    <th>Completadas</th>
+                    <th>Total</th>
+                    <th>Valor</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let admin of administradorStats.reservations; let i = index" 
+                      [class.highlight]="i < 3">
+                    <td class="rank">
+                      <span class="medal" *ngIf="i === 0">🥇</span>
+                      <span class="medal" *ngIf="i === 1">🥈</span>
+                      <span class="medal" *ngIf="i === 2">🥉</span>
+                      <span *ngIf="i > 2">{{i + 1}}</span>
+                    </td>
+                    <td class="service-name">{{admin.user_name}}</td>
+                    <td class="count">{{admin.pending_count}}</td>
+                    <td class="count completed">{{admin.completed_count}}</td>
+                    <td class="count"><strong>{{admin.pending_count + admin.completed_count}}</strong></td>
+                    <td class="value">{{admin.total_value | currency:'COP':'symbol':'1.0-0'}}</td>
+                  </tr>
+                  <tr *ngIf="administradorStats.reservations.length === 0">
+                    <td colspan="6" class="no-data">No hay datos de administradores</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gráficas comunes para todos -->
+      <div class="charts-grid" *ngIf="showChart">
+        <!-- Gráfica de tendencia temporal -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>📈 Tendencia temporal</h3>
+          </div>
+          <div class="chart-body">
+            <canvas #timelineChart id="timelineChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Gráfica de ingresos por usuario -->
+        <div class="chart-card">
+          <div class="chart-header">
+            <h3>💵 Ingresos por usuario</h3>
+          </div>
+          <div class="chart-body">
+            <canvas #usersChart id="usersChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Estado inicial / cargando -->
+      <div class="empty-state" *ngIf="!showChart && !isGenerating">
+        <div class="empty-icon">📊</div>
+        <h3>{{noDataMessage}}</h3>
+        <p>Selecciona el tipo de usuario, período y haz clic en "Generar Informe"</p>
+      </div>
+
+      <div class="loading-state" *ngIf="isGenerating">
+        <div class="spinner"></div>
+        <p>Generando informe detallado...</p>
       </div>
     </div>
     

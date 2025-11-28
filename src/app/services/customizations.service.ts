@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, BehaviorSubject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { BrandingConfig } from '../cliente-final/branding-config.model';
-import { AuthService } from './auth.service';
+
+interface ApiResponse {
+  data: BrandingConfig;
+  message?: string;
+  status?: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -10,62 +16,93 @@ import { AuthService } from './auth.service';
 export class CustomizationsService {
   private apiUrl = 'http://127.0.0.1:8000/api';
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  private customizationChanges$ = new BehaviorSubject<BrandingConfig | null>(null);
+  public customization$ = this.customizationChanges$.asObservable();
 
-  // Obtener personalización por business ID
-  getCustomizationByBusiness(businessId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/customizations/business/${businessId}`, {
-      headers: this.authService.getAuthHeaders()
+  constructor(private http: HttpClient) {}
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token') || localStorage.getItem('auth_token');
+    return new HttpHeaders({
+      'Authorization': token ? `Bearer ${token}` : '',
+      'Accept': 'application/json'
     });
   }
 
-  // Crear personalización
-  createCustomization(customizationData: any, logoFile?: File): Observable<any> {
-    const formData = this.createFormData(customizationData, logoFile);
-    return this.http.post(`${this.apiUrl}/customizations`, formData, {
-      headers: this.authService.getAuthHeadersForFiles()
-    });
+  getCustomizationByBusiness(businessId: number): Observable<ApiResponse> {
+    return this.http
+      .get<ApiResponse>(`${this.apiUrl}/customizations/business/${businessId}`, {
+        headers: this.getAuthHeaders()
+      })
+      .pipe(
+        tap(res => {
+          if (res?.data) {
+            this.customizationChanges$.next(res.data);
+            this.applyBranding(res.data);
+          }
+        })
+      );
   }
 
-  // Actualizar personalización
-  updateCustomization(id: number, customizationData: any, logoFile?: File): Observable<any> {
-    const formData = this.createFormData(customizationData, logoFile);
-    return this.http.put(`${this.apiUrl}/customizations/${id}`, formData, {
-      headers: this.authService.getAuthHeadersForFiles()
-    });
+  createCustomization(data: any, logoFile?: File): Observable<ApiResponse> {
+    const form = this.createFormData(data, logoFile);
+    return this.http
+      .post<ApiResponse>(`${this.apiUrl}/customizations`, form, {
+        headers: this.getAuthHeaders()
+      })
+      .pipe(
+        tap(res => {
+          if (res?.data) {
+            this.customizationChanges$.next(res.data);
+            this.applyBranding(res.data);
+          }
+        })
+      );
   }
 
-  // Eliminar personalización
-  deleteCustomization(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/customizations/${id}`, {
-      headers: this.authService.getAuthHeaders()
-    });
+  updateCustomization(id: number, data: any, logoFile?: File): Observable<ApiResponse> {
+    const form = this.createFormData(data, logoFile);
+    form.append('_method', 'PUT');
+
+    return this.http
+      .post<ApiResponse>(`${this.apiUrl}/customizations/${id}`, form, {
+        headers: this.getAuthHeaders()
+      })
+      .pipe(
+        tap(res => {
+          if (res?.data) {
+            this.customizationChanges$.next(res.data);
+            this.applyBranding(res.data);
+          }
+        })
+      );
   }
 
-  // Método helper para crear FormData
-  private createFormData(customizationData: any, logoFile?: File): FormData {
-    const formData = new FormData();
+  private createFormData(data: any, logoFile?: File): FormData {
+    const form = new FormData();
 
-    formData.append('negocios_id', customizationData.negocios_id);
-    formData.append('nombre_comercial', customizationData.nombre_comercial || '');
-    formData.append('eslogan', customizationData.eslogan || '');
-    formData.append('descripcion_negocio', customizationData.descripcion_negocio || '');
-    formData.append('facebook_url', customizationData.facebook_url || '');
-    formData.append('instagram_url', customizationData.instagram_url || '');
-    formData.append('whatsapp_numero', customizationData.whatsapp_numero || '');
-    formData.append('texto_seguir_redes', customizationData.texto_seguir_redes || '');
-    formData.append('acepta_efectivo', customizationData.acepta_efectivo ? 'true' : 'false');
-    formData.append('acepta_tarjeta', customizationData.acepta_tarjeta ? 'true' : 'false');
-    formData.append('acepta_nequi', customizationData.acepta_nequi ? 'true' : 'false');
-    formData.append('acepta_transferencia', customizationData.acepta_transferencia ? 'true' : 'false');
-    formData.append('texto_metodos_pago', customizationData.texto_metodos_pago || '');
-    formData.append('color_fondo_branding', customizationData.color_fondo_branding || '#f8d7da');
-    formData.append('color_letra_branding', customizationData.color_letra_branding || '#333333');
+    Object.keys(data).forEach(key => {
+      if (data[key] !== undefined && data[key] !== null) {
+        form.append(key, data[key]);
+      }
+    });
 
     if (logoFile) {
-      formData.append('logo_empresa', logoFile);
+      form.append('logo_empresa', logoFile, logoFile.name);
     }
 
-    return formData;
+    return form;
+  }
+
+  private applyBranding(config: BrandingConfig) {
+    if (config.color_fondo_branding) {
+      document.documentElement.style.setProperty('--color-fondo-branding', config.color_fondo_branding);
+    }
+    if (config.color_letra_branding) {
+      document.documentElement.style.setProperty('--color-letra-branding', config.color_letra_branding);
+    }
+    if (config.logo_empresa) {
+      localStorage.setItem('business_logo', `http://127.0.0.1:8000/storage/${config.logo_empresa}`);
+    }
   }
 }

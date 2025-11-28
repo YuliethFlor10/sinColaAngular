@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 
 // Interfaces
 interface User {
@@ -9,10 +9,6 @@ interface User {
   name: string;
   email: string;
   role?: string;
-  password?: string;
-  password_confirmation?: string;
-  created_at?: string;
-  updated_at?: string;
   [key: string]: any;
 }
 
@@ -23,119 +19,240 @@ interface ApiResponse<T> {
   errors?: any;
 }
 
+interface ReportParams {
+  user_id?: number;
+  start_date: string;
+  end_date: string;
+  role?: string;
+  status?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ReportsService {
-  // URL base de la API - ajusta según tu configuración
   private baseUrl = 'http://localhost:8000/api';
 
   constructor(private http: HttpClient) {}
 
-  /**
-   * Obtiene los headers con el token de autenticación
-   */
   private getAuthHeaders(): HttpHeaders {
-    const token = localStorage.getItem('auth_token'); // Ajusta según dónde guardes tu token
+    let token = localStorage.getItem('auth_token') || 
+                localStorage.getItem('token') ||
+                sessionStorage.getItem('auth_token') ||
+                sessionStorage.getItem('token');
     
     if (!token) {
-      console.warn('No se encontró token de autenticación');
+      console.warn('⚠️ No se encontró token de autenticación');
     }
 
-    return new HttpHeaders({
+    let headers = new HttpHeaders({
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : ''
+      'Accept': 'application/json'
     });
+
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    return headers;
   }
 
   /**
-   * Obtener todos los usuarios para el dropdown de informes
-   * Endpoint: GET /api/users/for-reports
+   * Obtener usuarios para el dropdown de informes
+   * GET /api/users/for-reports
    */
   getUsers(): Observable<ApiResponse<User[]>> {
     const url = `${this.baseUrl}/users/for-reports`;
-    return this.http.get<ApiResponse<User[]>>(url, { headers: this.getAuthHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
+    
+    console.log('📡 Solicitando usuarios desde:', url);
+    
+    return this.http.get<ApiResponse<User[]>>(url, { 
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(response => {
+        console.log('✓ Usuarios obtenidos:', response.data?.length || 0);
+      }),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   /**
-   * Obtener un usuario específico por ID
-   * Endpoint: GET /api/users/{id}
+   * 🔥 MEJORADO: Generar informe completo con TODOS los parámetros
+   * POST /api/reports
    */
-  getUserById(userId: number): Observable<ApiResponse<User>> {
-    const url = `${this.baseUrl}/users/${userId}`;
-    return this.http.get<ApiResponse<User>>(url, { headers: this.getAuthHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
-  /**
-   * Crear un nuevo usuario
-   * Endpoint: POST /api/users
-   */
-  createUser(userData: User): Observable<ApiResponse<User>> {
-    const url = `${this.baseUrl}/users`;
-    return this.http.post<ApiResponse<User>>(url, userData, { headers: this.getAuthHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
-  /**
-   * Generar informe para un usuario en un rango de fechas
-   * Endpoint: POST /api/reports
-   */
-  generateReport(userId: number, startDate: string, endDate: string): Observable<any> {
+  generateReport(
+    userId: number | null, 
+    startDate: string, 
+    endDate: string,
+    role?: string,
+    status?: string
+  ): Observable<any> {
     const url = `${this.baseUrl}/reports`;
-    const body = {
-      user_id: userId,
+    
+    // 🔥 Construir el body con TODOS los parámetros
+    const body: ReportParams = {
       start_date: startDate,
       end_date: endDate
     };
 
-    return this.http.post(url, body, { headers: this.getAuthHeaders() })
-      .pipe(
-        catchError(this.handleError)
-      );
+    // Solo agregar user_id si es un número válido mayor que 0
+    if (userId !== null && userId > 0) {
+      body.user_id = userId;
+    }
+
+    // 🔥 CRÍTICO: Normalizar el rol antes de enviarlo
+    if (role && role !== 'all') {
+      body.role = this.normalizeRole(role);
+    }
+
+    // 🔥 Agregar filtro de estado
+    if (status && status !== 'all') {
+      body.status = status;
+    }
+
+    console.log('📡 Generando informe con parámetros:', body);
+
+    return this.http.post(url, body, { 
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(response => {
+        console.log('✓ Informe generado exitosamente');
+        console.log('📊 Datos del informe:', response);
+      }),
+      catchError(this.handleError.bind(this))
+    );
   }
 
   /**
-   * Manejo centralizado de errores HTTP
+   * 🔥 NUEVO: Normalizar roles para enviar al backend
+   */
+  private normalizeRole(role: string): string {
+    const roleMap: { [key: string]: string } = {
+      'propietario': 'propietario',
+      'empleado': 'empleado',
+      'administrador': 'administrador',
+      'all': 'all'
+    };
+
+    const normalized = role.toLowerCase().trim();
+    return roleMap[normalized] || role;
+  }
+
+  /**
+   * Obtener estadísticas rápidas
+   * GET /api/reports/stats
+   */
+  getQuickStats(): Observable<any> {
+    const url = `${this.baseUrl}/reports/stats`;
+    
+    console.log('📡 Solicitando estadísticas rápidas');
+    
+    return this.http.get(url, { 
+      headers: this.getAuthHeaders()
+    }).pipe(
+      tap(response => {
+        console.log('✓ Estadísticas obtenidas');
+      }),
+      catchError(this.handleError.bind(this))
+    );
+  }
+
+  /**
+   * Verificar si el usuario está autenticado
+   */
+  isAuthenticated(): boolean {
+    const token = localStorage.getItem('auth_token') || 
+                  localStorage.getItem('token') ||
+                  sessionStorage.getItem('auth_token') ||
+                  sessionStorage.getItem('token');
+    
+    return !!token;
+  }
+
+  /**
+   * Manejo centralizado de errores HTTP con logging detallado
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
-    console.error('ReportsService error:', error);
+    console.error('❌ Error en ReportsService:', error);
 
-    let message = 'Ocurrió un error en la comunicación con el servidor.';
+    let userMessage = 'Ocurrió un error en la comunicación con el servidor.';
+    let technicalDetails = '';
 
     if (error.error instanceof ErrorEvent) {
-      // Error del lado del cliente
-      message = `Error: ${error.error.message}`;
+      userMessage = 'Error de conexión. Por favor verifica tu conexión a internet.';
+      technicalDetails = error.error.message;
+      console.error('🔌 Error de red:', technicalDetails);
+      
     } else {
-      // Error del lado del servidor
-      if (error.status === 0) {
-        message = 'No se pudo conectar al servidor. Verifique su conexión a internet.';
-      } else if (error.status === 401) {
-        message = 'No estás autenticado. Por favor, inicia sesión.';
-      } else if (error.status === 404) {
-        message = 'Recurso no encontrado en el servidor.';
-      } else if (error.status === 500) {
-        message = 'Error interno del servidor.';
-      } else if (error.status === 422) {
-        message = 'Datos de entrada inválidos.';
-      } else if (error.error && error.error.message) {
-        message = error.error.message;
-      } else if (error.message) {
-        message = error.message;
+      technicalDetails = `Código: ${error.status}, Mensaje: ${error.message}`;
+      
+      switch (error.status) {
+        case 0:
+          userMessage = '❌ No se pudo conectar al servidor. Verifica que el backend esté corriendo en http://localhost:8000';
+          console.error('🔌 Backend no disponible. Asegúrate de que Laravel esté corriendo.');
+          break;
+          
+        case 401:
+          userMessage = '🔐 No estás autenticado. Por favor, inicia sesión nuevamente.';
+          console.error('🔐 Token inválido o expirado.');
+          break;
+          
+        case 403:
+          userMessage = '⛔ No tienes permisos para realizar esta acción.';
+          console.error('⛔ Acceso denegado por permisos insuficientes.');
+          break;
+          
+        case 404:
+          userMessage = '🔍 El recurso solicitado no fue encontrado.';
+          console.error('🔍 Endpoint no encontrado:', error.url);
+          break;
+          
+        case 422:
+          userMessage = '📝 Datos de entrada inválidos. Verifica los campos del formulario.';
+          if (error.error && error.error.errors) {
+            console.error('📝 Errores de validación:', error.error.errors);
+            const validationErrors = error.error.errors;
+            const errorMessages = Object.values(validationErrors).flat();
+            userMessage = errorMessages.join(', ');
+          }
+          break;
+          
+        case 500:
+          userMessage = '⚠️ Error interno del servidor. Por favor contacta al administrador.';
+          console.error('⚠️ Error 500 - Revisa los logs del backend Laravel');
+          break;
+          
+        case 503:
+          userMessage = '🔧 El servidor está en mantenimiento. Intenta más tarde.';
+          console.error('🔧 Servicio no disponible');
+          break;
+          
+        default:
+          if (error.error && error.error.message) {
+            userMessage = error.error.message;
+          }
+          console.error(`❌ Error HTTP ${error.status}:`, error.message);
       }
+    }
+
+    console.group('📋 Detalles del Error');
+    console.log('URL:', error.url);
+    console.log('Status:', error.status);
+    console.log('Status Text:', error.statusText);
+    console.log('Error Response:', error.error);
+    console.log('Headers:', error.headers);
+    console.groupEnd();
+
+    if (error.error && typeof error.error === 'object' && error.error.message) {
+      userMessage = error.error.message;
     }
 
     return throwError(() => ({ 
       status: error.status, 
-      message: message,
-      errors: error.error?.errors || null
+      message: userMessage,
+      technicalDetails: technicalDetails,
+      errors: error.error?.errors || null,
+      originalError: error
     }));
   }
 }
