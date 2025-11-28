@@ -14,27 +14,33 @@ body {
 /* ===========================
    Header
    =========================== */
+  /* ================================
+   HEADER FIJO CON GRADIENTE
+   ================================ */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
-  padding: 1.2rem 20px;
-  padding-bottom: 1.2rem;
-  padding-top: calc(1.2rem + env(safe-area-inset-top, 24px));
-  color: white;
-  gap: 12px;
-  flex-wrap: wrap;
-  overflow: hidden;
-  max-width: 100vw;
-  position: relative;
-  width: 100%;
-  margin-top: 0;
-  z-index: 100;
-  box-sizing: border-box;
-  min-height: 110px;
+  position: fixed;           /* header fijo */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  /* Safe area y altura del header */
+  padding-top: env(safe-area-inset-top, 24px);  /* evita que toque la barra de estado */
+  padding-bottom: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  /* Gradiente del header */
+  background-image: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  background-clip: padding-box; /* asegura que el gradiente no se transparente */
+  color: #ffffff;               /* texto blanco */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Esto asegura que el contenido detrás del header no se vea por la barra de estado */
 .header::before {
   content: '';
   position: absolute;
@@ -42,9 +48,18 @@ body {
   left: 0;
   right: 0;
   height: env(safe-area-inset-top, 24px);
-  background-color: #ffffff;
+  background-color: #ffffff; /* barra de estado blanca */
   z-index: -1;
 }
+
+/* ================================
+   CONTENIDO PRINCIPAL
+   ================================ */
+.main-container {
+  margin-top: calc(env(safe-area-inset-top, 24px) + 70px); /* 70px es la altura de tu header */
+  min-height: calc(100vh - (env(safe-area-inset-top, 24px) + 70px));
+}
+
 
 .titulo {
   margin: 0;
@@ -202,6 +217,7 @@ body {
   background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 1.5rem;
+  margin-top: 4em;
 }
 
 .registro-form {
