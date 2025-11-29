@@ -354,45 +354,265 @@ body {
     transform: scale(1);
   }
 }
+/* ============================================
+   FIX EXCLUSIVO PARA 820 × 1180 (iPad vertical)
+   ============================================ */
+   @media (min-width: 810px) and (max-width: 1024px) and (orientation: portrait) {
+
+    /* HEADER */
+    .header {
+      height: auto !important;
+      padding: 12px 20px;
+      align-items: flex-start !important;
+    }
+
+    .titulo {
+      font-size: 1.55rem !important;
+      margin-top: 15px;
+    }
+
+    /* LOGIN FORM — se divide en 2 filas */
+    .login-form {
+      width: auto !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      padding-top: 0 !important;
+    }
+
+    /* Inputs más pequeños */
+    .login-form input {
+      width: 145px !important;
+      height: 26px !important;
+      padding: 0.3rem 0.55rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Botón ajustado */
+    .login-form .boton-redireccion {
+      height: 28px !important;
+      padding: 0 0.8rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* EXTRA debajo, alineado a la derecha */
+    .extra {
+      width: 100%;
+      margin-top: -1rem !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 1rem !important;
+      padding-right: 0.3rem;
+      font-size: 0.78rem !important;
+      padding-top: -5rem;
+    }
+
+    .remember-label input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Ajustes de container */
+    .container {
+      margin-top: 0.5rem;
+      padding: 1rem 4vw;
+    }
+    /* Ajuste fino del EXTRA para 820 × 1180 */
+@media (min-width: 810px) and (max-width: 1024px) and (orientation: portrait) {
+
+  .extra {
+    margin-top: -1rem !important;
+    padding-right: 9.0rem !important;
+    gap: 0.6rem !important;    /* más compacto */
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+    height: auto !important;
+    overflow: hidden !important;   /* evita scroll */
+  }
+  .extra > *:not(:last-child) {
+    margin-right: 3.5rem;
+  }
+  .remember-label {
+    gap: 0.25rem !important;   /* más pegado */
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0;
+  }
+
+  .extra a {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+}
+
+  }
 
 /* ===========================
-   RESPONSIVE - Tablets (768px)
+   RESPONSIVE - Tablets reales
+   769px → 1024px
    =========================== */
-@media (max-width: 768px) {
-  .header {
-    padding: 15px;
-    gap: 15px;
+   @media (min-width: 769px) and (max-width: 1024px) {
+
+    /* --------------------------------------
+       HEADER
+    -------------------------------------- */
+    .header {
+      padding: 12px 20px;
+      gap: 12px;
+      height: 78px !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .titulo {
+      font-size: 1.6rem;
+    }
+
+    /* --------------------------------------
+       LOGIN FORM (inputs + botón)
+       → alineado a la derecha
+    -------------------------------------- */
+    .login-form {
+      width: 100%;
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+      gap: 0.6rem !important;
+      flex-wrap: nowrap;
+    }
+
+    .login-form input {
+      height: 28px !important;
+      width: 150px !important;
+      font-size: 0.85rem !important;
+      padding: 0.3rem 0.6rem !important;
+    }
+
+    .login-form .boton-redireccion {
+      height: 30px !important;
+      padding: 0 1rem !important;
+      font-size: 0.85rem !important;
+      white-space: nowrap;
+    }
+
+    /* --------------------------------------
+       RECUÉRDAME + OLVIDÉ CONTRASEÑA
+       → debajo del login
+       → alineado a la derecha
+    -------------------------------------- */
+    .extra {
+      width: 100%;
+      margin-top: 0.35rem !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      align-items: center;
+      gap: 1.2rem !important;
+      padding-right: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .remember-label {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* --------------------------------------
+       CONTENIDO PRINCIPAL
+    -------------------------------------- */
+    .container {
+      padding: 1rem 3vw;
+      gap: 1.5rem;
+    }
+
+    .mensaje {
+      font-size: 1.05rem;
+    }
+
+    .logo {
+      width: 180px;
+    }
+
+    /* Derecha (Registro) subido */
+    .derecha {
+      margin-top: -10px;
+    }
   }
 
-  .titulo {
-    font-size: 1.75rem;
-  }
 
-  .login-form {
-    justify-content: start-end;
-    width: 100%;
-  }
+/* ===========================
+   RESPONSIVE - Tablets reales (600px – 1024px)
+   =========================== */
+   @media (min-width: 600px) and (max-width: 1024px) {
 
-  .login-form input {
-    width: 160px;
-  }
+    /* Header */
+    .header {
+      padding: 12px 15px;
+      gap: 12px;
+    }
 
-  .container {
-    padding: 0.5rem 3vw;
-    padding-top: 0.25rem;
-    gap: 1.5rem;
-  }
+    /* Título */
+    .titulo {
+      font-size: 1.6rem;
+    }
 
-  .mensaje {
-    font-size: 1.1rem;
-  }
+    /* Login form */
+    .login-form {
+      width: auto;
+      gap: 0.5rem;
+      padding-top: 10px;
+      padding-bottom: 0;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
 
-  .logo {
-    width: 50%;
-    max-width: 200px;
-  }
+    /* Inputs */
+    .login-form input {
+      width: 140px;
+      height: 30px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+    }
 
+    /* Botón */
+    .login-form .boton-redireccion {
+      height: 34px;
+      padding: 0 1rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    /* Secciones del body */
+    .container {
+      padding: 1rem 3vw;
+      padding-top: 0.5rem;
+      gap: 1rem;
+    }
+
+    .mensaje {
+      font-size: 1rem;
+    }
+
+    .logo {
+      width: 150px;
+    }
+    .extra {
+      display: flex;
+      justify-content: flex-end; /* mover a la derecha */
+      gap: 3.8rem;
+      padding-right: 9em;
+  }
 }
+
 
 
 /* ===========================
