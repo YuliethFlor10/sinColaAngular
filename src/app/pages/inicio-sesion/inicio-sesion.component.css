@@ -836,3 +836,89 @@ button {
   max-width: 100%;
   box-sizing: border-box;
 }
+/* ============================
+   FIX HEADER SOLO PARA WEB
+   ============================ */
+   @media (min-width: 769px) {
+
+    .header {
+      padding-top: 0.3rem !important;     /* elimina el safe-area en web */
+      padding-bottom: 0.3rem !important;
+      height: 78px !important;          /* ALTURA EXACTA del header */
+      line-height: 1 !important;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Quitar la barra blanca en web */
+    .header::before {
+      display: none !important;
+    }
+
+    /* Ajustar contenido principal */
+    .main-container {
+      margin-top: 70px !important;
+    }
+  }
+/* ============================================================
+   FIX SOLO PARA WEB — Ajuste de altura de inputs y botón
+   ============================================================ */
+   @media (min-width: 769px) {
+
+    /* Inputs del login */
+    .login-form input {
+      height: 25px !important;
+      padding: 0.3rem 0.8rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Botón de ingresar */
+    .login-form .boton-redireccion {
+      height: 30px !important;
+      padding: 0 1rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Evitar que el contenedor haga inputs grandes */
+    .login-form {
+      gap: 0.5rem !important;
+      padding-top: 15px !important;
+      padding-bottom: 0 !important;
+    }
+  }
+  /* ============================================================
+   Ajuste de "extra" (Recuérdame + Olvidé contraseña) solo WEB
+   ============================================================ */
+@media (min-width: 769px) {
+  .extra {
+    margin-top: -0.6rem;      /* Más cerca de los inputs */
+    gap: 7.5rem;             /* Más espacio entre "Recuérdame" y "Olvidé contraseña" */
+    justify-content: flex-end; /* Alinea a la izquierda */
+    padding: 0 10.5rem;       /* Espacio lateral */
+  }
+
+  .remember-label {
+    gap: 0.5rem;             /* Separación entre checkbox y texto */
+  }
+
+  .extra a {
+    white-space: nowrap;     /* Evita que el enlace se rompa en dos líneas */
+  }
+}
+/* Ajustar espacio debajo del header fijo */
+main.container {
+  margin-top: calc(env(safe-area-inset-top, 24px) + 95px); /* 70px = altura de tu header */
+  padding: 1rem; /* opcional: espacio interno */
+}
+/* Ajustar sección Derecha (Registro) */
+.derecha {
+  margin-top: -20px; /* elimina márgenes grandes arriba */
+  padding: 2rem; /* espacio interno, opcional */
+}
+
+/* Ajustar título "Regístrate" */
+.registrate {
+  margin-top: 0; /* antes tenía 4em u otro valor grande */
+  margin-bottom: 1rem; /* separa del formulario */
+  font-size: 2rem;
+}
