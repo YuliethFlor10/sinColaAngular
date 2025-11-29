@@ -119,7 +119,7 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-top: 5px;
+  margin-top: px;
   gap: 15px;
   font-size: 13px;
   flex-wrap: wrap;
@@ -369,7 +369,7 @@ body {
   }
 
   .login-form {
-    justify-content: center;
+    justify-content: start-end;
     width: 100%;
   }
 
@@ -391,7 +391,9 @@ body {
     width: 50%;
     max-width: 200px;
   }
+
 }
+
 
 /* ===========================
    RESPONSIVE - Móviles (600px)
