@@ -279,14 +279,24 @@ export class CitasComponent implements OnInit {
       return;
     }
 
-    const selectedService = this.availableServices.find(s => s.id.toString() === this.form.appointmentService);
-    const selectedStaff = this.availableStaff.find(st => st.id.toString() === this.form.appointmentStaff);
+    // 🔥 BUSCAR SERVICIO Y STAFF SELECCIONADOS
+    const selectedService = this.availableServices.find(
+      s => s.id.toString() === this.form.appointmentService
+    );
+    
+    const selectedStaff = this.availableStaff.find(
+      st => st.id.toString() === this.form.appointmentStaff
+    );
 
     if (!selectedService || !selectedStaff) {
       this.showError('Datos inválidos');
       return;
     }
 
+    console.log('✅ Servicio seleccionado:', selectedService);
+    console.log('✅ Personal seleccionado:', selectedStaff);
+
+    // 🔥 CONSTRUIR OBJETO CON IDs CORRECTOS
     const appointment: Appointment = {
       clientName: this.form.clientName.trim(),
       clientEmail: this.form.clientEmail.trim(),
@@ -294,14 +304,19 @@ export class CitasComponent implements OnInit {
       clientDocNumber: this.form.clientDocNumber || '0000000000',
       clientBirthDate: this.form.clientBirthDate || '2000-01-01',
       clientPhone: this.form.clientPhone || '3000000000',
-      serviceName: selectedService.nombre,
-      staffName: selectedStaff.nombre_completo,
+      serviceName: selectedService.nombre,           // ← Nombre para mostrar
+      serviceId: selectedService.id,                 // ← 🔥 ID del servicio
+      staffName: selectedStaff.nombre_completo,      // ← Nombre para mostrar
+      staffId: selectedStaff.id,                     // ← 🔥 ID del personal
       day: this.form.selectedDay,
       monthName: this.form.selectedMonth,
       time: this.form.selectedTime,
       status: 'reserved',
-      nota: this.form.appointmentObservations || ''
+      nota: this.form.appointmentObservations || '',
+      tiempo_estimado: selectedService.tiempo_estimado  // ← 🔥 Duración del servicio
     };
+
+    console.log('📦 Appointment construido:', appointment);
 
     this.isLoading = true;
 
@@ -345,8 +360,8 @@ export class CitasComponent implements OnInit {
       clientEmail: apt.clientEmail || '',
       clientBirthDate: apt.clientBirthDate || '',
       clientPhone: apt.clientPhone || '',
-      appointmentService: apt.serviceName,
-      appointmentStaff: apt.staffName || '',
+      appointmentService: apt.serviceId?.toString() || '',  // 🔥 USAR serviceId
+      appointmentStaff: apt.staffId?.toString() || '',      // 🔥 USAR staffId
       appointmentObservations: apt.nota || '',
       selectedDay: apt.day,
       selectedMonth: apt.monthName,
@@ -357,8 +372,8 @@ export class CitasComponent implements OnInit {
     this.availableTimeSlots.forEach(s => s.selected = s.time === apt.time);
     this.selectedDateText = `Día ${apt.day}`;
 
-    if (apt.serviceName) this.onServiceChange();
-    if (apt.staffName) this.onStaffChange();
+    if (apt.serviceId) this.onServiceChange();
+    if (apt.staffId) this.onStaffChange();
 
     this.switchView('create');
   }

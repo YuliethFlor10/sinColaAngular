@@ -13,12 +13,15 @@ export interface Appointment {
   clientBirthDate?: string;
   clientPhone?: string;
   serviceName: string;
+  serviceId?: number;              // 🔥 NUEVO
   staffName?: string;
+  staffId?: number;                // 🔥 NUEVO
   day: number;
   monthName: string;
   time: string;
   status: 'reserved' | 'confirmed' | 'cancelled';
   nota?: string;
+  tiempo_estimado?: number;        // 🔥 NUEVO
   showMenu?: boolean;
 }
 
@@ -147,12 +150,13 @@ export class AppointmentsService {
       numero_telefono: appointment.clientPhone || '3000000000',
       celular: appointment.clientPhone || '3000000000',
       negocios_id: this.getCurrentBusinessId(),
-      servicios_id: 1,
+      servicios_id: appointment.serviceId || 1,        // 🔥 USAR serviceId
+      agendas_id: appointment.staffId || null,         // 🔥 USAR staffId
       tipo_cita: appointment.serviceName,
       personal_servicio: appointment.staffName || '',
       fecha_cita: this.buildDateString(appointment),
       hora_cita: appointment.time,
-      tiempo_estimado: 60,
+      tiempo_estimado: appointment.tiempo_estimado || 60,  // 🔥 USAR tiempo_estimado
       nota: appointment.nota || '',
       estados_id: this.mapStatusToId(appointment.status)
     };
@@ -199,10 +203,13 @@ export class AppointmentsService {
       numero_documento: appointment.clientDocNumber || '0000000000',
       fecha_nacimiento: appointment.clientBirthDate || '2000-01-01',
       numero_telefono: appointment.clientPhone || '3000000000',
+      servicios_id: appointment.serviceId || 1,        // 🔥 USAR serviceId
+      agendas_id: appointment.staffId || null,         // 🔥 USAR staffId
       tipo_cita: appointment.serviceName,
       personal_servicio: appointment.staffName || '',
       fecha_cita: this.buildDateString(appointment),
       hora_cita: appointment.time,
+      tiempo_estimado: appointment.tiempo_estimado || 60,  // 🔥 USAR tiempo_estimado
       nota: appointment.nota || '',
       estados_id: this.mapStatusToId(appointment.status)
     };
@@ -276,12 +283,15 @@ export class AppointmentsService {
       clientBirthDate: apiData.cliente_fecha_nac || '',
       clientPhone: apiData.cliente_telefono || '',
       serviceName: apiData.service?.nombre || apiData.tipo_servicio || 'Sin servicio',
+      serviceId: apiData.servicios_id || apiData.service?.id,  // 🔥 NUEVO
       staffName: apiData.personal_asignado || 'Sin personal',
+      staffId: apiData.agendas_id || null,                     // 🔥 NUEVO
       day: fecha.getDate(),
       monthName: monthNames[fecha.getMonth()],
       time: fecha.toTimeString().substring(0, 5),
       status: this.mapApiStatus(apiData.status?.nombre || apiData.estados_id),
-      nota: apiData.nota || ''
+      nota: apiData.nota || '',
+      tiempo_estimado: apiData.tiempo_estimado || 60           // 🔥 NUEVO
     };
   }
 
