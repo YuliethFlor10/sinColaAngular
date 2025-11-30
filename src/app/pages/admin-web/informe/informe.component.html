@@ -63,7 +63,7 @@
               (change)="onDateChange()">
           </div>
 
-          <!-- Selector de usuario específico -->
+          <!-- Selector de usuario específico - CORREGIDO -->
           <div class="form-group">
             <label for="reportPersonSelect">👤 Usuario específico</label>
             <select 
@@ -73,7 +73,7 @@
               (change)="onPersonChange()">
               <option [ngValue]="null">Todos los usuarios</option>
               <option *ngFor="let u of filteredUsers" [ngValue]="u.id">
-                {{u.name || u.full_name || u.username}} ({{u.role || 'Usuario'}})
+                {{ getUserName(u) }} - {{ getRoleName(u) }}
               </option>
             </select>
           </div>
@@ -391,14 +391,7 @@
         </div>
 
         <!-- Gráfica de ingresos por usuario -->
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>💵 Ingresos por usuario</h3>
-          </div>
-          <div class="chart-body">
-            <canvas #usersChart id="usersChart"></canvas>
-          </div>
-        </div>
+        
       </div>
 
       <!-- Estado inicial / cargando -->

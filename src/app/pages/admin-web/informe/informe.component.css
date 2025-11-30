@@ -1,3 +1,6 @@
+/* Copiar TODO el contenido del CSS que tienes (documento 9) aquí */
+/* Este es el archivo completo que ya tienes, solo asegúrate de tenerlo en informe.component.css */
+
 .container {
   padding: 2rem;
   max-width: 1400px;
@@ -21,6 +24,7 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 1.5rem;
   align-items: end;
+  margin-bottom: 1.5rem;
 }
 
 .form-group {
@@ -92,6 +96,7 @@
   box-shadow: 0 4px 15px rgba(253, 192, 48, 0.4);
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  width: 100%;
 }
 
 .btn-generate-report:hover:not(:disabled) {
@@ -196,16 +201,18 @@
   border-radius: 12px;
   margin-bottom: 1rem;
   font-weight: 600;
-  opacity: 0;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
+  animation: slideIn 0.3s ease;
 }
 
-.success-message.show,
-.error-message-global.show,
-.info-message-global.show {
-  opacity: 1;
-  transform: translateY(0);
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .success-message {

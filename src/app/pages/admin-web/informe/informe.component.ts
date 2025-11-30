@@ -1,49 +1,12 @@
-import { Component, OnInit, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { AdminWeb } from "../admin-web";
-import { ContenidoComponent } from "../../../compartido/components/contenido/contenido.component";
+import { AdminWeb } from '../admin-web';
+import { ContenidoComponent } from '../../../compartido/components/contenido/contenido.component';
 import { ReportsService } from '../../../services/reports.service';
 
 declare var Chart: any;
-
-interface User {
-  id?: number;
-  name: string;
-  email: string;
-  password?: string;
-  password_confirmation?: string;
-  role?: string;
-  created_at?: string;
-  updated_at?: string;
-  [key: string]: any;
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-  errors?: any;
-}
-
-interface ServiceData {
-  name: string;
-  count: number;
-  value: number;
-  user_id?: number;
-  user_name?: string;
-}
-
-interface AppointmentData {
-  user_id: number;
-  user_name: string;
-  role: string;
-  pending_count: number;
-  completed_count: number;
-  total_value: number;
-  services: ServiceData[];
-}
 
 @Component({
   selector: 'app-informe',
@@ -51,15 +14,14 @@ interface AppointmentData {
   styleUrls: ['./informe.component.css'],
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule,
+    CommonModule, 
+    FormsModule, 
     HttpClientModule,
-    AdminWeb, 
+    AdminWeb,
     ContenidoComponent
   ]
 })
-export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
+export class InformeComponent implements OnInit, OnDestroy {
   @ViewChild('servicesChart') chartCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('timelineChart') timelineCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('usersChart') usersCanvas!: ElementRef<HTMLCanvasElement>;
@@ -73,27 +35,33 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
   selectedRole: string = 'all';
   selectedStatus: string = 'all';
 
-  // Datos
-  users: Array<any> = [];
-  filteredUsers: Array<any> = [];
+  // Datos originales
+  allUsers: any[] = [];
+  allServices: any[] = [];
+  allAppointments: any[] = [];
+
+  // Datos filtrados
+  users: any[] = [];
+  filteredUsers: any[] = [];
   
   // Estados
   isGenerating: boolean = false;
   showChart: boolean = false;
   
-  // Estadísticas principales
-  mostPerformedServices: ServiceData[] = [];
+  // Estadísticas
+  mostPerformedServices: any[] = [];
   totalValue: number = 0;
   totalRecords: number = 0;
   totalPending: number = 0;
   totalCompleted: number = 0;
   averagePerMonth: number = 0;
+  userPerformance: any[] = [];
   
   // Estadísticas por rol
   propietarioStats = {
     totalServices: 0,
     totalValue: 0,
-    services: [] as ServiceData[]
+    services: [] as any[]
   };
   
   empleadoStats = {
@@ -101,7 +69,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     completedAppointments: 0,
     totalValue: 0,
     topReserver: '',
-    reservations: [] as AppointmentData[]
+    reservations: [] as any[]
   };
   
   administradorStats = {
@@ -109,11 +77,8 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     completedAppointments: 0,
     totalValue: 0,
     topReserver: '',
-    reservations: [] as AppointmentData[]
+    reservations: [] as any[]
   };
-  
-  // Performance de usuarios
-  userPerformance: AppointmentData[] = [];
   
   // Mensajes
   successMessage: string = '';
@@ -130,39 +95,15 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
 
   Math = Math;
 
-  constructor(
-    private reportsService: ReportsService,
-    private fb: FormBuilder
-  ) {}
+  constructor(private reportsService: ReportsService) {}
 
   ngOnInit(): void {
     this.initializeDates();
-    this.loadUsers();
+    this.loadAllData();
   }
-
-  ngAfterViewInit(): void {}
 
   ngOnDestroy(): void {
     this.destroyCharts();
-  }
-
-  private destroyCharts(): void {
-    if (this.chartInstance) {
-      this.chartInstance.destroy();
-      this.chartInstance = null;
-    }
-    if (this.timelineChartInstance) {
-      this.timelineChartInstance.destroy();
-      this.timelineChartInstance = null;
-    }
-    if (this.usersChartInstance) {
-      this.usersChartInstance.destroy();
-      this.usersChartInstance = null;
-    }
-    if (this.appointmentsChartInstance) {
-      this.appointmentsChartInstance.destroy();
-      this.appointmentsChartInstance = null;
-    }
   }
 
   private initializeDates(): void {
@@ -176,41 +117,84 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     return date.toISOString().split('T')[0];
   }
 
-  loadUsers(): void {
-    this.reportsService.getUsers().subscribe({
-      next: (response: ApiResponse<User[]>) => {
-        if (response.success) {
-          this.users = response.data;
-          this.filterUsersByRole();
-          console.log('✅ Usuarios cargados:', this.users.length);
-        } else {
-          this.users = [];
-          this.showErrorMessage(response.message || 'Error al obtener los usuarios.');
+loadAllData(): void {
+    console.log('📡 Cargando datos...');
+    
+    this.reportsService.getAllData().subscribe({
+      next: (data) => {
+        console.log('✅ Datos cargados:', data);
+        
+        this.allUsers = data.users || [];
+        this.allServices = data.services || [];
+        this.allAppointments = data.appointments || [];
+        
+        // 🔍 DIAGNÓSTICO COMPLETO
+        if (this.allAppointments.length > 0) {
+          console.log('📊 ===== DIAGNÓSTICO DE DATOS CARGADOS =====');
+          
+          const citasConService = this.allAppointments.filter(apt => apt.service !== null).length;
+          console.log(`✅ Citas con service: ${citasConService} de ${this.allAppointments.length}`);
+          
+          if (citasConService === 0) {
+            console.error('❌❌❌ NINGUNA CITA TIENE SERVICE CARGADO');
+            console.error('🔧 ACCIÓN REQUERIDA:');
+            console.error('   1. Verificar AppointmentController->index()');
+            console.error('   2. Debe incluir: ->with([\'user\', \'business\', \'status\', \'service\', \'agenda\'])');
+          }
+          
+          // Mostrar ejemplo de cita
+          const ejemploCita = this.allAppointments[0];
+          console.log('📝 Ejemplo de cita:', {
+            id: ejemploCita.id,
+            servicios_id: ejemploCita.servicios_id,
+            service: ejemploCita.service ? '✅ EXISTE' : '❌ NULL',
+            service_name: ejemploCita.service?.nombre || 'NO DISPONIBLE'
+          });
+          
+          const userIdsWithAppointments = new Set(
+            this.allAppointments.map((apt: any) => apt.usuarios_id || apt.user_id)
+          );
+          
+          console.log('📊 IDs de usuarios que TIENEN citas:', Array.from(userIdsWithAppointments));
+          console.log('===========================================');
         }
+        
+        this.filterUsers();
+        this.showSuccessMessage('Datos cargados correctamente');
       },
-      error: (error: any) => {
-        console.error('❌ Error al cargar usuarios:', error);
-        this.showErrorMessage('Error de conexión al cargar usuarios.');
-        this.users = [];
+      error: (err) => {
+        console.error('❌ Error cargando datos:', err);
+        this.showErrorMessage('Error al cargar los datos');
       }
     });
   }
 
-  onRoleChange(): void {
-    this.filterUsersByRole();
-    this.selectedUserId = null;
-    if (this.showChart) {
-      this.generateReport();
-    }
-  }
-
-  filterUsersByRole(): void {
+  filterUsers(): void {
+    this.users = this.allUsers;
+    
     if (this.selectedRole === 'all') {
       this.filteredUsers = this.users;
     } else {
       this.filteredUsers = this.users.filter(u => 
-        u.role?.toLowerCase() === this.selectedRole.toLowerCase()
+        u.role?.toLowerCase() === this.selectedRole.toLowerCase() ||
+        u.role?.nombre?.toLowerCase() === this.selectedRole.toLowerCase()
       );
+    }
+    
+    console.log('👥 Usuarios filtrados para selector:', this.filteredUsers.length);
+    
+    // Agregar opción "Todos" al inicio
+    this.filteredUsers = [
+      { id: null, nombres: 'Todos', apellidos: 'los usuarios', role: this.selectedRole },
+      ...this.filteredUsers
+    ];
+  }
+
+  onRoleChange(): void {
+    this.filterUsers();
+    this.selectedUserId = null;
+    if (this.showChart) {
+      this.generateReport();
     }
   }
 
@@ -261,7 +245,6 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
         this.showErrorMessage('La fecha de inicio no puede ser mayor que la fecha de fin.');
         return;
       }
-      this.clearMessages();
     }
   }
 
@@ -277,156 +260,140 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
-  // 🔥 MÉTODO CORREGIDO: Enviar TODOS los parámetros al servicio
   generateReport(): void {
     if (!this.startDate || !this.endDate) {
-      this.showErrorMessage('Por favor, selecciona tanto la fecha de inicio como la de fin.');
+      this.showErrorMessage('Selecciona las fechas');
       return;
     }
 
-    this.isGenerating = true;
-    this.clearMessages();
-    this.showChart = false;
-
-    console.log('📊 Generando informe con filtros:', {
-      userId: this.selectedUserId,
-      role: this.selectedRole,
-      status: this.selectedStatus,
-      dates: [this.startDate, this.endDate]
+    console.log('📊 ========== GENERANDO INFORME ==========');
+    console.log('Filtros aplicados:', {
+      startDate: this.startDate,
+      endDate: this.endDate,
+      selectedUserId: this.selectedUserId,
+      selectedRole: this.selectedRole,
+      selectedStatus: this.selectedStatus
     });
-
-    // 🔥 CRÍTICO: Pasar TODOS los parámetros al servicio
-    this.reportsService.generateReport(
-      this.selectedUserId,
-      this.startDate,
-      this.endDate,
-      this.selectedRole,    // 🔥 Agregar rol
-      this.selectedStatus   // 🔥 Agregar estado
-    ).subscribe({
-      next: (res: any) => {
-        console.log('✅ Respuesta del backend:', res);
-        this.processReportResponse(res);
-        this.isGenerating = false;
-        this.showSuccessMessage('Informe generado exitosamente.');
-        this.showChart = true;
-      },
-      error: (err: any) => {
-        console.error('❌ Error generating report:', err);
-        this.showErrorMessage(err?.message || 'Error al generar el informe. Verifica tu conexión y autenticación.');
-        this.isGenerating = false;
-        
-        // 🔥 COMENTAR EN PRODUCCIÓN
-        // this.loadMockData();
-        // this.showChart = true;
-      }
-    });
-  }
-
-  private loadMockData(): void {
-    const mockResponse = {
-      services: [
-        { name: 'Corte de Cabello', count: 45, value: 675000, user_id: 1, user_name: 'Juan Pérez' },
-        { name: 'Manicure', count: 38, value: 570000, user_id: 2, user_name: 'María López' },
-        { name: 'Pedicure', count: 32, value: 640000, user_id: 1, user_name: 'Juan Pérez' },
-        { name: 'Tinte de Cabello', count: 28, value: 1120000, user_id: 3, user_name: 'Carlos Gómez' },
-        { name: 'Masaje Relajante', count: 25, value: 1250000, user_id: 2, user_name: 'María López' }
-      ],
-      appointments: [
-        { user_id: 1, user_name: 'Juan Pérez', role: 'Empleado', pending_count: 12, completed_count: 45, total_value: 1350000, services: [] },
-        { user_id: 2, user_name: 'María López', role: 'Empleado', pending_count: 8, completed_count: 38, total_value: 1140000, services: [] },
-        { user_id: 3, user_name: 'Carlos Gómez', role: 'Administrador', pending_count: 5, completed_count: 28, total_value: 1120000, services: [] }
-      ],
-      monthly: {
-        '2024-01': 45,
-        '2024-02': 52,
-        '2024-03': 48,
-        '2024-04': 60,
-        '2024-05': 55
-      }
-    };
     
-    this.processReportResponse(mockResponse);
-    this.showInfoMessage('Mostrando datos de ejemplo (modo desarrollo)');
-  }
-
-  private processReportResponse(response: any): void {
-    if (!response) {
-      this.noDataMessage = 'No hay datos disponibles para el período y usuario seleccionado.';
-      this.resetStats();
-      return;
-    }
-
+    this.isGenerating = true;
+    this.showChart = false;
     this.resetStats();
 
-    if (response.services && Array.isArray(response.services)) {
-      this.processServicesData(response.services);
-    }
+    // Filtrar citas por fechas
+    const startTime = new Date(this.startDate).getTime();
+    const endTime = new Date(this.endDate).getTime();
 
-    if (response.appointments && Array.isArray(response.appointments)) {
-      this.processAppointmentsData(response.appointments);
-    }
+    let filteredAppointments = this.allAppointments.filter(apt => {
+      const aptDate = new Date(apt.fecha || apt.date).getTime();
+      return aptDate >= startTime && aptDate <= endTime;
+    });
 
-    if (response.monthly) {
-      this.processTimelineData(response.monthly);
-    }
+    console.log('📅 Total citas en BD:', this.allAppointments.length);
+    console.log('📅 Citas en rango de fechas:', filteredAppointments.length);
 
-    this.createAllCharts(response);
-  }
-
-  private processServicesData(services: ServiceData[]): void {
-    this.mostPerformedServices = services
-      .slice()
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
-
-    this.totalValue = services.reduce((sum, item) => sum + (item.value || 0), 0);
-    this.totalRecords = services.reduce((sum, item) => sum + item.count, 0);
-
-    this.propietarioStats.totalServices = this.totalRecords;
-    this.propietarioStats.totalValue = this.totalValue;
-    this.propietarioStats.services = this.mostPerformedServices;
-  }
-
-  private processAppointmentsData(appointments: AppointmentData[]): void {
-    this.userPerformance = appointments;
-
-    this.totalPending = appointments.reduce((sum, a) => sum + (a.pending_count || 0), 0);
-    this.totalCompleted = appointments.reduce((sum, a) => sum + (a.completed_count || 0), 0);
-    this.totalValue += appointments.reduce((sum, a) => sum + (a.total_value || 0), 0);
-
-    const empleados = appointments.filter(a => a.role?.toLowerCase() === 'empleado');
-    const administradores = appointments.filter(a => a.role?.toLowerCase() === 'administrador');
-
-    if (empleados.length > 0) {
-      this.empleadoStats.pendingAppointments = empleados.reduce((sum, e) => sum + e.pending_count, 0);
-      this.empleadoStats.completedAppointments = empleados.reduce((sum, e) => sum + e.completed_count, 0);
-      this.empleadoStats.totalValue = empleados.reduce((sum, e) => sum + e.total_value, 0);
-      this.empleadoStats.reservations = empleados.sort((a, b) => b.completed_count - a.completed_count);
-      this.empleadoStats.topReserver = empleados[0]?.user_name || 'N/A';
-    }
-
-    if (administradores.length > 0) {
-      this.administradorStats.pendingAppointments = administradores.reduce((sum, a) => sum + a.pending_count, 0);
-      this.administradorStats.completedAppointments = administradores.reduce((sum, a) => sum + a.completed_count, 0);
-      this.administradorStats.totalValue = administradores.reduce((sum, a) => sum + a.total_value, 0);
-      this.administradorStats.reservations = administradores.sort((a, b) => b.completed_count - a.completed_count);
-      this.administradorStats.topReserver = administradores[0]?.user_name || 'N/A';
-    }
-  }
-
-  private processTimelineData(monthly: any): void {
-    const monthlyMap = new Map<string, number>();
-    
-    if (monthly && typeof monthly === 'object') {
-      Object.keys(monthly).forEach(k => {
-        monthlyMap.set(k, Number(monthly[k] || 0));
+    // Filtrar por usuario si está seleccionado
+    if (this.selectedUserId && this.selectedUserId !== null) {
+      const beforeFilter = filteredAppointments.length;
+      
+      filteredAppointments = filteredAppointments.filter(apt => {
+        const aptUserId = apt.usuarios_id || apt.user_id;
+        return Number(aptUserId) === Number(this.selectedUserId);
       });
+      
+      console.log(`👤 Filtrado por usuario ${this.selectedUserId}: ${beforeFilter} → ${filteredAppointments.length} citas`);
+      
+      if (filteredAppointments.length === 0) {
+        console.warn('⚠️ Este usuario NO tiene citas en el rango seleccionado');
+        console.warn('💡 Sugerencia: Selecciona "Todos" en el selector de persona');
+      }
+    } else {
+      console.log('👥 Mostrando citas de TODOS los usuarios');
     }
 
-    if (monthlyMap.size > 0) {
-      const monthsSpan = monthlyMap.size || 1;
-      this.averagePerMonth = +(this.totalRecords / monthsSpan).toFixed(2);
+    // Filtrar por rol si está seleccionado
+    if (this.selectedRole && this.selectedRole !== 'all') {
+      const beforeFilter = filteredAppointments.length;
+      
+      filteredAppointments = filteredAppointments.filter(apt => {
+        const userId = apt.usuarios_id || apt.user_id;
+        const user = this.allUsers.find(u => u.id === userId);
+        if (!user) return false;
+        
+        const userRole = (user.role?.nombre || user.role || '').toLowerCase();
+        return userRole === this.selectedRole.toLowerCase();
+      });
+      
+      console.log(`🎭 Filtrado por rol ${this.selectedRole}: ${beforeFilter} → ${filteredAppointments.length} citas`);
     }
+
+    // Filtrar por estado si está seleccionado
+    if (this.selectedStatus !== 'all') {
+      const beforeFilter = filteredAppointments.length;
+      
+      filteredAppointments = filteredAppointments.filter(apt => {
+        const status = apt.status?.nombre || apt.status_name || '';
+        return status.toLowerCase().includes(this.selectedStatus.toLowerCase());
+      });
+      
+      console.log(`📋 Filtrado por estado ${this.selectedStatus}: ${beforeFilter} → ${filteredAppointments.length} citas`);
+    }
+
+    // ✅ DIAGNÓSTICO DETALLADO
+    console.log('📊 ===== DIAGNÓSTICO DE CITAS FILTRADAS =====');
+    filteredAppointments.slice(0, 3).forEach((apt, i) => {
+      console.log(`Cita ${i + 1}:`, {
+        id: apt.id,
+        fecha: apt.fecha || apt.date,
+        usuario_id: apt.usuarios_id || apt.user_id,
+        servicio_id: apt.servicios_id || apt.service_id,
+        service_object: apt.service ? '✅ CARGADO' : '❌ NULL',
+        service_name: apt.service?.nombre || 'NO DISPONIBLE',
+        status: apt.status?.nombre || apt.status_name
+      });
+    });
+    
+    // ✅ VALIDAR QUE LAS CITAS TENGAN SERVICIOS CARGADOS
+    const citasConService = filteredAppointments.filter(apt => apt.service !== null).length;
+    const citasSinService = filteredAppointments.length - citasConService;
+
+    if (citasSinService > 0) {
+      console.error(`⚠️⚠️⚠️ PROBLEMA: ${citasSinService} citas NO tienen service cargado`);
+      console.error('💡 SOLUCIÓN: Verificar que el backend use ->with([\'service\']) en index()');
+    }
+    console.log('============================================');
+
+    if (filteredAppointments.length === 0) {
+      console.error('❌ NO HAY CITAS PARA PROCESAR');
+      console.error('💡 Opciones:');
+      console.error('   1. Cambia el rango de fechas');
+      console.error('   2. Selecciona "Todos" en persona');
+      console.error('   3. Verifica que haya citas en la BD');
+    }
+
+    // Procesar servicios más realizados
+    this.processServices(filteredAppointments);
+
+    // Procesar performance de usuarios
+    this.processUserPerformance(filteredAppointments);
+
+    // Procesar stats por rol
+    this.processRoleStats(filteredAppointments);
+
+    // Calcular promedio mensual
+    this.calculateAveragePerMonth(filteredAppointments);
+
+    // Crear gráficas
+    setTimeout(() => {
+      this.createAllCharts(filteredAppointments);
+      this.isGenerating = false;
+      this.showChart = true;
+      
+      if (filteredAppointments.length > 0) {
+        this.showSuccessMessage('Informe generado exitosamente');
+      } else {
+        this.showErrorMessage('No hay datos para mostrar con los filtros seleccionados');
+      }
+    }, 500);
   }
 
   private resetStats(): void {
@@ -443,31 +410,180 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     this.administradorStats = { pendingAppointments: 0, completedAppointments: 0, totalValue: 0, topReserver: '', reservations: [] };
   }
 
-  private createAllCharts(response: any): void {
-    setTimeout(() => {
-      if (this.selectedRole === 'propietario' || this.selectedRole === 'all') {
-        this.createMainChart(this.mostPerformedServices);
-      }
+private processServices(appointments: any[]): void {
+    const serviceMap = new Map<number, any>();
+
+    console.log('🛠️ Procesando servicios con', appointments.length, 'citas');
+    
+    appointments.forEach(apt => {
+      // 🔥 USAR DIRECTAMENTE apt.service SI VIENE CARGADO
+      const service = apt.service || this.allServices.find(s => s.id === (apt.servicios_id || apt.service_id));
       
-      if (this.selectedRole === 'empleado' || this.selectedRole === 'administrador' || this.selectedRole === 'all') {
-        this.createAppointmentsChart();
+      if (service) {
+        const serviceId = service.id;
+        
+        if (!serviceMap.has(serviceId)) {
+          serviceMap.set(serviceId, {
+            name: service.nombre || service.name,
+            count: 0,
+            value: 0,
+            price: parseFloat(service.precio || service.price || 0)
+          });
+        }
+        
+        const serviceData = serviceMap.get(serviceId);
+        serviceData.count++;
+        serviceData.value = serviceData.count * serviceData.price;
+      } else {
+        console.warn('⚠️ Cita sin servicio:', apt.id);
       }
+    });
+
+    this.mostPerformedServices = Array.from(serviceMap.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 10);
+
+    this.totalValue = this.mostPerformedServices.reduce((sum, s) => sum + s.value, 0);
+    this.totalRecords = this.mostPerformedServices.reduce((sum, s) => sum + s.count, 0);
+
+    console.log('✅ Servicios procesados:', this.mostPerformedServices.length);
+    console.log('💰 Valor total:', this.totalValue);
+  }
+  private processUserPerformance(appointments: any[]): void {
+    const userMap = new Map<number, any>();
+
+    console.log('👥 Procesando rendimiento de usuarios con', appointments.length, 'citas');
+
+    appointments.forEach(apt => {
+      const userId = apt.usuarios_id || apt.user_id;
+      const user = this.allUsers.find(u => u.id === userId);
       
-      this.createTimelineChart(response);
-      this.createUsersChart();
-    }, 100);
+      if (user) {
+        if (!userMap.has(userId)) {
+          userMap.set(userId, {
+            user_id: userId,
+            user_name: `${user.nombres || user.name} ${user.apellidos || ''}`.trim(),
+            role: user.role?.nombre || user.role,
+            pending_count: 0,
+            completed_count: 0,
+            total_value: 0
+          });
+        }
+        
+        const userData = userMap.get(userId);
+        const status = (apt.status?.nombre || apt.status_name || '').toLowerCase();
+        
+        if (status.includes('pendiente')) {
+          userData.pending_count++;
+        } else if (status.includes('completada') || status.includes('confirmada')) {
+          userData.completed_count++;
+          
+         const service = apt.service || this.allServices.find(s => s.id === (apt.servicios_id || apt.service_id));
+          if (service) {
+            userData.total_value += parseFloat(service.precio || service.price || 0);
+          }
+        }
+      }
+    });
+
+    this.userPerformance = Array.from(userMap.values())
+      .sort((a, b) => b.completed_count - a.completed_count);
+
+    this.totalPending = this.userPerformance.reduce((sum, u) => sum + u.pending_count, 0);
+    this.totalCompleted = this.userPerformance.reduce((sum, u) => sum + u.completed_count, 0);
+
+    console.log('📊 Usuarios con rendimiento:', this.userPerformance.length);
+    console.log('⏳ Total pendientes:', this.totalPending);
+    console.log('✅ Total completadas:', this.totalCompleted);
+  }
+
+  private processRoleStats(appointments: any[]): void {
+    // Stats de propietario (servicios)
+    this.propietarioStats.services = this.mostPerformedServices;
+    this.propietarioStats.totalServices = this.totalRecords;
+    this.propietarioStats.totalValue = this.totalValue;
+
+    // Stats de empleados y administradores
+    const empleados = this.userPerformance.filter(u => 
+      u.role?.toLowerCase() === 'empleado'
+    );
+    const administradores = this.userPerformance.filter(u => 
+      u.role?.toLowerCase() === 'administrador'
+    );
+
+    console.log('👷 Empleados encontrados:', empleados.length);
+    console.log('👔 Administradores encontrados:', administradores.length);
+
+    if (empleados.length > 0) {
+      this.empleadoStats.pendingAppointments = empleados.reduce((sum, e) => sum + e.pending_count, 0);
+      this.empleadoStats.completedAppointments = empleados.reduce((sum, e) => sum + e.completed_count, 0);
+      this.empleadoStats.totalValue = empleados.reduce((sum, e) => sum + e.total_value, 0);
+      this.empleadoStats.reservations = empleados;
+      this.empleadoStats.topReserver = empleados[0]?.user_name || 'N/A';
+    }
+
+    if (administradores.length > 0) {
+      this.administradorStats.pendingAppointments = administradores.reduce((sum, a) => sum + a.pending_count, 0);
+      this.administradorStats.completedAppointments = administradores.reduce((sum, a) => sum + a.completed_count, 0);
+      this.administradorStats.totalValue = administradores.reduce((sum, a) => sum + a.total_value, 0);
+      this.administradorStats.reservations = administradores;
+      this.administradorStats.topReserver = administradores[0]?.user_name || 'N/A';
+    }
+  }
+
+  private calculateAveragePerMonth(appointments: any[]): void {
+    if (appointments.length === 0) {
+      this.averagePerMonth = 0;
+      return;
+    }
+
+    const monthMap = new Map<string, number>();
+    
+    appointments.forEach(apt => {
+      const date = new Date(apt.fecha || apt.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + 1);
+    });
+
+    const monthsCount = monthMap.size || 1;
+    this.averagePerMonth = +(appointments.length / monthsCount).toFixed(2);
+
+    console.log('📅 Promedio por mes:', this.averagePerMonth);
+  }
+
+  private createAllCharts(appointments: any[]): void {
+    if (this.selectedRole === 'propietario' || this.selectedRole === 'all') {
+      this.createMainChart();
+    }
+    
+    if (this.selectedRole === 'empleado' || this.selectedRole === 'administrador' || this.selectedRole === 'all') {
+      this.createAppointmentsChart();
+    }
+    
+    this.createTimelineChart(appointments);
+    this.createUsersChart();
   }
 
   changeMainChartType(type: 'doughnut' | 'bar' | 'pie'): void {
     this.mainChartType = type;
     if (this.chartInstance) {
       this.chartInstance.destroy();
-      this.createMainChart(this.mostPerformedServices);
+      this.createMainChart();
     }
   }
 
-  private createMainChart(data: ServiceData[]): void {
-    if (!this.chartCanvas?.nativeElement || data.length === 0) return;
+  private createMainChart(): void {
+     if (!this.chartCanvas?.nativeElement) {
+      console.warn('⚠️ Canvas no disponible para gráfico principal');
+      return;
+    }
+    
+    if (this.mostPerformedServices.length === 0) {
+      console.warn('⚠️ No hay servicios para graficar');
+      return;
+    }
+    
+    console.log('📊 Creando gráfico con', this.mostPerformedServices.length, 'servicios');
 
     if (this.chartInstance) {
       this.chartInstance.destroy();
@@ -476,18 +592,15 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    const colors = [
-      '#FDC030', '#1976d2', '#10b981', '#ef4444', '#8b5cf6', 
-      '#f97316', '#06b6d4', '#ec4899', '#84cc16', '#f59e0b'
-    ];
+    const colors = ['#FDC030', '#1976d2', '#10b981', '#ef4444', '#8b5cf6', '#f97316', '#06b6d4', '#ec4899', '#84cc16', '#f59e0b'];
 
     this.chartInstance = new Chart(ctx, {
       type: this.mainChartType,
       data: {
-        labels: data.map(item => item.name),
+        labels: this.mostPerformedServices.map(s => s.name),
         datasets: [{
-          label: 'Cantidad de servicios',
-          data: data.map(item => item.count),
+          label: 'Cantidad',
+          data: this.mostPerformedServices.map(s => s.count),
           backgroundColor: colors,
           borderColor: '#fff',
           borderWidth: 2
@@ -499,19 +612,7 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
         plugins: {
           legend: {
             position: 'bottom',
-            labels: { 
-              padding: 15, 
-              usePointStyle: true, 
-              font: { size: 11 }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              afterLabel: (context: any) => {
-                const service = data[context.dataIndex];
-                return service.value ? `Valor: $${service.value.toLocaleString()}` : '';
-              }
-            }
+            labels: { padding: 15, usePointStyle: true, font: { size: 11 } }
           }
         }
       }
@@ -528,22 +629,22 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     const ctx = this.appointmentsCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    const data = this.userPerformance.slice(0, 8);
+    const topUsers = this.userPerformance.slice(0, 8);
 
     this.appointmentsChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: data.map(u => u.user_name),
+        labels: topUsers.map(u => u.user_name),
         datasets: [
           {
             label: 'Pendientes',
-            data: data.map(u => u.pending_count),
+            data: topUsers.map(u => u.pending_count),
             backgroundColor: '#FDC030',
             borderRadius: 6
           },
           {
             label: 'Completadas',
-            data: data.map(u => u.completed_count),
+            data: topUsers.map(u => u.completed_count),
             backgroundColor: '#10b981',
             borderRadius: 6
           }
@@ -553,24 +654,14 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              usePointStyle: true,
-              padding: 15
-            }
-          }
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } }
         },
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
+        scales: { y: { beginAtZero: true } }
       }
     });
   }
 
-  private createTimelineChart(response: any): void {
+  private createTimelineChart(appointments: any[]): void {
     if (!this.timelineCanvas?.nativeElement) return;
 
     if (this.timelineChartInstance) {
@@ -580,21 +671,28 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
     const ctx = this.timelineCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    let labels: string[] = [];
-    let data: number[] = [];
+    const monthMap = new Map<string, number>();
+    
+    appointments.forEach(apt => {
+      const date = new Date(apt.fecha || apt.date);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      monthMap.set(monthKey, (monthMap.get(monthKey) || 0) + 1);
+    });
 
-    if (response.monthly && typeof response.monthly === 'object') {
-      const sorted = Object.keys(response.monthly).sort();
-      labels = sorted.map(k => this.formatMonthLabel(k));
-      data = sorted.map(k => response.monthly[k]);
-    }
+    const sortedMonths = Array.from(monthMap.keys()).sort();
+    const labels = sortedMonths.map(m => {
+      const [year, month] = m.split('-');
+      const date = new Date(parseInt(year), parseInt(month) - 1);
+      return date.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+    });
+    const data = sortedMonths.map(m => monthMap.get(m) || 0);
 
     this.timelineChartInstance = new Chart(ctx, {
       type: 'line',
       data: {
         labels: labels,
         datasets: [{
-          label: 'Servicios por período',
+          label: 'Citas por mes',
           data: data,
           borderColor: '#44fee2',
           backgroundColor: 'rgba(68, 254, 226, 0.1)',
@@ -606,19 +704,8 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              precision: 0
-            }
-          }
-        }
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
       }
     });
   }
@@ -649,56 +736,56 @@ export class InformeComponent implements OnInit, AfterViewInit, OnDestroy {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: false
-          }
-        },
-        scales: {
-          y: {
-            beginAtZero: true
-          }
-        }
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true } }
       }
     });
   }
 
-  private formatMonthLabel(monthKey: string): string {
-    const parts = monthKey.split('-');
-    if (parts.length < 2) return monthKey;
-    const year = parts[0];
-    const month = Number(parts[1]);
-    const date = new Date(Number(year), month - 1, 1);
-    return date.toLocaleString('es-ES', { month: 'short', year: 'numeric' });
+  private destroyCharts(): void {
+    if (this.chartInstance) this.chartInstance.destroy();
+    if (this.timelineChartInstance) this.timelineChartInstance.destroy();
+    if (this.usersChartInstance) this.usersChartInstance.destroy();
+    if (this.appointmentsChartInstance) this.appointmentsChartInstance.destroy();
   }
 
-  private showSuccessMessage(message: string): void {
-    this.successMessage = message;
-    this.clearOtherMessages('success');
-    setTimeout(() => { this.successMessage = ''; }, 5000);
-  }
-
-  private showErrorMessage(message: string): void {
-    this.errorMessage = message;
-    this.clearOtherMessages('error');
-    setTimeout(() => { this.errorMessage = ''; }, 5000);
-  }
-
-  private showInfoMessage(message: string): void {
-    this.infoMessage = message;
-    this.clearOtherMessages('info');
-    setTimeout(() => { this.infoMessage = ''; }, 5000);
-  }
-
-  private clearMessages(): void {
-    this.successMessage = '';
+  private showSuccessMessage(msg: string): void {
+    this.successMessage = msg;
     this.errorMessage = '';
     this.infoMessage = '';
+    setTimeout(() => this.successMessage = '', 5000);
   }
 
-  private clearOtherMessages(except: 'success' | 'error' | 'info'): void {
-    if (except !== 'success') this.successMessage = '';
-    if (except !== 'error') this.errorMessage = '';
-    if (except !== 'info') this.infoMessage = '';
+  private showErrorMessage(msg: string): void {
+    this.errorMessage = msg;
+    this.successMessage = '';
+    this.infoMessage = '';
+    setTimeout(() => this.errorMessage = '', 5000);
+  }
+
+  getUserName(user: any): string {
+    if (!user) return 'Sin nombre';
+    const nombre = user.nombres || user.name || user.firstName || '';
+    const apellido = user.apellidos || user.lastname || user.lastName || '';
+    const fullName = `${nombre} ${apellido}`.trim();
+    return fullName || user.email || 'Usuario sin nombre';
+  }
+
+  getRoleName(user: any): string {
+    if (!user) return 'Sin rol';
+    
+    if (user.role) {
+      if (typeof user.role === 'string') {
+        return user.role;
+      }
+      if (user.role.nombre) {
+        return user.role.nombre;
+      }
+      if (user.role.name) {
+        return user.role.name;
+      }
+    }
+    
+    return 'Sin rol';
   }
 }

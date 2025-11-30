@@ -117,16 +117,16 @@
 						</div>
 					</div>
 
-					<!-- Botones de acción -->
-					<div class="button-group">
-						<button type="button" class="skip-btn" (click)="omitirPersonalizacion()" [disabled]="isSaving">
-							Omitir por ahora
+					<!-- BOTONES OMITIR Y GUARDAR -->
+					<div style="display: flex; gap: 12px; margin-top: 24px;">
+						<button type="button" (click)="omitir()" style="flex: 1; padding: 14px; background: #6c757d; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
+							Omitir
 						</button>
-						<button type="submit" class="continue-btn" [disabled]="isSaving">
+						<button type="submit" class="continue-btn" [disabled]="isSaving" style="flex: 2; padding: 14px; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: 600;">
 							@if (isSaving) {
 								<span>Guardando...</span>
 							} @else {
-								<span>Guardar y continuar</span>
+								<span>Guardar</span>
 							}
 						</button>
 					</div>

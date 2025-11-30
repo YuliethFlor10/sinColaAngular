@@ -20,12 +20,7 @@ interface ApiServiceResponse {
   status?: { id: number; nombre: string; };
   category?: { id: number; nombre: string; };
   negocios_id?: number;
-  usuario_id?: number;
-  usuario?: {
-    id: number;
-    nombre: string;
-    email: string;
-  };
+  assigned_users?: any[];
 }
 
 export interface Service {
@@ -49,16 +44,6 @@ interface ServiceFormData {
   assignedUserId: number;
 }
 
-interface ApiServiceRequest {
-  nombre: string;
-  tiempo_estimado: number;
-  precio: number;
-  tipos_id: number;
-  estados_id: number;
-  negocios_id: number;
-  usuario_id: number;
-}
-
 interface Usuario {
   id: number;
   nombres: string;
@@ -79,7 +64,6 @@ interface Usuario {
 })
 export class ServiciosComponent implements OnInit {
 
-  // PROPIEDADES
   services: Service[] = [];
   filteredServices: Service[] = [];
   searchTerm: string = '';
@@ -88,10 +72,7 @@ export class ServiciosComponent implements OnInit {
   loadingUsers: boolean = false;
   openMenuId: number | string | null = null;
 
-  // 🔥 Usuarios del negocio (Admins + Empleados)
   usuariosDelNegocio: Usuario[] = [];
-
-  // 🔥 Negocio actual
   negocioId: number = 1;
   negocioNombre: string = '';
 
@@ -106,7 +87,6 @@ export class ServiciosComponent implements OnInit {
   ngOnInit(): void {
     console.log('🚀 COMPONENTE SERVICIOS INICIALIZADO');
 
-    // 🔥 Obtener negocio del usuario autenticado
     const user = this.authService.getCurrentUser();
     if (user?.negocios_id) {
       this.negocioId = user.negocios_id;
@@ -121,7 +101,7 @@ export class ServiciosComponent implements OnInit {
   }
 
   // ========================================
-  // 🔥 CARGAR USUARIOS DEL NEGOCIO (ADMINS + EMPLEADOS)
+  // CARGAR USUARIOS DEL NEGOCIO
   // ========================================
 
   cargarUsuariosDelNegocio(): void {
@@ -134,11 +114,10 @@ export class ServiciosComponent implements OnInit {
         next: (response: any) => {
           let usuarios = Array.isArray(response) ? response : (response.data || []);
 
-          // 🔥 Filtrar por negocio actual y solo admins/empleados activos
           this.usuariosDelNegocio = usuarios
             .filter((u: any) =>
               u.negocios_id === this.negocioId &&
-              (u.roles_id === 1 || u.roles_id === 3) && // 1=Admin, 3=Empleado
+              (u.roles_id === 1 || u.roles_id === 3) &&
               (u.estados_id === 1 || u.status?.nombre === 'Activo')
             )
             .map((u: any) => ({
@@ -152,7 +131,7 @@ export class ServiciosComponent implements OnInit {
               negocios_id: u.negocios_id
             }));
 
-          console.log(`✅ ${this.usuariosDelNegocio.length} miembros del staff cargados:`, this.usuariosDelNegocio);
+          console.log(`✅ ${this.usuariosDelNegocio.length} miembros del staff cargados`);
           setTimeout(() => this.poblarSelectUsuarios(), 100);
         },
         error: (error) => {
@@ -178,7 +157,7 @@ export class ServiciosComponent implements OnInit {
       userSelect.appendChild(option);
     });
 
-    console.log(`✅ ${this.usuariosDelNegocio.length} usuarios agregados al select`);
+    console.log(`✅ Select poblado con ${this.usuariosDelNegocio.length} usuarios`);
   }
 
   // ========================================
@@ -201,13 +180,12 @@ export class ServiciosComponent implements OnInit {
           rawServices = Array.isArray(response.data) ? response.data as ApiServiceResponse[] : [];
         }
 
-        // 🔥 Filtrar por negocio actual
         rawServices = rawServices.filter(s => s.negocios_id === this.negocioId);
 
         this.services = rawServices.map(s => this.transformService(s));
         this.filteredServices = [...this.services];
 
-        console.log(`📊 Total servicios del negocio ${this.negocioNombre}:`, this.services.length);
+        console.log(`📊 Total servicios: ${this.services.length}`);
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -225,6 +203,10 @@ export class ServiciosComponent implements OnInit {
   // ========================================
 
   private transformService(api: ApiServiceResponse): Service {
+    const assignedUser = api.assigned_users && api.assigned_users.length > 0 
+      ? api.assigned_users[0] 
+      : null;
+
     return {
       id: api.id,
       name: api.nombre || 'Sin nombre',
@@ -233,21 +215,30 @@ export class ServiciosComponent implements OnInit {
       status: api.status?.nombre === 'Activo' ? 'Activo' : 'Inactivo',
       category: api.category?.nombre || 'Sin categoría',
       createdAt: api.creado_en ? new Date(api.creado_en) : new Date(),
-      assignedTo: api.usuario?.nombre || 'Sin asignar',
-      assignedUserId: api.usuario_id || 0
+      assignedTo: assignedUser ? `${assignedUser.nombres} ${assignedUser.apellidos}` : 'Sin asignar',
+      assignedUserId: assignedUser?.id || 0
     };
   }
 
-  private transformToApiRequest(form: ServiceFormData): ApiServiceRequest {
-    return {
+  private transformToApiRequest(form: ServiceFormData): any {
+    console.log('🔄 ===== TRANSFORMANDO DATOS =====');
+    console.log('Formulario original:', form);
+    
+    const payload = {
       nombre: form.name,
       tiempo_estimado: this.durationToMinutes(form.duration),
       precio: form.price,
       tipos_id: 12,
       estados_id: form.status === 'Activo' ? 1 : 2,
-      negocios_id: this.negocioId, // 🔥 NEGOCIO ACTUAL
-      usuario_id: form.assignedUserId || 0
+      negocios_id: this.negocioId,
+      ...(form.assignedUserId && form.assignedUserId !== 0 
+        ? { usuarios_asignados: [form.assignedUserId] } 
+        : {})
     };
+    
+    console.log('📦 Payload transformado:', payload);
+    console.log('=============================');
+    return payload;
   }
 
   // ========================================
@@ -264,10 +255,6 @@ export class ServiciosComponent implements OnInit {
     const [h, m] = duration.split(':').map(Number);
     return (h || 0) * 60 + (m || 0);
   }
-
-  // ========================================
-  // FORMATEO PÚBLICO
-  // ========================================
 
   public formatDuration(duration: string): string {
     const [h, m] = duration.split(':').map(Number);
@@ -339,7 +326,6 @@ export class ServiciosComponent implements OnInit {
       document.body.style.overflow = 'hidden';
     }
 
-    // Asegurar que el select esté poblado
     setTimeout(() => this.poblarSelectUsuarios(), 100);
   }
 
@@ -367,7 +353,6 @@ export class ServiciosComponent implements OnInit {
       document.body.style.overflow = 'hidden';
     }
 
-    // Asegurar que el select esté poblado
     setTimeout(() => this.poblarSelectUsuarios(), 100);
   }
 
@@ -441,6 +426,8 @@ export class ServiciosComponent implements OnInit {
   }
 
   private getFormData(): ServiceFormData {
+    console.log('📋 ===== OBTENIENDO DATOS DEL FORMULARIO =====');
+
     const name = document.getElementById('serviceName') as HTMLInputElement;
     const duration = document.getElementById('serviceDuration') as HTMLInputElement;
     const price = document.getElementById('servicePrice') as HTMLInputElement;
@@ -448,7 +435,14 @@ export class ServiciosComponent implements OnInit {
     const type = document.getElementById('serviceType') as HTMLSelectElement;
     const user = document.getElementById('serviceUser') as HTMLSelectElement;
 
-    return {
+    // Verificar que los elementos existan
+    if (!name) console.error('❌ Campo "serviceName" no encontrado');
+    if (!duration) console.error('❌ Campo "serviceDuration" no encontrado');
+    if (!price) console.error('❌ Campo "servicePrice" no encontrado');
+    if (!status) console.error('❌ Campo "serviceStatus" no encontrado');
+    if (!user) console.error('❌ Campo "serviceUser" no encontrado');
+
+    const formData: ServiceFormData = {
       name: name?.value || '',
       duration: duration?.value || '',
       price: parseInt(price?.value || '0'),
@@ -456,31 +450,78 @@ export class ServiciosComponent implements OnInit {
       userType: type?.value || '',
       assignedUserId: parseInt(user?.value || '0')
     };
+
+    console.log('📦 Datos extraídos del formulario:');
+    console.log('   - Nombre:', formData.name);
+    console.log('   - Duración:', formData.duration);
+    console.log('   - Precio:', formData.price);
+    console.log('   - Estado:', formData.status);
+    console.log('   - Usuario ID:', formData.assignedUserId);
+    console.log('   - Usuario (raw value):', user?.value);
+    console.log('================================================');
+
+    return formData;
   }
 
   private validateForm(): boolean {
     const data = this.getFormData();
 
+    console.log('🔍 ===== VALIDANDO FORMULARIO =====');
+    console.log('Datos obtenidos:', data);
+    console.log('===================================');
+
+    // Validar nombre
+    console.log('📝 Validando nombre:', data.name);
     if (!data.name || data.name.trim().length < 3) {
+      console.error('❌ Nombre inválido:', data.name);
       this.showToast('El nombre debe tener al menos 3 caracteres', 'error');
       return false;
     }
+    console.log('✅ Nombre válido');
 
-    if (!data.duration) {
-      this.showToast('La duración es requerida', 'error');
+    // Validar duración
+    console.log('⏱️ Validando duración:', data.duration);
+    if (!data.duration || data.duration === '00:00') {
+      console.error('❌ Duración inválida:', data.duration);
+      this.showToast('La duración es requerida (debe ser mayor a 0)', 'error');
       return false;
     }
+    console.log('✅ Duración válida');
 
-    if (!data.price || data.price <= 0) {
+    // Validar precio
+    console.log('💰 Validando precio:', data.price);
+    if (!data.price || data.price <= 0 || isNaN(data.price)) {
+      console.error('❌ Precio inválido:', data.price);
       this.showToast('El precio debe ser mayor a 0', 'error');
       return false;
     }
+    console.log('✅ Precio válido');
 
+    // Validar usuario asignado
+    console.log('👤 Validando usuario asignado:', data.assignedUserId);
+    console.log('   Tipo:', typeof data.assignedUserId);
+    console.log('   Usuarios disponibles:', this.usuariosDelNegocio.length);
+    
     if (!data.assignedUserId || data.assignedUserId === 0) {
+      console.error('❌ Usuario no seleccionado');
+      console.error('   assignedUserId:', data.assignedUserId);
+      console.error('   Usuarios en el sistema:', this.usuariosDelNegocio.map(u => ({ id: u.id, nombre: u.nombre_completo })));
       this.showToast('Debes seleccionar un usuario', 'error');
       return false;
     }
 
+    // Verificar que el usuario exista en la lista
+    const userExists = this.usuariosDelNegocio.some(u => u.id === data.assignedUserId);
+    if (!userExists) {
+      console.error('❌ Usuario seleccionado no existe en la lista');
+      console.error('   ID buscado:', data.assignedUserId);
+      console.error('   IDs disponibles:', this.usuariosDelNegocio.map(u => u.id));
+      this.showToast('El usuario seleccionado no es válido', 'error');
+      return false;
+    }
+    console.log('✅ Usuario válido');
+
+    console.log('✅ ===== VALIDACIÓN EXITOSA =====');
     return true;
   }
 
@@ -489,9 +530,12 @@ export class ServiciosComponent implements OnInit {
   // ========================================
 
   public saveService(): void {
-    console.log('💾 Guardando servicio...');
+    console.log('💾 ===== GUARDAR SERVICIO =====');
 
-    if (!this.validateForm()) return;
+    if (!this.validateForm()) {
+      console.error('❌ Validación fallida');
+      return;
+    }
 
     const formData = this.getFormData();
     console.log('📝 Datos del formulario:', formData);
@@ -504,17 +548,18 @@ export class ServiciosComponent implements OnInit {
   }
 
   private createService(formData: ServiceFormData): void {
-    console.log(`➕ CREAR servicio en ${this.negocioNombre}`);
+    console.log(`➕ ===== CREAR SERVICIO EN ${this.negocioNombre} =====`);
     this.isLoading = true;
 
     const apiData = this.transformToApiRequest(formData);
-    console.log('📤 Enviando:', apiData);
+    console.log('📤 PAYLOAD FINAL:', JSON.stringify(apiData, null, 2));
 
     this.servicesService.create(apiData).subscribe({
       next: (response: any) => {
-        console.log('✅ Creado:', response);
+        console.log('✅ ===== RESPUESTA DEL SERVIDOR =====');
+        console.log(response);
 
-        const newService = this.transformService(response as ApiServiceResponse);
+        const newService = this.transformService(response);
         this.services.unshift(newService);
         this.filteredServices = [...this.services];
 
@@ -524,13 +569,21 @@ export class ServiciosComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (error) => {
-        console.error('❌ Error crear:', error);
+        console.error('❌ ===== ERROR AL CREAR =====');
+        console.error('Status:', error.status);
+        console.error('Error:', error.error);
+        console.error('Message:', error.message);
 
         let msg = 'Error al crear servicio';
         if (error.status === 0) {
-          msg = 'No se puede conectar con el servidor';
+          msg = 'No se puede conectar con el servidor. Verifica que Laravel esté corriendo en puerto 8000.';
         } else if (error.error?.message) {
           msg = error.error.message;
+        } else if (error.error?.errors) {
+          const firstError = Object.values(error.error.errors)[0];
+          msg = Array.isArray(firstError) ? firstError[0] : firstError;
+        } else if (error.message) {
+          msg = error.message;
         }
 
         this.showToast(msg, 'error');
@@ -540,17 +593,18 @@ export class ServiciosComponent implements OnInit {
   }
 
   private updateService(id: string | number, formData: ServiceFormData): void {
-    console.log('🔄 ACTUALIZAR servicio:', id);
+    console.log(`🔄 ===== ACTUALIZAR SERVICIO ${id} =====`);
     this.isLoading = true;
 
     const apiData = this.transformToApiRequest(formData);
-    console.log('📤 Enviando:', apiData);
+    console.log('📤 PAYLOAD:', JSON.stringify(apiData, null, 2));
 
     this.servicesService.update(id, apiData).subscribe({
       next: (response: any) => {
-        console.log('✅ Actualizado:', response);
+        console.log('✅ ===== ACTUALIZADO =====');
+        console.log(response);
 
-        const updated = this.transformService(response as ApiServiceResponse);
+        const updated = this.transformService(response);
         const index = this.services.findIndex(s => s.id.toString() === id.toString());
 
         if (index !== -1) {
@@ -578,12 +632,12 @@ export class ServiciosComponent implements OnInit {
   public confirmDelete(): void {
     if (!this.currentEditingId) return;
 
-    console.log('🗑️ ELIMINAR servicio:', this.currentEditingId);
+    console.log(`🗑️ ===== ELIMINAR SERVICIO ${this.currentEditingId} =====`);
     this.isLoading = true;
 
     this.servicesService.delete(this.currentEditingId).subscribe({
       next: () => {
-        console.log('✅ Eliminado');
+        console.log('✅ Eliminado exitosamente');
 
         this.services = this.services.filter(s =>
           s.id.toString() !== this.currentEditingId?.toString()
@@ -626,14 +680,45 @@ export class ServiciosComponent implements OnInit {
   // ========================================
 
   public debug(): void {
-    console.log('🔍 DEBUG:');
-    console.log('  Negocio:', this.negocioId, this.negocioNombre);
-    console.log('  Services:', this.services.length);
-    console.log('  Filtered:', this.filteredServices.length);
-    console.log('  Search:', this.searchTerm);
-    console.log('  Editing:', this.currentEditingId);
-    console.log('  Menu Open:', this.openMenuId);
-    console.log('  Loading:', this.isLoading);
-    console.log('  Usuarios:', this.usuariosDelNegocio);
+    console.log('🔍 ===== DEBUG =====');
+    console.log('Negocio:', this.negocioId, this.negocioNombre);
+    console.log('Services:', this.services.length);
+    console.log('Filtered:', this.filteredServices.length);
+    console.log('Usuarios disponibles:', this.usuariosDelNegocio.length);
+    console.log('====================');
+  }
+
+  public debugForm(): void {
+    console.log('🔍 ===== DEBUG COMPLETO DEL FORMULARIO =====');
+    
+    const name = document.getElementById('serviceName') as HTMLInputElement;
+    const duration = document.getElementById('serviceDuration') as HTMLInputElement;
+    const price = document.getElementById('servicePrice') as HTMLInputElement;
+    const status = document.getElementById('serviceStatus') as HTMLSelectElement;
+    const user = document.getElementById('serviceUser') as HTMLSelectElement;
+
+    console.log('📋 Elementos del DOM:');
+    console.log('   serviceName:', name ? 'Encontrado' : 'NO ENCONTRADO');
+    console.log('   serviceDuration:', duration ? 'Encontrado' : 'NO ENCONTRADO');
+    console.log('   servicePrice:', price ? 'Encontrado' : 'NO ENCONTRADO');
+    console.log('   serviceStatus:', status ? 'Encontrado' : 'NO ENCONTRADO');
+    console.log('   serviceUser:', user ? 'Encontrado' : 'NO ENCONTRADO');
+
+    if (name) console.log('   → Nombre value:', name.value);
+    if (duration) console.log('   → Duración value:', duration.value);
+    if (price) console.log('   → Precio value:', price.value);
+    if (status) console.log('   → Estado value:', status.value);
+    if (user) {
+      console.log('   → Usuario value:', user.value);
+      console.log('   → Usuario selectedIndex:', user.selectedIndex);
+      console.log('   → Usuario options:', Array.from(user.options).map(o => ({ value: o.value, text: o.text })));
+    }
+
+    console.log('👥 Usuarios cargados en el componente:', this.usuariosDelNegocio.length);
+    if (this.usuariosDelNegocio.length > 0) {
+      console.log('   Primer usuario:', this.usuariosDelNegocio[0]);
+    }
+
+    console.log('============================================');
   }
 }

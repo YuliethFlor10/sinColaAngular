@@ -115,9 +115,11 @@ export class ScheduleService {
   // Usa caché para evitar múltiples llamadas
   // --------------------------------------------
   getScheduleByStaff(staffId: string): Observable<DaySchedule[]> {
+    console.log(`📅 Obteniendo horario para: ${staffId}`);
 
     // Si ya está en caché, lo devuelve inmediatamente
     if (this.scheduleCache.has(staffId)) {
+      console.log(`✅ Horario encontrado en caché para: ${staffId}`);
       return of(this.scheduleCache.get(staffId)!);
     }
 
@@ -126,6 +128,7 @@ export class ScheduleService {
     // return this.http.get(url, { headers: this.getHeaders() });
 
     // Por ahora usa horario por defecto
+    console.log(`🔨 Creando horario por defecto para: ${staffId}`);
     const schedule = this.getDefaultSchedule();
     this.scheduleCache.set(staffId, schedule);
 
@@ -226,6 +229,7 @@ export class ScheduleService {
   // 💾 Guardar horario (por ahora simulado)
   // --------------------------------------------
   saveSchedule(staffId: string, schedules: DaySchedule[]): Observable<any> {
+    console.log(`💾 Guardando horario para: ${staffId}`, schedules);
     this.scheduleCache.set(staffId, schedules);
 
     return of({
@@ -239,7 +243,111 @@ export class ScheduleService {
   // --------------------------------------------
   private getDefaultSchedule(): DaySchedule[] {
     return [
-      // ... (TODO: Tu horario por defecto completo aquí)
+      {
+        id: 'monday',
+        name: 'Lunes',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'tuesday',
+        name: 'Martes',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'wednesday',
+        name: 'Miércoles',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'thursday',
+        name: 'Jueves',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'friday',
+        name: 'Viernes',
+        isOpen: true,
+        firstShift: {
+          enabled: true,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: true,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'saturday',
+        name: 'Sábado',
+        isOpen: false,
+        firstShift: {
+          enabled: false,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: false,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      },
+      {
+        id: 'sunday',
+        name: 'Domingo',
+        isOpen: false,
+        firstShift: {
+          enabled: false,
+          start: { hour: 8, minute: 0, ampm: 'AM', display: '8:00 AM' },
+          end: { hour: 12, minute: 0, ampm: 'PM', display: '12:00 PM' }
+        },
+        secondShift: {
+          enabled: false,
+          start: { hour: 14, minute: 0, ampm: 'PM', display: '2:00 PM' },
+          end: { hour: 18, minute: 0, ampm: 'PM', display: '6:00 PM' }
+        }
+      }
     ];
   }
 
