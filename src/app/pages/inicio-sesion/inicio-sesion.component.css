@@ -128,9 +128,9 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  margin-top: 10px;
-  gap: 20px;
-  font-size: 0.8rem;
+  margin-top: px;
+  gap: 15px;
+  font-size: 13px;
   flex-wrap: wrap;
   box-sizing: border-box;
   padding: 0 5px;
@@ -369,294 +369,266 @@ body {
     transform: scale(1);
   }
 }
+/* ============================================
+   FIX EXCLUSIVO PARA 820 × 1180 (iPad vertical)
+   ============================================ */
+   @media (min-width: 810px) and (max-width: 1024px) and (orientation: portrait) {
 
-/* ===========================
-   RESPONSIVE - Tablets Grandes (1024px)
-   =========================== */
-@media (max-width: 1024px) {
-  .header {
-    padding: 1rem 15px;
-    padding-top: calc(1rem + env(safe-area-inset-top, 24px));
-    padding-bottom: 1rem;
-    gap: 10px;
-    min-height: 100px;
-  }
+    /* HEADER */
+    .header {
+      height: auto !important;
+      padding: 12px 20px;
+      align-items: flex-start !important;
+    }
 
-  .titulo {
-    font-size: 1.25rem;
-  }
+    .titulo {
+      font-size: 1.55rem !important;
+      margin-top: 15px;
+    }
 
-  .login-form {
-    gap: 7px;
-  }
+    /* LOGIN FORM — se divide en 2 filas */
+    .login-form {
+      width: auto !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      padding-top: 0 !important;
+    }
 
-  .login-form input {
-    width: 145px;
-    padding: 0.6rem;
-    font-size: 0.8rem;
-    min-width: 110px;
-  }
+    /* Inputs más pequeños */
+    .login-form input {
+      width: 145px !important;
+      height: 26px !important;
+      padding: 0.3rem 0.55rem !important;
+      font-size: 0.8rem !important;
+    }
 
-  .boton-redireccion {
-    padding: 0.6rem 0.7rem;
-    font-size: 0.8rem;
-  }
+    /* Botón ajustado */
+    .login-form .boton-redireccion {
+      height: 28px !important;
+      padding: 0 0.8rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* EXTRA debajo, alineado a la derecha */
+    .extra {
+      width: 100%;
+      margin-top: -1rem !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 1rem !important;
+      padding-right: 0.3rem;
+      font-size: 0.78rem !important;
+      padding-top: -5rem;
+    }
+
+    .remember-label input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Ajustes de container */
+    .container {
+      margin-top: 0.5rem;
+      padding: 1rem 4vw;
+    }
+    /* Ajuste fino del EXTRA para 820 × 1180 */
+@media (min-width: 810px) and (max-width: 1024px) and (orientation: portrait) {
 
   .extra {
-    font-size: 0.75rem;
-    gap: 15px;
-    margin-top: 8px;
-    margin-bottom: 4px;
+    margin-top: -1rem !important;
+    padding-right: 9.0rem !important;
+    gap: 0.6rem !important;    /* más compacto */
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+    height: auto !important;
+    overflow: hidden !important;   /* evita scroll */
   }
-
+  .extra > *:not(:last-child) {
+    margin-right: 3.5rem;
+  }
   .remember-label {
-    gap: 5px;
+    gap: 0.25rem !important;   /* más pegado */
   }
 
   .remember-label input[type="checkbox"] {
-    width: 14px;
-    height: 14px;
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0;
   }
 
-  .container {
-    padding: 1rem 4vw;
-    gap: 2.5rem;
-  }
-
-  .izquierda,
-  .derecha {
-    padding: 1.5rem;
-  }
-
-  .mensaje {
-    font-size: 1.15rem;
-  }
-
-  .registro-form {
-    max-width: 100%;
-    gap: 10px;
+  .extra a {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
   }
 }
+
+  }
 
 /* ===========================
-   RESPONSIVE - Tablets Medianas (900px)
+   RESPONSIVE - Tablets reales
+   769px → 1024px
    =========================== */
-@media (max-width: 900px) {
-  .header {
-    padding: 0.9rem 12px;
-    padding-top: calc(0.9rem + env(safe-area-inset-top, 24px));
-    padding-bottom: 0.9rem;
-    gap: 8px;
-    min-height: 95px;
+   @media (min-width: 769px) and (max-width: 1024px) {
+
+    /* --------------------------------------
+       HEADER
+    -------------------------------------- */
+    .header {
+      padding: 12px 20px;
+      gap: 12px;
+      height: 78px !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .titulo {
+      font-size: 1.6rem;
+    }
+
+    /* --------------------------------------
+       LOGIN FORM (inputs + botón)
+       → alineado a la derecha
+    -------------------------------------- */
+    .login-form {
+      width: 100%;
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+      gap: 0.6rem !important;
+      flex-wrap: nowrap;
+    }
+
+    .login-form input {
+      height: 28px !important;
+      width: 150px !important;
+      font-size: 0.85rem !important;
+      padding: 0.3rem 0.6rem !important;
+    }
+
+    .login-form .boton-redireccion {
+      height: 30px !important;
+      padding: 0 1rem !important;
+      font-size: 0.85rem !important;
+      white-space: nowrap;
+    }
+
+    /* --------------------------------------
+       RECUÉRDAME + OLVIDÉ CONTRASEÑA
+       → debajo del login
+       → alineado a la derecha
+    -------------------------------------- */
+    .extra {
+      width: 100%;
+      margin-top: 0.35rem !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      align-items: center;
+      gap: 1.2rem !important;
+      padding-right: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .remember-label {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* --------------------------------------
+       CONTENIDO PRINCIPAL
+    -------------------------------------- */
+    .container {
+      padding: 1rem 3vw;
+      gap: 1.5rem;
+    }
+
+    .mensaje {
+      font-size: 1.05rem;
+    }
+
+    .logo {
+      width: 180px;
+    }
+
+    /* Derecha (Registro) subido */
+    .derecha {
+      margin-top: -10px;
+    }
   }
 
-  .titulo {
-    font-size: 1.2rem;
-  }
-
-  .login-form {
-    gap: 6px;
-  }
-
-  .login-form input {
-    width: 135px;
-    padding: 0.55rem;
-    font-size: 0.78rem;
-    min-width: 100px;
-  }
-
-  .boton-redireccion {
-    padding: 0.55rem 0.65rem;
-    font-size: 0.78rem;
-  }
-
-  .extra {
-    font-size: 0.72rem;
-    gap: 12px;
-    margin-top: 7px;
-    margin-bottom: 3px;
-  }
-
-  .remember-label {
-    gap: 5px;
-  }
-
-  .remember-label input[type="checkbox"] {
-    width: 13px;
-    height: 13px;
-  }
-
-  .container {
-    padding: 1rem 3vw;
-    gap: 2rem;
-  }
-
-  .registrate {
-    font-size: 1.8rem;
-  }
-
-  .registro-form {
-    gap: 8px;
-  }
-
-  .registro-form input,
-  .registro-form select {
-    padding: 0.65rem;
-    font-size: 0.9rem;
-  }
-}
 
 /* ===========================
-   RESPONSIVE - Tablets Pequeñas (768px)
+   RESPONSIVE - Tablets reales (600px – 1024px)
    =========================== */
-@media (max-width: 768px) {
-  .header {
-    padding: 0.8rem 10px;
-    padding-top: calc(0.8rem + env(safe-area-inset-top, 24px));
-    padding-bottom: 0.8rem;
-    gap: 8px;
-    flex-direction: column;
-    align-items: stretch;
-    min-height: 90px;
-  }
+   @media (min-width: 600px) and (max-width: 1024px) {
 
-  .titulo {
-    font-size: 1.15rem;
-    text-align: center;
-  }
+    /* Header */
+    .header {
+      padding: 12px 15px;
+      gap: 12px;
+    }
 
-  .login-form {
-    justify-content: center;
-    width: 100%;
-    gap: 6px;
-    max-width: 100%;
-  }
+    /* Título */
+    .titulo {
+      font-size: 1.6rem;
+    }
 
-  .login-form input {
-    width: 125px;
-    padding: 0.5rem;
-    font-size: 0.75rem;
-    min-width: 90px;
-    flex: 1;
-    max-width: 140px;
-  }
+    /* Login form */
+    .login-form {
+      width: auto;
+      gap: 0.5rem;
+      padding-top: 10px;
+      padding-bottom: 0;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
 
-  .boton-redireccion {
-    padding: 0.5rem 0.6rem;
-    font-size: 0.75rem;
-  }
+    /* Inputs */
+    .login-form input {
+      width: 140px;
+      height: 30px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+    }
 
-  .extra {
-    margin-top: 8px;
-    gap: 10px;
-    font-size: 0.7rem;
-    margin-bottom: 3px;
-  }
+    /* Botón */
+    .login-form .boton-redireccion {
+      height: 34px;
+      padding: 0 1rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
 
-  .remember-label input[type="checkbox"] {
-    width: 13px;
-    height: 13px;
-  }
+    /* Secciones del body */
+    .container {
+      padding: 1rem 3vw;
+      padding-top: 0.5rem;
+      gap: 1rem;
+    }
 
-  .container {
-    padding: 0.8rem 2.5vw;
-    padding-top: 0.5rem;
-    gap: 1.8rem;
-    flex-direction: column;
-  }
+    .mensaje {
+      font-size: 1rem;
+    }
 
-  .izquierda,
-  .derecha {
-    width: 100%;
-    min-width: auto;
-    padding: 1.2rem;
-  }
-
-  /* En tablets, registro primero */
-  .derecha {
-    order: 1;
-  }
-
-  .izquierda {
-    order: 2;
-  }
-
-  .mensaje {
-    font-size: 1.05rem;
-    line-height: 1.5;
-    margin-bottom: 1.5rem;
-  }
-
-  .logo {
-    width: 55%;
-    max-width: 220px;
-  }
-
-  .registrate {
-    font-size: 1.7rem;
-    margin-bottom: 1rem;
-  }
-
-  .registro-form {
-    max-width: 100%;
-    gap: 10px;
-  }
-
-  .registro-form input,
-  .registro-form select {
-    padding: 0.7rem;
-    font-size: 0.9rem;
-  }
-
-  .terminos-label {
-    font-size: 0.85rem;
-  }
-
-  .btn-registrar {
-    padding: 0.7rem;
-    font-size: 0.9rem;
+    .logo {
+      width: 150px;
+    }
+    .extra {
+      display: flex;
+      justify-content: flex-end; /* mover a la derecha */
+      gap: 3.8rem;
+      padding-right: 9em;
   }
 }
 
-/* ===========================
-   RESPONSIVE - Tablets en Landscape (landscape)
-   =========================== */
-@media (max-width: 1024px) and (orientation: landscape) {
-  .header {
-    padding: 1rem 15px;
-    padding-top: calc(1rem + env(safe-area-inset-top, 24px));
-  }
 
-  .container {
-    flex-direction: row;
-    gap: 2rem;
-  }
-
-  .izquierda,
-  .derecha {
-    flex: 1;
-    order: initial;
-  }
-
-  .mensaje {
-    font-size: 1rem;
-  }
-
-  .logo {
-    width: 45%;
-    max-width: 180px;
-  }
-
-  .registro-form {
-    gap: 8px;
-  }
-
-  .registro-form input,
-  .registro-form select {
-    padding: 0.6rem;
-    font-size: 0.85rem;
-  }
-}
 
 /* ===========================
    RESPONSIVE - Móviles (600px)
@@ -1092,4 +1064,90 @@ select,
 button {
   max-width: 100%;
   box-sizing: border-box;
+}
+/* ============================
+   FIX HEADER SOLO PARA WEB
+   ============================ */
+   @media (min-width: 769px) {
+
+    .header {
+      padding-top: 0.3rem !important;     /* elimina el safe-area en web */
+      padding-bottom: 0.3rem !important;
+      height: 78px !important;          /* ALTURA EXACTA del header */
+      line-height: 1 !important;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Quitar la barra blanca en web */
+    .header::before {
+      display: none !important;
+    }
+
+    /* Ajustar contenido principal */
+    .main-container {
+      margin-top: 70px !important;
+    }
+  }
+/* ============================================================
+   FIX SOLO PARA WEB — Ajuste de altura de inputs y botón
+   ============================================================ */
+   @media (min-width: 769px) {
+
+    /* Inputs del login */
+    .login-form input {
+      height: 25px !important;
+      padding: 0.3rem 0.8rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Botón de ingresar */
+    .login-form .boton-redireccion {
+      height: 30px !important;
+      padding: 0 1rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Evitar que el contenedor haga inputs grandes */
+    .login-form {
+      gap: 0.5rem !important;
+      padding-top: 15px !important;
+      padding-bottom: 0 !important;
+    }
+  }
+  /* ============================================================
+   Ajuste de "extra" (Recuérdame + Olvidé contraseña) solo WEB
+   ============================================================ */
+@media (min-width: 769px) {
+  .extra {
+    margin-top: -0.6rem;      /* Más cerca de los inputs */
+    gap: 7.5rem;             /* Más espacio entre "Recuérdame" y "Olvidé contraseña" */
+    justify-content: flex-end; /* Alinea a la izquierda */
+    padding: 0 10.5rem;       /* Espacio lateral */
+  }
+
+  .remember-label {
+    gap: 0.5rem;             /* Separación entre checkbox y texto */
+  }
+
+  .extra a {
+    white-space: nowrap;     /* Evita que el enlace se rompa en dos líneas */
+  }
+}
+/* Ajustar espacio debajo del header fijo */
+main.container {
+  margin-top: calc(env(safe-area-inset-top, 24px) + 95px); /* 70px = altura de tu header */
+  padding: 1rem; /* opcional: espacio interno */
+}
+/* Ajustar sección Derecha (Registro) */
+.derecha {
+  margin-top: -20px; /* elimina márgenes grandes arriba */
+  padding: 2rem; /* espacio interno, opcional */
+}
+
+/* Ajustar título "Regístrate" */
+.registrate {
+  margin-top: 0; /* antes tenía 4em u otro valor grande */
+  margin-bottom: 1rem; /* separa del formulario */
+  font-size: 2rem;
 }
