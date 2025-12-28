@@ -1,0 +1,164 @@
+<div class="cancellation-container">
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
+    <div class="spinner"></div>
+    <p>Procesando tu solicitud...</p>
+    <p class="loading-detail">Por favor espera un momento</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="!loading && error" class="error-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
+    <div class="icon-error"></div>
+    <h1>Ups, algo salió mal</h1>
+    <p class="error-message">{{ error }}</p>
+
+    <div class="error-actions">
+      <button (click)="volverAlInicio()" class="btn btn-primary">
+        🏠 Volver al Inicio
+      </button>
+      <button (click)="contactarSoporte()" class="btn btn-secondary">
+        📞 Contactar Soporte
+      </button>
+    </div>
+  </div>
+
+  <!-- Success State -->
+  <div *ngIf="!loading && !error && citaData" class="cancel-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
+    <!-- Icon dinámico -->
+    <div class="icon-cancel" *ngIf="!alreadyCancelled"></div>
+    <div class="icon-info" *ngIf="alreadyCancelled"></div>
+
+    <!-- Título dinámico -->
+    <h1 *ngIf="!alreadyCancelled">Cita Cancelada</h1>
+    <h1 *ngIf="alreadyCancelled">Cita Ya Cancelada</h1>
+
+    <!-- Mensaje principal -->
+    <p class="message" *ngIf="cancelacionExitosa && !alreadyCancelled">
+      ✅ Tu cita ha sido cancelada correctamente. Lamentamos que no puedas asistir.
+    </p>
+
+    <p class="message" *ngIf="alreadyCancelled">
+      ℹ️ Esta cita ya había sido cancelada anteriormente. No es necesario cancelarla nuevamente.
+    </p>
+
+    <!-- Datos de la cita cancelada -->
+    <div class="info-card">
+      <h3>📋 Detalles de la cita cancelada</h3>
+
+      <div class="info-row">
+        <span class="label">👤 Cliente:</span>
+        <span class="value">{{ citaData.cliente_nombre || 'No disponible' }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">📧 Email:</span>
+        <span class="value">{{ citaData.cliente_email || 'No disponible' }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.cliente_telefono">
+        <span class="label">📱 Teléfono:</span>
+        <span class="value">{{ citaData.cliente_telefono }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">💅 Servicio:</span>
+        <span class="value">{{ citaData.tipo_servicio || 'No disponible' }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.personal_asignado">
+        <span class="label">👩‍💼 Personal:</span>
+        <span class="value">{{ citaData.personal_asignado }}</span>
+      </div>
+
+      <div class="info-row">
+        <span class="label">📅 Fecha y Hora:</span>
+        <span class="value">{{ formatearFecha(citaData.fecha) }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.tiempo_estimado">
+        <span class="label">⏱️ Duración:</span>
+        <span class="value">{{ citaData.tiempo_estimado }} minutos</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.direccion">
+        <span class="label">📍 Dirección:</span>
+        <span class="value">{{ citaData.direccion }}</span>
+      </div>
+
+      <div class="info-row" *ngIf="citaData.descripcion_cancel">
+        <span class="label">📝 Motivo:</span>
+        <span class="value">{{ citaData.descripcion_cancel }}</span>
+      </div>
+
+      <div class="info-row status-row">
+        <span class="label">❌ Estado:</span>
+        <span class="value status-badge status-cancelled">
+          CANCELADA
+        </span>
+      </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="info-box">
+      <p><strong>ℹ️ Información:</strong></p>
+      <p>✓ Tu espacio ha sido liberado para otros clientes</p>
+      <p>✓ Puedes agendar una nueva cita cuando lo desees</p>
+      <p>✓ No se aplicaron cargos por la cancelación</p>
+      <p>✓ Recibirás un correo de confirmación de la cancelación</p>
+    </div>
+
+    <!-- Alert Warning -->
+    <div class="alert-warning">
+      📌 <strong>Nota:</strong> Si deseas agendar nuevamente, puedes hacerlo en cualquier momento desde nuestra página principal o contactándonos directamente.
+    </div>
+
+    <!-- Acciones -->
+    <div class="btn-group">
+      <button (click)="agendarNuevaCita()" class="btn btn-primary">
+        📅 Agendar Nueva Cita
+      </button>
+      <button (click)="volverAlInicio()" class="btn btn-secondary">
+        🏠 Volver al Inicio
+      </button>
+      <button (click)="contactarSoporte()" class="btn btn-tertiary">
+        💬 Contactar por WhatsApp
+      </button>
+    </div>
+  </div>
+
+  <!-- Estado vacío (no debería ocurrir) -->
+  <div *ngIf="!loading && !error && !citaData" class="error-container">
+    <!-- Logo SinCola -->
+    <div class="logo-header">
+      <div class="logo-circle">
+        <img src="assets/iconos/logo.svg" alt="Logo SinCola">
+      </div>
+    </div>
+
+    <div class="icon-error"></div>
+    <h1>No se encontraron datos</h1>
+    <p class="error-message">No se pudo cargar la información de la cita.</p>
+    <button (click)="volverAlInicio()" class="btn btn-primary">Volver al Inicio</button>
+  </div>
+</div>

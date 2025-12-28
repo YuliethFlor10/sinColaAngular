@@ -2,6 +2,195 @@
   <app-admin-web></app-admin-web>
   <app-contenido [title]="'Informe de servicios realizados'">
 
-  </app-contenido>
+    <div class="container">
+      <!-- Controles del reporte -->
+      <div class="report-controls">
+        <div class="date-range-selector">
+          <div class="form-group">
+            <label for="dateRangeType">Tipo de rango</label>
+            <select 
+              id="dateRangeType"
+              class="date-input"
+              [(ngModel)]="dateRangeType"
+              (change)="onDateRangeTypeChange()">
+              <option value="diario">Diario</option>
+              <option value="mensual">Mensual</option>
+              <option value="personalizado">Personalizado</option>
+            </select>
+          </div>
+          
+          <div class="form-group" *ngIf="dateRangeType === 'personalizado'">
+            <label for="startDate">Fecha de inicio</label>
+            <input
+              type="date"
+              id="startDate"
+              class="date-input"
+              [(ngModel)]="startDate"
+              (change)="onDateChange()">
+          </div>
+          
+          <div class="form-group" *ngIf="dateRangeType === 'personalizado'">
+            <label for="endDate">Fecha de fin</label>
+            <input
+              type="date"
+              id="endDate"
+              class="date-input"
+              [(ngModel)]="endDate"
+              (change)="onDateChange()">
+          </div>
 
+          <!-- Selector de empleado (solo para negocios) -->
+          <div class="form-group" *ngIf="isBusiness && employees.length > 0">
+            <label for="selectedEmployeeId">Filtrar por empleado</label>
+            <select 
+              id="selectedEmployeeId"
+              class="date-input"
+              [(ngModel)]="selectedEmployeeId"
+              (change)="onEmployeeChange()">
+              <option [value]="null">Todos los empleados</option>
+              <option *ngFor="let emp of employees" [value]="emp.id">
+                {{emp.nombre_completo || (emp.nombres + ' ' + emp.apellidos) || emp.email}}
+              </option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          class="btn-generate-report"
+          (click)="generateReport()"
+          [disabled]="isGenerating">
+          {{isGenerating ? 'Generando...' : 'Generar Informe'}}
+        </button>
+      </div>
+
+      <!-- Resultados del reporte -->
+      <div class="report-results" *ngIf="showReport">
+        
+        <!-- Resumen de estadísticas -->
+        <div class="summary-cards">
+          <div class="summary-card">
+            <h3>Total de Citas</h3>
+            <p class="summary-value-large">{{totalAppointments}}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Ganancia Total</h3>
+            <p class="summary-value-large">{{totalRevenue | currency:'COP':'symbol':'1.0-0'}}</p>
+          </div>
+          <div class="summary-card">
+            <h3>Promedio por Cita</h3>
+            <p class="summary-value-large">{{averagePerAppointment | currency:'COP':'symbol':'1.0-0'}}</p>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-container">
+          <div class="chart-wrapper">
+            <canvas #revenueChart id="revenueChart" *ngIf="showChart && dateGroupedData.length > 0"></canvas>
+            <p class="no-data-message" *ngIf="!showChart || dateGroupedData.length === 0">
+              No hay datos para mostrar el gráfico de ganancias.
+            </p>
+          </div>
+          <div class="chart-wrapper">
+            <canvas #appointmentsChart id="appointmentsChart" *ngIf="showChart && dateGroupedData.length > 0"></canvas>
+            <p class="no-data-message" *ngIf="!showChart || dateGroupedData.length === 0">
+              No hay datos para mostrar el gráfico de citas.
+            </p>
+          </div>
+          <div class="chart-wrapper">
+            <canvas #statusChart id="statusChart" *ngIf="showChart && statusGroupedData.length > 0"></canvas>
+            <p class="no-data-message" *ngIf="!showChart || statusGroupedData.length === 0">
+              No hay datos para mostrar el gráfico por estado.
+            </p>
+          </div>
+          <div class="chart-wrapper">
+            <canvas #serviceChart id="serviceChart" *ngIf="showChart && serviceGroupedData.length > 0"></canvas>
+            <p class="no-data-message" *ngIf="!showChart || serviceGroupedData.length === 0">
+              No hay datos para mostrar el gráfico por servicio.
+            </p>
+          </div>
+        </div>
+
+        <!-- Tabla de citas -->
+        <div class="appointments-table-container">
+          <h3>Detalle de Citas Confirmadas</h3>
+          <div class="table-wrapper">
+            <table class="appointments-table">
+              <thead>
+                <tr>
+                  <th>Fecha</th>
+                  <th>Hora</th>
+                  <th>Servicio</th>
+                  <th *ngIf="isBusiness">Empleado</th>
+                  <th>Cliente</th>
+                  <th>Precio</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let apt of filteredAppointments">
+                  <td>{{apt.fechaFormateada || 'N/A'}}</td>
+                  <td>{{apt.horaFormateada || 'N/A'}}</td>
+                  <td>{{apt.servicioNombre || 'N/A'}}</td>
+                  <td *ngIf="isBusiness">{{apt.empleadoNombre || 'N/A'}}</td>
+                  <td>{{apt.clienteNombre || 'N/A'}}</td>
+                  <td>{{apt.precio | currency:'COP':'symbol':'1.0-0'}}</td>
+                </tr>
+                <tr *ngIf="filteredAppointments.length === 0">
+                  <td [attr.colspan]="isBusiness ? 6 : 5" class="no-data">No hay citas confirmadas en el período seleccionado</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Servicios más realizados -->
+        <div class="most-performed-services">
+          <h3>Servicios más realizados</h3>
+          <ul class="summary-list">
+            <li *ngFor="let service of mostPerformedServices; let i = index">
+              {{i + 1}}. {{service.name}} ({{service.count}} veces)
+            </li>
+            <li *ngIf="mostPerformedServices.length === 0">
+              No hay datos para mostrar.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Mensaje cuando no hay reporte -->
+      <div class="no-report-message" *ngIf="!showReport && !isGenerating">
+        <p>{{noDataMessage}}</p>
+      </div>
+
+      <!-- Loading spinner -->
+      <div class="loading-spinner" *ngIf="isGenerating">
+        <div class="spinner"></div>
+        <p>Generando informe...</p>
+      </div>
+
+      <!-- Mensajes de estado -->
+      <div class="message-container">
+        <div
+          class="success-message"
+          [class.show]="successMessage"
+          *ngIf="successMessage">
+          {{successMessage}}
+        </div>
+
+        <div
+          class="error-message-global"
+          [class.show]="errorMessage"
+          *ngIf="errorMessage">
+          {{errorMessage}}
+        </div>
+
+        <div
+          class="info-message-global"
+          [class.show]="infoMessage"
+          *ngIf="infoMessage">
+          {{infoMessage}}
+        </div>
+      </div>
+    </div>
+
+  </app-contenido>
 </div>

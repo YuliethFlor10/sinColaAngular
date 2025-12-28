@@ -1,6 +1,504 @@
-<div>
-  <h2>Página de Inicio</h2>
+<!-- Modern Header with Glassmorphism -->
+<header class="modern-header">
+  <div class="header-container">
+    <div class="logo-section">
+      <img src="/assets/iconos/logo.svg" alt="SinCola Logo" class="logo">
+      <span class="brand-name">SinCola</span>
+    </div>
 
+    <nav class="main-navigation">
+      <ul class="nav-list">
+        <li><a href="#hero" class="nav-link" (click)="scrollToSection('hero')">Inicio</a></li>
+        <li><a href="#features" class="nav-link" (click)="scrollToSection('features')">Características</a></li>
+        <li><a href="#plans" class="nav-link" (click)="scrollToSection('plans')">Planes</a></li>
+        <li><a href="#about" class="nav-link" (click)="scrollToSection('about')">Nosotros</a></li>
+      </ul>
+    </nav>
 
-  <a routerLink="/admin/citas">admin citas</a>
-</div>
+    <div class="auth-section">
+      <button class="btn-login" (click)="irInicioSesion()">
+        <i class="fas fa-sign-in-alt"></i>
+        Iniciar Sesión
+      </button>
+      <button class="btn-register" (click)="irRegistro()">
+        <i class="fas fa-user-plus"></i>
+        Registrarse
+      </button>
+    </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" (click)="toggleMobileMenu()">
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+      <span class="hamburger-line"></span>
+    </button>
+  </div>
+
+  <!-- Mobile Navigation -->
+  <nav class="mobile-navigation" [class.active]="mobileMenuOpen">
+    <ul class="mobile-nav-list">
+      <li><a href="#hero" class="mobile-nav-link" (click)="closeMobileMenu(); scrollToSection('hero')">Inicio</a></li>
+      <li><a href="#features" class="mobile-nav-link" (click)="closeMobileMenu(); scrollToSection('features')">Características</a></li>
+      <li><a href="#plans" class="mobile-nav-link" (click)="closeMobileMenu(); scrollToSection('plans')">Planes</a></li>
+      <li><a href="#about" class="mobile-nav-link" (click)="closeMobileMenu(); scrollToSection('about')">Nosotros</a></li>
+      <li class="mobile-auth">
+        <button class="btn-login-mobile" (click)="irInicioSesion(); closeMobileMenu()">Iniciar Sesión</button>
+        <button class="btn-register-mobile" (click)="irRegistro(); closeMobileMenu()">Registrarse</button>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<!-- Hero Section - Modern Design -->
+<section id="hero" class="hero-section">
+  <div class="hero-background">
+    <div class="gradient-overlay"></div>
+    <div class="floating-shapes">
+      <div class="shape shape-1"></div>
+      <div class="shape shape-2"></div>
+      <div class="shape shape-3"></div>
+    </div>
+  </div>
+
+  <div class="hero-container">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="hero-title">
+          <span class="title-highlight">¡Deja atrás el papel!</span>
+          <span class="title-subtitle">Transforma tu negocio</span>
+        </h1>
+        <p class="hero-description">
+          Gestiona tus citas de forma digital y eficiente. Recibe notificaciones en tiempo real y mantén a tus clientes siempre informados con nuestra plataforma inteligente.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn-primary" (click)="irInicioSesion()">
+            <i class="fas fa-rocket"></i>
+            Comenzar Ahora
+          </button>
+          <button class="btn-secondary" (click)="scrollToSection('features')">
+            <i class="fas fa-play"></i>
+            Ver Demo
+          </button>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat-item">
+            <div class="stat-number">500+</div>
+            <div class="stat-label">Citas organizadas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">100+</div>
+            <div class="stat-label">Negocios activos</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">99%</div>
+            <div class="stat-label">Satisfacción</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="dashboard-preview">
+          <div class="preview-header">
+            <div class="preview-dots">
+              <span class="dot red"></span>
+              <span class="dot yellow"></span>
+              <span class="dot green"></span>
+            </div>
+            <div class="preview-title">SinCola Dashboard</div>
+          </div>
+          <div class="preview-content">
+            <div class="feature-card-preview">
+              <i class="fas fa-calendar-alt"></i>
+              <h3>Agenda Digital</h3>
+              <p>Organiza todas tus citas</p>
+            </div>
+            <div class="feature-card-preview">
+              <i class="fas fa-bell"></i>
+              <h3>Notificaciones</h3>
+              <p>Recordatorios automáticos</p>
+            </div>
+            <div class="feature-card-preview">
+              <i class="fas fa-chart-line"></i>
+              <h3>Estadísticas</h3>
+              <p>Analiza tu crecimiento</p>
+            </div>
+            <div class="feature-card-preview">
+              <i class="fas fa-users"></i>
+              <h3>Gestión CRM</h3>
+              <p>Historial de clientes</p>
+            </div>
+            <div class="feature-card-preview">
+              <i class="fas fa-clock"></i>
+              <h3>Horarios flexibles</h3>
+              <p>Configura horarios y duraciones</p>
+            </div>
+            <div class="feature-card-preview">
+              <i class="fas fa-mobile-alt"></i>
+              <h3>Acceso móvil</h3>
+              <p>Reserva y gestiona citas desde tu teléfono</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Problem/Solution Section -->
+<section id="intro" class="intro-section">
+  <div class="container">
+    <div class="intro-content">
+      <div class="intro-text">
+        <h2 class="section-title">Un problema real, una solución innovadora</h2>
+        <p class="intro-description">
+          SinCola surge tras convivir con pequeños negocios que pierden clientes por manejar sus citas en papel.
+          Nuestra plataforma permite configurar horarios, enviar recordatorios y monitorear métricas en tiempo real,
+          facilitando su transformación digital.
+        </p>
+        <div class="intro-features">
+          <div class="feature-point">
+            <i class="fas fa-check-circle"></i>
+            <span>Eliminación del papel</span>
+          </div>
+          <div class="feature-point">
+            <i class="fas fa-check-circle"></i>
+            <span>Automatización completa</span>
+          </div>
+          <div class="feature-point">
+            <i class="fas fa-check-circle"></i>
+            <span>Transformación digital</span>
+          </div>
+        </div>
+      </div>
+      <div class="intro-visual">
+        <div class="visual-container">
+          <img src="/assets/iconos/va.sgv.png" alt="Agenda digital organizada" class="intro-image">
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="features-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Características que transforman tu negocio</h2>
+      <p class="section-description">
+        Descubre todas las herramientas que necesitas para gestionar tu negocio de manera eficiente
+      </p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-calendar-check"></i>
+        </div>
+        <h3 class="feature-title">Agenda Digital Personalizada</h3>
+        <p class="feature-description">Horarios y duraciones adaptables a tu negocio con interfaz intuitiva.</p>
+        <div class="feature-highlight">Flexible</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-bell"></i>
+        </div>
+        <h3 class="feature-title">Notificaciones Automáticas</h3>
+        <p class="feature-description">Recordatorios por correo, SMS o WhatsApp para mantener a tus clientes informados.</p>
+        <div class="feature-highlight">Automático</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-chart-bar"></i>
+        </div>
+        <h3 class="feature-title">Panel de Estadísticas</h3>
+        <p class="feature-description">Métricas clave de ocupación y recurrencia para optimizar tu negocio.</p>
+        <div class="feature-highlight">Inteligente</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-users"></i>
+        </div>
+        <h3 class="feature-title">Gestión de Clientes (CRM)</h3>
+        <p class="feature-description">Historial completo y preferencias de cada cliente en un solo lugar.</p>
+        <div class="feature-highlight">Completo</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-globe"></i>
+        </div>
+        <h3 class="feature-title">Reserva en Línea</h3>
+        <p class="feature-description">Link público para que tus clientes agenden citas de forma independiente.</p>
+        <div class="feature-highlight">Accesible</div>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">
+          <i class="fas fa-headset"></i>
+        </div>
+        <h3 class="feature-title">Soporte Personalizado</h3>
+        <p class="feature-description">Acompañamiento continuo por WhatsApp o correo para resolver tus dudas.</p>
+        <div class="feature-highlight">24/7</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Mission & Vision Section -->
+<section id="mission-vision" class="mission-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Nuestro Propósito</h2>
+    </div>
+
+    <div class="mission-grid">
+      <div class="mission-card">
+        <div class="mission-icon">
+          <i class="fas fa-bullseye"></i>
+        </div>
+        <h3 class="mission-title">Misión</h3>
+        <p class="mission-description">
+          Brindar a los pequeños negocios una plataforma tecnológica que optimice su gestión de citas,
+          mejore la experiencia de sus clientes y fortalezca su operación diaria.
+        </p>
+      </div>
+
+      <div class="mission-card">
+        <div class="mission-icon">
+          <i class="fas fa-eye"></i>
+        </div>
+        <h3 class="mission-title">Visión</h3>
+        <p class="mission-description">
+          Ser la plataforma líder en gestión de reservas para el mercado en Santander, reconocida por su
+          accesibilidad, eficiencia y personalización.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing Plans Section -->
+<section id="plans" class="pricing-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Elige el plan perfecto para tu negocio</h2>
+      <p class="section-description">
+        Selecciona el plan que mejor se adapte a las necesidades de tu negocio
+      </p>
+    </div>
+
+    <div class="pricing-grid">
+      <!-- Plan Esencial -->
+      <div class="pricing-card">
+        <div class="plan-header popular">
+          <div class="plan-badge">Popular</div>
+          <h3 class="plan-name">Plan Esencial</h3>
+          <div class="plan-messages">150 notificaciones/mes</div>
+        </div>
+        <div class="plan-price">
+          <span class="currency">$</span>
+          <span class="amount">15.000</span>
+          <span class="period">/mes</span>
+
+        <ul class="plan-features">
+          <li><i class="fas fa-check"></i> Agenda completa</li>
+          <li><i class="fas fa-check"></i> Historial de citas</li>
+          <li><i class="fas fa-check"></i> Recordatorio + confirmación</li>
+          <li><i class="fas fa-check"></i> Branding personalizado</li>
+        </ul>
+        <button class="plan-button" (click)="irInicioSesion()">
+          Seleccionar plan
+        </button>
+      </div>
+      </div>
+
+      <!-- Plan Avanzado -->
+      <div class="pricing-card featured">
+        <div class="plan-header avanzado">
+          <div class="plan-badge featured">Recomendado</div>
+          <h3 class="plan-name">Plan Avanzado</h3>
+          <div class="plan-messages">500 notificaciones/mes</div>
+        </div>
+        <div class="plan-price">
+          <span class="currency">$</span>
+          <span class="amount">35.000</span>
+          <span class="period">/mes</span>
+        <ul class="plan-features">
+          <li><i class="fas fa-check"></i> Recordatorio + confirmación</li>
+          <li><i class="fas fa-check"></i> Reprogramación automática</li>
+          <li><i class="fas fa-check"></i> Dashboard con métricas</li>
+          <li><i class="fas fa-check"></i> Branding personalizado</li>
+        </ul>
+        <button class="plan-button featured" (click)="irInicioSesion()">
+          Seleccionar plan
+        </button>
+      </div>
+      </div>
+
+      <!-- Plan Ilimitado -->
+      <div class="pricing-card">
+        <div class="plan-header ilimitado">
+          <div class="plan-badge">Premium</div>
+          <h3 class="plan-name">Plan Ilimitado</h3>
+          <div class="plan-messages">Notificaciones ilimitadas</div>
+        </div>
+        <div class="plan-price">
+          <span class="currency">$</span>
+          <span class="amount">70.000</span>
+          <span class="period">/mes</span>
+        <ul class="plan-features">
+          <li><i class="fas fa-check"></i> Todas las funciones</li>
+          <li><i class="fas fa-check"></i> Estadísticas avanzadas</li>
+          <li><i class="fas fa-check"></i> Integración con pasarelas de pago</li>
+          <li><i class="fas fa-check"></i> Branding personalizado</li>
+        </ul>
+        <button class="plan-button" (click)="irInicioSesion()">
+          Seleccionar plan
+        </button>
+      </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- About Us Section -->
+<section id="about" class="about-section">
+  <div class="container">
+    <div class="section-header">
+      <h2 class="section-title">Quiénes Somos</h2>
+      <p class="section-description">
+        SinCola está impulsado por un equipo apasionado por la transformación digital de pequeños negocios
+      </p>
+    </div>
+
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="team-avatar">
+          <img src="/assets/iconos/yuli.svg" alt="Yulieth Flor" class="avatar-image">
+          <div class="avatar-overlay">
+            <svg class="icon" width="20" height="20">
+              <use href="/assets/icons.svg#icon-code"></use>
+            </svg>
+          </div>
+        </div>
+        <h3 class="team-name">Yulieth Flor</h3>
+        <p class="team-role">Fundadora y Desarrolladora Full-Stack</p>
+        <p class="team-description">
+          Lidera la arquitectura, la lógica de negocio y la validación con usuarios reales.
+          Apasionada por crear soluciones que realmente funcionen.
+        </p>
+        <div class="team-skills">
+          <span class="skill-tag">Arquitectura</span>
+          <span class="skill-tag">Backend</span>
+          <span class="skill-tag">Frontend</span>
+          <span class="skill-tag">Validación</span>
+        </div>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">
+          <img src="/assets/iconos/isa2.jpg" alt="Isabela García" class="avatar-image">
+          <div class="avatar-overlay">
+            <svg class="icon" width="20" height="20">
+              <use href="/assets/icons.svg#icon-paint-brush"></use>
+            </svg>
+          </div>
+        </div>
+        <h3 class="team-name">Isabela García</h3>
+        <p class="team-role">Desarrolladora Full-Stack y Diseñadora UX/UI</p>
+        <p class="team-description">
+          Encargada de la experiencia visual, documentación y soporte al cliente.
+          Especialista en crear interfaces intuitivas y atractivas.
+        </p>
+        <div class="team-skills">
+          <span class="skill-tag">Frontend</span>
+          <span class="skill-tag">UX/UI</span>
+          <span class="skill-tag">Soporte</span>
+        </div>
+      </div>
+
+      <div class="team-card">
+        <div class="team-avatar">
+          <img src="/assets/iconos/tere.svg.jpg" alt="Teresa García" class="avatar-image">
+          <div class="avatar-overlay">
+            <svg class="icon" width="20" height="20">
+              <use href="/assets/icons.svg#icon-mobile"></use>
+            </svg>
+          </div>
+        </div>
+        <h3 class="team-name">Teresa García</h3>
+        <p class="team-role">Desarrolladora Full-Stack y Diseñadora UX/UI</p>
+        <p class="team-description">
+          Encargada de la experiencia visual, documentación y soporte al cliente.
+          Experta en diseño responsive y experiencia móvil.
+        </p>
+        <div class="team-skills">
+          <span class="skill-tag">Mobile</span>
+          <span class="skill-tag">UX/UI</span>
+          <span class="skill-tag">Documentación</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <img src="/assets/iconos/logo.svg" alt="SinCola Logo" class="footer-logo">
+        <h3 class="footer-brand-name">SinCola</h3>
+        <p class="footer-description">
+          Tu tiempo es oro no lo pongas en espera.... <br>
+          Transformando pequeños negocios con tecnología inteligente para la gestión de citas.
+        </p>
+      </div>
+
+      <div class="footer-links">
+        <div class="link-group">
+          <h4 class="link-title">Producto</h4>
+          <ul class="link-list">
+            <li><a href="#features">Características</a></li>
+            <li><a href="#plans">Planes</a></li>
+            <li><a href="#about">Nosotros</a></li>
+          </ul>
+        </div>
+
+        <div class="link-group">
+          <h4 class="link-title">Soporte</h4>
+          <ul class="link-list">
+            <li><a href="mailto:sincola@gmail.com">Contacto</a></li>
+            <li><a href="tel:+573107343607">Teléfono</a></li>
+            <li><a href="https://www.instagram.com/sincola2025?igsh=aTlrdGs1cWVybWx1" target="_blank">Instagram</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-social">
+        <h4 class="social-title">Síguenos</h4>
+        <div class="social-links">
+          <a href="mailto:sincola@gmail.com" class="social-link">
+            <i class="fas fa-envelope"></i>
+          </a>
+          <a href="tel:+573107343607" class="social-link">
+            <i class="fas fa-phone"></i>
+          </a>
+          <a href="https://www.instagram.com/sincola2025?igsh=aTlrdGs1cWVybWx1" target="_blank" class="social-link">
+            <i class="fab fa-instagram"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p class="copyright">&copy; 2025 SinCola. Todos los derechos reservados.</p>
+      <p class="made-with">Hecho con ❤️ en Colombia</p>
+    </div>
+  </div>
+</footer>

@@ -1,11 +1,14 @@
-<aside class="sidebar" id="sidebar">
+<aside class="sidebar" [class.open]="isOpen" id="sidebar">
   <div class="sidebar-content">
+      <!-- ✅ Perfil de usuario con datos dinámicos -->
       <div class="user-profile">
           <div class="profile-avatar">
-              <span>J</span>
+              <!-- ✅ Mostrar inicial dinámica -->
+              <span>{{ userInitial }}</span>
           </div>
-          <span class="profile-name">Juanito</span>
-          </div>
+          <!-- ✅ Mostrar nombre completo dinámico -->
+          <span class="profile-name">{{ userFullName }}</span>
+      </div>
 
       <nav class="nav-menu">
           <button routerLink="/crear-usuario" routerLinkActive="active" class="nav-item" data-target="user-management-view">
@@ -32,6 +35,17 @@
               <span class="nav-icon"><img src="assets/iconos/informe.svg" alt="Icono informe" class="icon"></span>
               <span>Informe</span>
           </button>
+          <button
+    routerLink="/cliente-final/formulario"
+    routerLinkActive="active"
+    class="nav-item"
+    data-target="cliente-final-view">
+    <span class="nav-icon">
+      <img src="assets/iconos/user.svg" alt="cliente" class="icon">
+    </span>
+    <span>Cliente Final</span>
+</button>
+
       </nav>
   </div>
 </aside>

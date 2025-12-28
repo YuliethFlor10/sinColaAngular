@@ -1,0 +1,1106 @@
+/* ========================================
+   RESET Y ESTILOS BASE
+   ======================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #f5f5f5;
+  color: #333;
+  line-height: 1.6;
+}
+
+/* ========================================
+   ESTILOS PARA ICONOS UNICODE
+   ======================================== */
+.icon {
+  font-size: 1.2em;
+  display: inline-block;
+  line-height: 1;
+}
+
+.nav-icon {
+  font-size: 1.1em;
+  display: inline-block;
+  width: 20px;
+  text-align: center;
+  line-height: 1;
+}
+
+/* ========================================
+   HEADER - Barra superior
+   MODIFICACIÓN: Altura aumentada de 70px a 90px
+   ======================================== */
+.header {
+  /* Gradiente de fondo (púrpura a naranjo) */
+  background: linear-gradient(135deg, #030B58,#023B4B,#5D0365,#F82929,#FA6C24,#FDC030);
+  color: white;
+  padding: 1.5rem 2rem; /* AUMENTADO: padding más grande */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  height: 90px; /* AUMENTADO: de 70px a 90px */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Sombra añadida */
+}
+
+/* Lado izquierdo del header */
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem; /* AUMENTADO: más espacio entre elementos */
+}
+
+/* Logo de la empresa */
+.logo {
+  width: 56px; /* AUMENTADO: de 48px a 56px */
+  height: 56px; /* AUMENTADO: de 48px a 56px */
+  background: rgba(8, 8, 8, 0);
+  border-radius: 14px; /* AUMENTADO: border-radius más grande */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra añadida */
+  margin-top: 7px;
+}
+
+/* Botón menú hamburguesa */
+.menu-toggle {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.6rem; /* AUMENTADO: icono más grande */
+  cursor: pointer;
+  padding: 0.75rem; /* AUMENTADO: padding más grande */
+  border-radius: 10px; /* AUMENTADO: border-radius más grande */
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px; /* AÑADIDO: ancho mínimo */
+  min-height: 50px; /* AÑADIDO: altura mínima */
+}
+
+.menu-toggle:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.menu-toggle .icon {
+  font-size: 1.5rem; /* AUMENTADO: icono más grande */
+  line-height: 1;
+}
+
+/* Avatar del usuario */
+.user-avatar {
+  width: 56px; /* AUMENTADO: de 48px a 56px */
+  height: 56px; /* AUMENTADO: de 48px a 56px */
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem; /* AUMENTADO: icono más grande */
+  border: 2px solid rgba(255, 255, 255, 0.3); /* AÑADIDO: borde */
+}
+
+/* ========================================
+   CONTENEDOR PRINCIPAL
+   ======================================== */
+.main-container {
+  display: flex;
+  margin-top: 90px; /* ACTUALIZADO: ajustado al nuevo height del header */
+  min-height: calc(100vh - 90px); /* ACTUALIZADO: ajustado al nuevo height */
+}
+
+/* ========================================
+   SIDEBAR - Menú lateral
+   ======================================== */
+.sidebar {
+  width: 280px;
+  background: white;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+  position: fixed;
+  left: 0;
+  top: 90px; /* ACTUALIZADO: ajustado al nuevo height del header */
+  height: calc(100vh - 90px); /* ACTUALIZADO: ajustado al nuevo height */
+  overflow-y: auto;
+  z-index: 999;
+}
+
+/* Contenido interno del sidebar */
+.sidebar-content {
+  padding: 1.5rem;
+}
+
+/* ========================================
+   PERFIL DE USUARIO EN SIDEBAR
+   ======================================== */
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+/* Avatar del perfil */
+.profile-avatar {
+  width: 40px;
+  height: 40px;
+  background: #6b7280;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 500;
+}
+
+/* Nombre del usuario */
+.profile-name {
+  font-weight: 500;
+  color: #000000;
+  flex: 1;
+}
+
+/* ========================================
+   MENÚ DE NAVEGACIÓN
+   ======================================== */
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Elementos del menú de navegación */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: none;
+  background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-size: 0.95rem;
+  color: #000000;
+  width: 100%;
+}
+
+/* Estado hover de los elementos del menú */
+.nav-item:hover {
+  background-color: #f3f4f6;
+}
+
+/* Estado activo del elemento del menú */
+.nav-item.active {
+  background-color: #FDC030; /* Color naranja claro */
+  color: #000000; /* Color naranja oscuro */
+  font-weight: 500;
+}
+
+/* ========================================
+   CONTENIDO PRINCIPAL
+   ======================================== */
+.main-content {
+  flex: 1;
+  padding: 2rem;
+  margin-left: 280px; /* Espacio para el sidebar */
+  transition: margin-left 0.3s ease;
+}
+
+/* Tarjeta contenedora del formulario */
+.content-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Encabezado de la tarjeta */
+.card-header {
+  padding: 2rem 2rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.card-header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #000000;
+  text-shadow: 2px 2px 4px rgba(53, 52, 52, 0.5);
+}
+
+/* Contenido de la tarjeta */
+.card-content {
+  padding: 2rem;
+}
+
+/* ========================================
+   ESTILOS DEL FORMULARIO (APLICABLES SI SE MANTUVIERAN)
+   ======================================== */
+
+/* Sección del formulario */
+.form-section {
+  margin-bottom: 2rem;
+}
+
+/* Título de la sección */
+.form-section h3 {
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #000000;
+  margin-bottom: 1.5rem;
+}
+
+/* Fila de campos del formulario (grid responsive) */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Grupo individual de campo */
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Etiquetas de los campos */
+.form-group label {
+  font-weight: 500;
+  color: #000000;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Campos de entrada y selectores */
+.form-group input,
+.form-group select {
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background: white;
+}
+
+/* Estado focus de los campos */
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #f97316; /* Color naranja */
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* Placeholder de los campos */
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+/* ========================================
+   BOTONES DE ACCIÓN
+   ======================================== */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+/* Botón principal de crear usuario */
+.btn-create {
+  background: #FDC030; /* Color naranja */
+  color: rgb(0, 0, 0);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  border: solid 2px;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+/* Estado hover del botón */
+.btn-create:hover {
+  background: #FDC030; /* Naranja más oscuro */
+  transform: translateY(-1px);
+}
+
+/* Estado activo del botón */
+.btn-create:active {
+  transform: translateY(0);
+}
+
+/* ========================================
+   OVERLAY PARA MÓVIL
+   ======================================== */
+.overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+/* ========================================
+   ESTILOS ESPECÍFICOS MI PLAN ACTUAL
+   ======================================== */
+.plan-section {
+    margin-bottom: 3rem;
+}
+
+.plan-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #000000;
+    margin-bottom: 1.5rem;
+}
+
+.current-plan-details {
+    display: flex;
+    flex-wrap: wrap; /* Permite que los elementos se envuelvan en pantallas pequeñas */
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.plan-card {
+    background: linear-gradient(135deg, #030B58,#5D0365,#F82929,#FA6C24,#FDC030); /* Gradiente del header */
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    min-width: 280px; /* Ancho mínimo para las tarjetas */
+    flex: 1; /* Permite que la tarjeta se estire pero respeta el min-width */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+}
+
+.plan-card .plan-type {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    color: #FDC030; /* Color de texto que resalte en el gradiente */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.plan-card .plan-status {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.plan-card ul {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 1.5rem;
+}
+
+.plan-card ul li {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.plan-card ul li::before {
+    content: '✔️'; /* Icono de check */
+    font-size: 0.9rem;
+    color: white; /* Color del check */
+}
+
+.plan-card .plan-price {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-align: right;
+    margin-top: auto; /* Empuja el precio hacia abajo */
+}
+
+.plan-info {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    padding: 1.5rem;
+    flex: 2; /* Permite que la información del plan ocupe más espacio */
+    min-width: 300px; /* Ancho mínimo para la información */
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.plan-info p {
+    margin-bottom: 0.7rem;
+    font-size: 1rem;
+    color: #444;
+}
+
+.plan-info p span {
+    font-weight: 600;
+    color: #000000;
+}
+
+/* Estilo para las notificaciones restantes */
+#notificationsRemaining {
+    color: #f97316; /* Naranja más vibrante */
+}
+
+.other-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+/* Ajustes para los otros planes para que no tengan el mismo gradiente */
+.other-plans-grid .plan-card {
+    background: white; /* Fondo blanco */
+    color: #333; /* Texto oscuro */
+    border: 1px solid #e0e0e0;
+}
+
+.other-plans-grid .plan-card .plan-type {
+    color: #FDC030; /* Color naranja para el tipo de plan */
+    text-shadow: none;
+}
+
+.other-plans-grid .plan-card .plan-status {
+    background-color: #eee;
+    color: #555;
+}
+
+.other-plans-grid .plan-card ul li::before {
+    color: #10b981; /* Check verde para los otros planes */
+}
+
+.other-plans-grid .plan-card .plan-price {
+    color: #000000;
+}
+
+
+/* ========================================
+   DISEÑO RESPONSIVE
+   ======================================== */
+
+/* Tablets y pantallas medianas */
+@media (max-width: 1024px) {
+  .form-row {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .main-content {
+    padding: 1.5rem;
+  }
+
+  .current-plan-details {
+      flex-direction: column; /* Apila en columnas en pantallas medianas */
+      align-items: stretch;
+  }
+
+  .plan-info {
+      min-width: auto; /* Permite que se ajuste */
+  }
+
+  .other-plans-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+  }
+
+  .sidebar {
+    transform: translateX(-100%);
+    top: 80px;
+    height: calc(100vh - 80px);
+    width: 280px;
+    position: fixed;
+    left: 0;
+    z-index: 999;
+    transition: transform 0.3s;
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+  .overlay.show {
+    display: block;
+  }
+}
+
+/* Móviles y tablets pequeñas */
+@media (max-width: 768px) {
+  /* Header ajustado para móvil */
+  .header {
+    padding: 1rem 1.5rem; /* AJUSTADO: padding reducido en móvil */
+    height: 80px; /* AJUSTADO: altura reducida en móvil */
+  }
+
+  .logo {
+    width: 48px; /* AJUSTADO: tamaño reducido en móvil */
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  .user-avatar {
+    width: 48px; /* AJUSTADO: tamaño reducido en móvil */
+    height: 48px;
+    font-size: 1.2rem;
+  }
+
+  /* Ajustes del contenedor principal */
+  .main-container {
+    margin-top: 80px; /* AJUSTADO: al nuevo height del header móvil */
+  }
+
+  /* Sidebar oculto por defecto en móvil */
+  .sidebar {
+    transform: translateX(-100%);
+    top: 80px; /* AJUSTADO: al nuevo height del header móvil */
+    height: calc(100vh - 80px);
+  }
+
+  /* Sidebar visible cuando tiene clase 'open' */
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  /* Contenido principal sin margen izquierdo en móvil */
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
+
+  /* Overlay visible cuando tiene clase 'show' */
+  .overlay.show {
+    display: block;
+  }
+
+  /* Formulario en una sola columna en móvil */
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Ajustes de la tarjeta en móvil */
+  .card-header {
+    padding: 1.5rem 1.5rem 1rem;
+  }
+
+  .card-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .card-content {
+    padding: 1.5rem;
+  }
+
+  .current-plan-details {
+      flex-direction: column; /* Asegura apilamiento en móvil */
+      gap: 1.5rem;
+  }
+
+  .plan-card {
+      min-width: auto; /* Permite que las tarjetas se estiren al 100% */
+  }
+
+  .other-plans-grid {
+      grid-template-columns: 1fr; /* Una columna en móvil */
+      gap: 1.5rem;
+  }
+}
+
+/* Móviles pequeños */
+@media (max-width: 480px) {
+  /* Header más compacto */
+  .header {
+    padding: 0.75rem 1rem; /* AJUSTADO: padding aún más reducido */
+    height: 70px; /* AJUSTADO: altura mínima para móviles pequeños */
+  }
+
+  .header-left {
+    gap: 1rem; /* AJUSTADO: menos espacio entre elementos */
+  }
+
+  .logo {
+    width: 40px; /* AJUSTADO: tamaño mínimo */
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .user-avatar {
+    width: 40px; /* AJUSTADO: tamaño mínimo */
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .menu-toggle {
+    padding: 0.5rem;
+    min-width: 40px;
+    min-height: 40px;
+  }
+
+  /* Ajustes del contenedor principal */
+  .main-container {
+    margin-top: 70px; /* AJUSTADO: al nuevo height del header móvil pequeño */
+  }
+
+  .sidebar {
+    top: 70px; /* AJUSTADO: al nuevo height del header móvil pequeño */
+    height: calc(100vh - 70px);
+  }
+
+  /* Formulario más compacto */
+  .form-row {
+    gap: 0.75rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 0.625rem;
+    font-size: 0.9rem;
+  }
+
+  /* Botón de ancho completo en móviles pequeños */
+  .btn-create {
+    width: 100%;
+    padding: 0.875rem;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  /* Tarjeta más compacta */
+  .card-header {
+    padding: 1rem;
+  }
+
+  .card-content {
+    padding: 1rem;
+  }
+
+  /* Sidebar más compacto */
+  .sidebar-content {
+    padding: 1rem;
+  }
+
+  .nav-item {
+    padding: 0.625rem;
+    font-size: 0.9rem;
+  }
+
+  /* Iconos más pequeños en móviles */
+  .nav-icon {
+    font-size: 1rem;
+    width: 18px;
+  }
+
+  .menu-toggle .icon {
+    font-size: 1.2rem;
+  }
+}
+
+/* ========================================
+   ESTADOS DE VALIDACIÓN DEL FORMULARIO
+   ======================================== */
+
+/* Campo con error */
+.form-group.error input,
+.form-group.error select {
+  border-color: #ef4444; /* Rojo para errores */
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Mensaje de error */
+.error-message {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+/* ========================================
+   ESTADOS DE CARGA
+   ======================================== */
+
+/* Botón deshabilitado */
+.btn-create:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Botón en estado de carga */
+.btn-create.loading {
+  position: relative;
+  color: transparent;
+}
+
+/* Spinner de carga */
+.btn-create.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Animación del spinner */
+@keyframes spin {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ========================================
+   MENSAJES DE ÉXITO Y ERROR
+   ======================================== */
+
+/* Mensaje de éxito */
+.success-message {
+  background: #10b981; /* Verde */
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+.success-message.show {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+/* Mensaje de error global */
+.error-message-global {
+  background: #ef4444; /* Rojo */
+  color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  display: none;
+}
+
+.error-message-global.show {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+/* Animación de deslizamiento hacia abajo */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   MEJORAS PARA ICONOS UNICODE
+   ======================================== */
+.nav-icon,
+.icon,
+.status-dot {
+  font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Segoe UI Symbol", sans-serif;
+  font-style: normal;
+  font-variant: normal;
+  text-rendering: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Alineación consistente de iconos */
+.nav-item .nav-icon {
+  flex-shrink: 0;
+}
+
+.menu-toggle .icon {
+  display: block;
+}
+
+/* ========================================
+   MEJORAS PARA DISPOSITIVOS TÁCTILES
+   ======================================== */
+
+/* Estados hover solo para dispositivos que soportan hover */
+@media (hover: hover) {
+  .nav-item:hover {
+    background-color: #f3f4f6;
+  }
+
+  .menu-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .btn-create:hover {
+    background: #fdbf30c2;
+    transform: translateY(-1px);
+  }
+}
+
+/* Tamaños táctiles amigables para móvil */
+@media (max-width: 768px) {
+  .nav-item {
+    min-height: 44px; /* Tamaño mínimo recomendado por iOS */
+  }
+
+  .menu-toggle {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+/* Copia de los estilos de tarjetas de planes de INICIO para PLAN */
+:root {
+    --header-gradient: linear-gradient(135deg, #030B58, #023B4B, #5D0365, #F82929, #FA6C24, #FDC030);
+    --gold-color: #FFD700;
+    --dark-bg-color: #1a1a1a;
+    --light-bg-color: #f9f9f9;
+    --text-dark: #333;
+    --text-light: #fff;
+    --primary-orange: #FA6C24;
+    --secondary-purple: #5D0365;
+    --deep-blue: #030B58;
+    --medium-purple: #023B4B;
+    --bright-red: #F82929;
+}
+
+.lp-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    margin-top: 50px;
+}
+
+.lp-plan-card {
+    background-color: #ffffff;
+    padding: 0;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    color: var(--text-dark);
+    overflow: hidden;
+}
+
+.lp-plan-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+}
+
+.lp-plan-header {
+    padding: 30px 20px 20px;
+    color: var(--text-light);
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.lp-plan-header .lp-plan-type {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    color: inherit;
+}
+
+.lp-plan-header .lp-plan-messages {
+    font-size: 1rem;
+    color: inherit;
+}
+
+.lp-plan-card .lp-plan-price {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--deep-blue);
+    margin-bottom: 25px;
+    padding: 0 20px;
+}
+
+.lp-plan-card ul {
+    list-style: none;
+    padding: 0 20px;
+    margin-bottom: 30px;
+    flex-grow: 1;
+}
+
+.lp-plan-card ul li {
+    margin-bottom: 12px;
+    font-size: 1.05rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    color: #555;
+}
+
+.lp-plan-card ul li::before {
+    content: '\2713';
+    color: var(--primary-orange);
+    font-weight: bold;
+}
+
+/* Restaurar estilos del plan esencial (primer hijo) */
+.lp-plan-card:first-child .lp-plan-price {
+    color: #030B58;
+}
+.lp-plan-card:first-child ul li::before {
+    color: #030B58;
+}
+.lp-plan-card:first-child .lp-btn-select-plan {
+    background: #030B58;
+    color: #fff;
+}
+.lp-plan-card:first-child .lp-btn-select-plan:hover {
+    background-color: #071976;
+}
+
+.lp-plan-card.lp-plan-essential .lp-btn-select-plan {
+    background: #030B58 !important;
+    color: #fff !important;
+}
+.lp-plan-card.lp-plan-essential .lp-btn-select-plan:hover {
+    background-color: #071976 !important;
+}
+
+.lp-plan-header-essential {
+            background: linear-gradient(135deg, #ff4de1, #ff3ade, #ff2eb2, #ff8df4 );
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+.lp-plan-header-essential .lp-plan-type,
+.lp-plan-header-essential .lp-plan-messages {
+    color: var(--text-light);
+}
+
+.lp-plan-header-advanced {
+background: linear-gradient(135deg,#bf47ff, #da2bee, hsl(299, 98%, 63%), #c48cff 90%);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+.lp-plan-header-advanced .lp-plan-type,
+.lp-plan-header-advanced .lp-plan-messages {
+    color: var(--text-light);
+}
+
+.lp-plan-header-unlimited {
+            background: linear-gradient(135deg, #70b3ff, #42c0ff, #6dfff0, #76f6ff);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+.lp-plan-header-unlimited .lp-plan-type,
+.lp-plan-header-unlimited .lp-plan-messages {
+    color: var(--text-dark);
+}
+
+.lp-plan-card:not(.lp-plan-advanced) .lp-plan-price {
+    color: var(--deep-blue);
+}
+.lp-plan-card:not(.lp-plan-advanced) ul li::before {
+    color: var(--primary-orange);
+}
+.lp-plan-card:not(.lp-plan-advanced) .lp-btn-select-plan {
+    background: var(--primary-orange);
+}
+.lp-plan-card:not(.lp-plan-advanced) .lp-btn-select-plan:hover {
+    background-color: #e0601c;
+}
+
+.lp-plan-card.lp-plan-advanced .lp-plan-price {
+    color: var(--bright-red) !important;
+    font-size: 3.4rem !important;
+}
+.lp-plan-advanced ul li {
+    color: #000000;
+}
+.lp-plan-advanced ul li::before {
+    color: var(--bright-red);
+}
+.lp-plan-advanced .lp-btn-select-plan {
+    background: var(--bright-red) !important;
+    color: var(--light-bg-color) !important;
+}
+.lp-plan-advanced .lp-btn-select-plan:hover {
+    background-color: #fd4c43 !important;
+}
+
+/* ========================================
+   ESTILOS ADICIONALES PARA PLAN ACTUAL EN ESCRITORIO
+   ======================================== */
+@media (min-width: 1024px) {
+  .plan-section.plan-actual-flex {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 24px;
+    justify-content: flex-start;
+
+  }
+  .plan-section.plan-actual-flex .lp-plans-grid {
+    display: block;
+    flex: 1 1 0;
+    max-width: 420px;
+    padding: 0;
+    margin-left: 0;
+  }
+  .plan-section.plan-actual-flex .lp-plan-card.lp-plan-advanced {
+    max-width: 420px;
+    margin-left: 0;
+    margin-right: 0;
+  }
+  .plan-section.plan-actual-flex .plan-info {
+    flex: 1 1 0;
+    min-width: 260px;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: #f9f9f9;
+    border-radius: 15px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: 1.5rem 1.2rem;
+    margin: 10rem 0 ;
+    height: auto;
+  }
+}

@@ -1,3 +1,169 @@
-<div>
-  <h2>Inicio de Sesión</h2>
-</div>
+<header class="header">
+  <!-- Título -->
+  <div style="flex: 1; display: flex; align-items: center;">
+    <h1 class="titulo">Bienvenido</h1>
+  </div>
+
+  <!-- Formulario de Login -->
+  <form class="login-form" [formGroup]="loginForm" (ngSubmit)="onLogin()">
+    <input type="email" formControlName="email" placeholder="Correo electrónico" required />
+    <input type="password" formControlName="clave" placeholder="Contraseña" required />
+    <button type="submit" class="boton-redireccion" [disabled]="loadingLogin">
+      {{ loadingLogin ? 'Ingresando...' : 'Ingresar' }}
+    </button>
+
+    <!-- Recuérdame + Olvidé contraseña -->
+    <div class="extra">
+      <label class="remember-label">
+        <input type="checkbox" id="remember" />
+        Recuérdame
+      </label>
+      <a href="#">Olvidé contraseña</a>
+    </div>
+  </form>
+</header>
+
+<!-- Modal de error de login -->
+<app-modal [visible]="!!loginError" (close)="loginError = ''">
+  <div style="font-size:22px;color:#ff4d4f;margin-bottom:12px;">
+    <strong>Error de autenticación</strong>
+  </div>
+  <div style="font-size:16px;color:#d32f2f;">{{ loginError }}</div>
+</app-modal>
+
+<main class="container">
+  <!-- Sección Izquierda -->
+  <section class="izquierda">
+    <p class="mensaje">
+      Agenda sin estrés. Porque el tiempo de tus clientes vale, <br />
+      transforma la forma en que gestionas tus citas y <br />
+      concéntrate en lo que realmente importa: atender a tus <br />
+      clientes mejor.
+    </p>
+    <img src="assets/iconos/logo.svg" alt="Logo SinCola" class="logo" />
+  </section>
+
+  <!-- Sección Derecha - Registro -->
+  <section class="derecha">
+    <h2 class="registrate">Regístrate</h2>
+    <form class="registro-form" [formGroup]="registroForm" (ngSubmit)="onRegister()">
+
+      <!-- 📝 DATOS DEL USUARIO -->
+      <h3 style="color: #666; font-size: 1.1rem; margin: 1rem 0 0.5rem 0; text-align: left;">Datos personales</h3>
+
+      <input type="text" formControlName="nombres" placeholder="Nombre" required />
+      <div *ngIf="registroForm.get('nombres')?.invalid && registroForm.get('nombres')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        El nombre es obligatorio.
+      </div>
+
+      <input type="text" formControlName="apellidos" placeholder="Apellido" required />
+      <div *ngIf="registroForm.get('apellidos')?.invalid && registroForm.get('apellidos')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        El apellido es obligatorio.
+      </div>
+
+      <input type="email" formControlName="email" placeholder="Email" required />
+      <div *ngIf="registroForm.get('email')?.invalid && registroForm.get('email')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        Ingresa un email válido.
+      </div>
+
+      <input type="password" formControlName="clave" placeholder="Contraseña" required />
+      <div *ngIf="registroForm.get('clave')?.invalid && registroForm.get('clave')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        La contraseña debe tener al menos 8 caracteres.
+      </div>
+
+      <input type="password" formControlName="confirmar_clave" placeholder="Confirmar contraseña" required />
+      <div *ngIf="registroForm.hasError('passwordMismatch') && registroForm.get('confirmar_clave')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        Las contraseñas no coinciden.
+      </div>
+
+      <input type="tel" formControlName="celular" placeholder="Celular" required />
+      <div *ngIf="registroForm.get('celular')?.invalid && registroForm.get('celular')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        El celular es obligatorio.
+      </div>
+
+      <input type="tel" formControlName="telefono" placeholder="Teléfono" required />
+      <div *ngIf="registroForm.get('telefono')?.invalid && registroForm.get('telefono')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        El teléfono es obligatorio.
+      </div>
+
+      <input type="text" formControlName="direccion" placeholder="Dirección" required />
+      <div *ngIf="registroForm.get('direccion')?.invalid && registroForm.get('direccion')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        La dirección es obligatoria.
+      </div>
+
+      <input type="text" formControlName="identificacion" placeholder="Identificación" required />
+      <div *ngIf="registroForm.get('identificacion')?.invalid && registroForm.get('identificacion')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        La identificación es obligatoria.
+      </div>
+
+      <select formControlName="tipo_identificacion_id" required>
+        <option value="1">CC - Cédula de Ciudadanía</option>
+        <option value="2">CE - Cédula de Extranjería</option>
+        <option value="3">TI - Tarjeta de Identidad</option>
+        <option value="4">NIT - Número de Identificación Tributaria</option>
+        <option value="5">RUT - Registro Único Tributario</option>
+      </select>
+
+      <!-- 🏢 DATOS DEL NEGOCIO -->
+      <h3 style="color: #666; font-size: 1.1rem; margin: 1.5rem 0 0.5rem 0; text-align: left;">Datos del negocio</h3>
+
+      <input type="text" formControlName="nombre_negocio" placeholder="Nombre del establecimiento" required />
+      <div *ngIf="registroForm.get('nombre_negocio')?.invalid && registroForm.get('nombre_negocio')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        El nombre del establecimiento es obligatorio.
+      </div>
+
+      <input type="text" formControlName="nit_negocio" placeholder="NIT del establecimiento" required />
+      <div *ngIf="registroForm.get('nit_negocio')?.invalid && registroForm.get('nit_negocio')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        El NIT es obligatorio.
+      </div>
+
+     
+
+      <input type="text" formControlName="direccion_negocio" placeholder="Dirección del negocio (opcional)" />
+
+      <input type="tel" formControlName="telefono_negocio" placeholder="Teléfono del negocio (opcional)" />
+
+      <!-- Términos y condiciones -->
+      <label class="terminos-label" style="margin-top: 1rem;">
+        <input type="checkbox" formControlName="terminos_condiciones" required />
+        Acepto términos y condiciones
+      </label>
+      <div *ngIf="registroForm.get('terminos_condiciones')?.invalid && registroForm.get('terminos_condiciones')?.touched"
+           style="color:#d32f2f; font-size:0.9rem; text-align:left;">
+        Debes aceptar los términos y condiciones.
+      </div>
+
+      <button type="submit" class="btn-registrar" [disabled]="loadingRegister">
+        {{ loadingRegister ? 'REGISTRANDO...' : 'REGISTRARME' }}
+      </button>
+
+      <!-- Mensajes de error -->
+      <div *ngIf="registroError"
+           style="color:#d32f2f; font-size:1rem; text-align:center; margin-top:8px; display:flex; align-items:center; justify-content:center; gap:8px; background:#fff0f0; padding:12px; border-radius:8px;">
+        <img src="assets/iconos/advertencia.svg" alt="Advertencia" style="width:22px; height:22px;" />
+        <span>{{registroError}}</span>
+      </div>
+
+      <!-- Mensaje de éxito -->
+      <div *ngIf="registroExito"
+           style="color:green; font-size:1.1rem; text-align:center; margin-top:16px; font-weight:bold; background:#f0fff0; padding:12px; border-radius:8px;">
+        {{registroExito}}
+      </div>
+    </form>
+  </section>
+</main>
+
+<footer>
+  <p class="footer">Tu tiempo es oro. No lo pongas en espera</p>
+</footer>

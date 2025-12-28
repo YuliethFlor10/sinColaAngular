@@ -1,1 +1,1153 @@
-h2 { color: #1976d2; }
+/* ===========================
+   Estilos Base
+   =========================== */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  box-sizing: border-box;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ===========================
+   Header
+   =========================== */
+  /* ================================
+   HEADER FIJO CON GRADIENTE
+   ================================ */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: fixed;           /* header fijo */
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+
+  /* Safe area y altura del header */
+  padding-top: env(safe-area-inset-top, 24px);  /* evita que toque la barra de estado */
+  padding-bottom: 1rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  /* Gradiente del header */
+  background-image: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  background-clip: padding-box; /* asegura que el gradiente no se transparente */
+  color: #ffffff;               /* texto blanco */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Esto asegura que el contenido detrás del header no se vea por la barra de estado */
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: env(safe-area-inset-top, 24px);
+  background-color: #ffffff; /* barra de estado blanca */
+  z-index: -1;
+}
+
+/* ================================
+   CONTENIDO PRINCIPAL
+   ================================ */
+.main-container {
+  margin-top: calc(env(safe-area-inset-top, 24px) + 70px); /* 70px es la altura de tu header */
+  min-height: calc(100vh - (env(safe-area-inset-top, 24px) + 70px));
+}
+
+
+.titulo {
+  margin: 0;
+  font-size: 1.4rem;
+  white-space: nowrap;
+  line-height: 1.2;
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+/* ===========================
+   Login Form
+   =========================== */
+.login-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+  padding: 0 5px;
+}
+
+.login-form input {
+  padding: 0.65rem;
+  border-radius: 5px;
+  border: none;
+  width: 170px;
+  flex-shrink: 1;
+  font-size: 0.85rem;
+  min-width: 120px;
+  box-sizing: border-box;
+}
+
+.boton-redireccion {
+  background-color: black;
+  color: white;
+  padding: 0.65rem 0.75rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  box-sizing: border-box;
+}
+
+.boton-redireccion:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.boton-redireccion:disabled {
+  background: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ===========================
+   Extra (Recuérdame)
+   =========================== */
+.extra {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: px;
+  gap: 15px;
+  font-size: 13px;
+  flex-wrap: wrap;
+  box-sizing: border-box;
+  padding: 0 5px;
+  margin-bottom: 5px;
+}
+
+.remember-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: white;
+  white-space: nowrap;
+}
+
+.remember-label input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  accent-color: #000;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.extra a {
+  color: white;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.extra a:hover {
+  text-decoration: underline;
+}
+
+/* ===========================
+   Container Principal
+   =========================== */
+.container {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 5vw;
+  padding-top: 0.5rem;
+  flex-wrap: wrap;
+  gap: 2rem;
+  min-height: 60vh;
+}
+
+.izquierda,
+.derecha {
+  flex: 1;
+  min-width: 280px;
+  box-sizing: border-box;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* ===========================
+   Sección Izquierda
+   =========================== */
+.mensaje {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.logo {
+  width: 60%;
+  max-width: 250px;
+  height: auto;
+  margin-top: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===========================
+   Sección Derecha - Registro
+   =========================== */
+.registrate {
+  font-size: 2rem;
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 1.5rem;
+  margin-top: 4em;
+}
+
+.registro-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px auto;
+  max-width: 320px;
+  width: 100%;
+}
+
+.registro-form input,
+.registro-form select {
+  padding: 0.75rem;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  width: 100%;
+  font-size: 0.95rem;
+  transition: border-color 0.2s;
+}
+
+.registro-form input:focus,
+.registro-form select:focus {
+  outline: none;
+  border-color: #4ec4ff;
+}
+
+.registro-form input.ng-invalid.ng-touched,
+.registro-form select.ng-invalid.ng-touched {
+  border: 2px solid #ff4d4f !important;
+  background: #fff0f0;
+}
+
+.terminos-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: left;
+  padding: 0.5rem 0;
+}
+
+.terminos-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #4ec4ff;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.btn-registrar {
+  padding: 0.75rem;
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.btn-registrar:hover:not(:disabled) {
+  background-color: #333;
+}
+
+.btn-registrar:disabled {
+  background: #888;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* ===========================
+   Footer
+   =========================== */
+.footer {
+  text-align: center;
+  margin: 30px 0;
+  font-style: italic;
+  font-size: 1rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #fe57b8, #ee66fd, #4ec4ff, #59fde4 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ===========================
+   Modal
+   =========================== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999 !important;
+  pointer-events: all;
+  opacity: 1 !important;
+}
+
+.modal-content {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px 24px;
+  max-width: 400px;
+  width: 90%;
+  margin: 0 auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  text-align: center;
+  position: relative;
+  animation: modalFadeIn 0.4s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  background: none;
+  border: none;
+  font-size: 28px;
+  color: #ff4d4f;
+  cursor: pointer;
+  z-index: 100000;
+  transition: transform 0.2s;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  transform: scale(1.1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* ============================================
+   FIX EXCLUSIVO PARA 820 × 1180 (iPad vertical)
+   ============================================ */
+   @media (min-width: 810px) and (max-width: 1024px) and (orientation: portrait) {
+
+    /* HEADER */
+    .header {
+      height: auto !important;
+      padding: 12px 20px;
+      align-items: flex-start !important;
+    }
+
+    .titulo {
+      font-size: 1.55rem !important;
+      margin-top: 15px;
+    }
+
+    /* LOGIN FORM — se divide en 2 filas */
+    .login-form {
+      width: auto !important;
+      display: flex !important;
+      flex-direction: row !important;
+      flex-wrap: wrap !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+      gap: 0.5rem !important;
+      padding-top: 0 !important;
+    }
+
+    /* Inputs más pequeños */
+    .login-form input {
+      width: 145px !important;
+      height: 26px !important;
+      padding: 0.3rem 0.55rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Botón ajustado */
+    .login-form .boton-redireccion {
+      height: 28px !important;
+      padding: 0 0.8rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* EXTRA debajo, alineado a la derecha */
+    .extra {
+      width: 100%;
+      margin-top: -1rem !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 1rem !important;
+      padding-right: 0.3rem;
+      font-size: 0.78rem !important;
+      padding-top: -5rem;
+    }
+
+    .remember-label input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Ajustes de container */
+    .container {
+      margin-top: 0.5rem;
+      padding: 1rem 4vw;
+    }
+    /* Ajuste fino del EXTRA para 820 × 1180 */
+@media (min-width: 810px) and (max-width: 1024px) and (orientation: portrait) {
+
+  .extra {
+    margin-top: -1rem !important;
+    padding-right: 9.0rem !important;
+    gap: 0.6rem !important;    /* más compacto */
+    font-size: 0.72rem !important;
+    line-height: 1 !important;
+    height: auto !important;
+    overflow: hidden !important;   /* evita scroll */
+  }
+  .extra > *:not(:last-child) {
+    margin-right: 3.5rem;
+  }
+  .remember-label {
+    gap: 0.25rem !important;   /* más pegado */
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 12px !important;
+    height: 12px !important;
+    flex-shrink: 0;
+  }
+
+  .extra a {
+    font-size: 0.72rem !important;
+    white-space: nowrap !important;
+  }
+}
+
+  }
+
+/* ===========================
+   RESPONSIVE - Tablets reales
+   769px → 1024px
+   =========================== */
+   @media (min-width: 769px) and (max-width: 1024px) {
+
+    /* --------------------------------------
+       HEADER
+    -------------------------------------- */
+    .header {
+      padding: 12px 20px;
+      gap: 12px;
+      height: 78px !important;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .titulo {
+      font-size: 1.6rem;
+    }
+
+    /* --------------------------------------
+       LOGIN FORM (inputs + botón)
+       → alineado a la derecha
+    -------------------------------------- */
+    .login-form {
+      width: 100%;
+      display: flex !important;
+      flex-direction: row !important;
+      justify-content: flex-end !important;
+      align-items: center !important;
+      gap: 0.6rem !important;
+      flex-wrap: nowrap;
+    }
+
+    .login-form input {
+      height: 28px !important;
+      width: 150px !important;
+      font-size: 0.85rem !important;
+      padding: 0.3rem 0.6rem !important;
+    }
+
+    .login-form .boton-redireccion {
+      height: 30px !important;
+      padding: 0 1rem !important;
+      font-size: 0.85rem !important;
+      white-space: nowrap;
+    }
+
+    /* --------------------------------------
+       RECUÉRDAME + OLVIDÉ CONTRASEÑA
+       → debajo del login
+       → alineado a la derecha
+    -------------------------------------- */
+    .extra {
+      width: 100%;
+      margin-top: 0.35rem !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+      align-items: center;
+      gap: 1.2rem !important;
+      padding-right: 0.5rem;
+      font-size: 0.8rem;
+    }
+
+    .remember-label {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    /* --------------------------------------
+       CONTENIDO PRINCIPAL
+    -------------------------------------- */
+    .container {
+      padding: 1rem 3vw;
+      gap: 1.5rem;
+    }
+
+    .mensaje {
+      font-size: 1.05rem;
+    }
+
+    .logo {
+      width: 180px;
+    }
+
+    /* Derecha (Registro) subido */
+    .derecha {
+      margin-top: -10px;
+    }
+  }
+
+
+/* ===========================
+   RESPONSIVE - Tablets reales (600px – 1024px)
+   =========================== */
+   @media (min-width: 600px) and (max-width: 1024px) {
+
+    /* Header */
+    .header {
+      padding: 12px 15px;
+      gap: 12px;
+    }
+
+    /* Título */
+    .titulo {
+      font-size: 1.6rem;
+    }
+
+    /* Login form */
+    .login-form {
+      width: auto;
+      gap: 0.5rem;
+      padding-top: 10px;
+      padding-bottom: 0;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    /* Inputs */
+    .login-form input {
+      width: 140px;
+      height: 30px;
+      padding: 0.35rem 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    /* Botón */
+    .login-form .boton-redireccion {
+      height: 34px;
+      padding: 0 1rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    /* Secciones del body */
+    .container {
+      padding: 1rem 3vw;
+      padding-top: 0.5rem;
+      gap: 1rem;
+    }
+
+    .mensaje {
+      font-size: 1rem;
+    }
+
+    .logo {
+      width: 150px;
+    }
+    .extra {
+      display: flex;
+      justify-content: flex-end; /* mover a la derecha */
+      gap: 3.8rem;
+      padding-right: 9em;
+  }
+}
+
+
+
+/* ===========================
+   RESPONSIVE - Móviles (600px)
+   =========================== */
+@media (max-width: 600px) {
+  .header {
+    padding: 0.4rem 0.2rem;
+    padding-top: calc(0.4rem + env(safe-area-inset-top));
+    gap: 0.2rem;
+    flex-wrap: wrap;
+    min-height: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 0;
+  }
+
+  .titulo {
+    display: none !important;
+  }
+
+  .login-form {
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.2rem;
+    box-sizing: border-box;
+  }
+
+  .login-form input {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: none;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.65rem;
+    box-sizing: border-box;
+  }
+
+  .boton-redireccion {
+    flex-shrink: 0;
+    padding: 0.35rem 0.4rem;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    box-sizing: border-box;
+  }
+
+  .extra {
+    width: 100%;
+    flex-direction: row;
+    gap: 0.4rem;
+    font-size: 0.6rem;
+    margin-top: 0.25rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+  }
+
+  .remember-label {
+    font-size: 0.6rem;
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+  }
+
+  .extra a {
+    font-size: 0.6rem;
+  }
+
+  .container {
+    flex-direction: column;
+    padding: 0.25rem 0.5rem;
+    padding-top: 0.1rem;
+    gap: 1rem;
+    min-height: auto;
+  }
+
+  .izquierda,
+  .derecha {
+    width: 100%;
+    padding: 0.5rem;
+    min-width: auto;
+  }
+
+  .derecha {
+    order: 1;
+  }
+
+  .izquierda {
+    order: 2;
+  }
+
+  .mensaje {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    padding: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .logo {
+    width: 100px;
+    max-width: 100px;
+    margin: 0.5rem auto;
+  }
+
+  .footer {
+    font-size: 0.8rem;
+    padding: 0.5rem;
+    margin: 15px 0;
+  }
+
+  .registrate {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .registro-form {
+    max-width: 100%;
+    gap: 6px;
+    margin: 10px auto;
+  }
+
+  .registro-form input,
+  .registro-form select {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .terminos-label {
+    font-size: 0.75rem;
+    padding: 0.25rem 0;
+  }
+
+  .btn-registrar {
+    padding: 0.55rem;
+    font-size: 0.85rem;
+    margin-top: 0.25rem;
+  }
+
+  .modal-content {
+    max-width: 90%;
+    padding: 20px 16px;
+  }
+}
+
+/* ===========================
+   RESPONSIVE - Móviles pequeños (450px)
+   =========================== */
+@media (max-width: 450px) {
+  .header {
+    padding: 0.45rem 0.25rem;
+    padding-top: calc(0.45rem + env(safe-area-inset-top));
+    gap: 0.25rem;
+    margin-top: 0;
+  }
+
+  .titulo {
+    display: none;
+  }
+
+  .login-form input {
+    max-width: 95px;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.65rem;
+  }
+
+  .boton-redireccion {
+    padding: 0.35rem 0.45rem;
+    font-size: 0.65rem;
+  }
+
+  .extra {
+    font-size: 0.6rem;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+  }
+
+  .remember-label {
+    font-size: 0.6rem;
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+  }
+
+  .extra a {
+    font-size: 0.6rem;
+  }
+
+  .container {
+    padding: 0.25rem 0.4rem;
+    padding-top: 0.1rem;
+    gap: 0.75rem;
+  }
+
+  .mensaje {
+    font-size: 0.8rem;
+  }
+
+  .logo {
+    width: 85px;
+  }
+
+  .registrate {
+    font-size: 1.25rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .registro-form {
+    gap: 5px;
+    margin: 8px auto;
+  }
+
+  .registro-form input,
+  .registro-form select {
+    padding: 0.45rem;
+    font-size: 0.75rem;
+  }
+
+  .terminos-label {
+    font-size: 0.7rem;
+  }
+
+  .btn-registrar {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .modal-content {
+    max-width: 95%;
+    padding: 18px 14px;
+  }
+
+  .footer {
+    font-size: 0.75rem;
+    margin: 10px 0;
+  }
+}
+
+/* ===========================
+   RESPONSIVE - Móviles muy pequeños (360px)
+   =========================== */
+@media (max-width: 360px) {
+  .header {
+    padding: 0.4rem 0.2rem;
+    padding-top: calc(0.4rem + env(safe-area-inset-top));
+    margin-top: 0;
+  }
+
+  .titulo {
+    display: none;
+  }
+
+  .login-form input {
+    max-width: 85px;
+    padding: 0.3rem 0.15rem;
+    font-size: 0.6rem;
+  }
+
+  .boton-redireccion {
+    padding: 0.3rem 0.4rem;
+    font-size: 0.6rem;
+  }
+
+  .extra {
+    font-size: 0.55rem;
+    gap: 0.3rem;
+  }
+
+  .remember-label {
+    font-size: 0.55rem;
+  }
+
+  .remember-label input[type="checkbox"] {
+    width: 11px;
+    height: 11px;
+  }
+
+  .extra a {
+    font-size: 0.55rem;
+  }
+
+  .mensaje {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .logo {
+    width: 75px;
+  }
+
+  .registrate {
+    font-size: 1.15rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .registro-form input,
+  .registro-form select {
+    padding: 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  .terminos-label {
+    font-size: 0.65rem;
+  }
+
+  .btn-registrar {
+    padding: 0.45rem;
+    font-size: 0.75rem;
+  }
+
+  .footer {
+    font-size: 0.7rem;
+  }
+}
+
+/* ===========================
+   Landscape Mode (móviles horizontales)
+   =========================== */
+@media (max-height: 500px) and (orientation: landscape) {
+  .header {
+    padding: 0.5rem 1rem;
+    padding-top: calc(0.5rem + env(safe-area-inset-top));
+    margin-top: 0;
+  }
+
+  .titulo {
+    font-size: 1.2rem;
+  }
+
+  .login-form {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .login-form input {
+    width: 160px;
+    padding: 0.45rem;
+    font-size: 0.85rem;
+  }
+
+  .boton-redireccion {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.85rem;
+    width: auto;
+  }
+
+  .extra {
+    flex-direction: row;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .container {
+    padding: 1rem 2vw;
+    flex-direction: row;
+    min-height: auto;
+  }
+
+  .izquierda,
+  .derecha {
+    padding: 0.5rem;
+  }
+
+  .mensaje {
+    font-size: 0.85rem;
+  }
+
+  .logo {
+    width: 80px;
+    margin-top: 0.5rem;
+  }
+
+  .modal-content {
+    max-height: 85vh;
+  }
+}
+
+/* ===========================
+   Accesibilidad
+   =========================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 2px solid #4ec4ff;
+  outline-offset: 2px;
+}
+
+/* ===========================
+   Ajustes adicionales para evitar overflow
+   =========================== */
+html {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+.header,
+.container,
+footer {
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+input,
+select,
+button {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+/* ============================
+   FIX HEADER SOLO PARA WEB
+   ============================ */
+   @media (min-width: 769px) {
+
+    .header {
+      padding-top: 0.3rem !important;     /* elimina el safe-area en web */
+      padding-bottom: 0.3rem !important;
+      height: 78px !important;          /* ALTURA EXACTA del header */
+      line-height: 1 !important;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Quitar la barra blanca en web */
+    .header::before {
+      display: none !important;
+    }
+
+    /* Ajustar contenido principal */
+    .main-container {
+      margin-top: 70px !important;
+    }
+  }
+/* ============================================================
+   FIX SOLO PARA WEB — Ajuste de altura de inputs y botón
+   ============================================================ */
+   @media (min-width: 769px) {
+
+    /* Inputs del login */
+    .login-form input {
+      height: 25px !important;
+      padding: 0.3rem 0.8rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Botón de ingresar */
+    .login-form .boton-redireccion {
+      height: 30px !important;
+      padding: 0 1rem !important;
+      font-size: 0.8rem !important;
+    }
+
+    /* Evitar que el contenedor haga inputs grandes */
+    .login-form {
+      gap: 0.5rem !important;
+      padding-top: 15px !important;
+      padding-bottom: 0 !important;
+    }
+  }
+  /* ============================================================
+   Ajuste de "extra" (Recuérdame + Olvidé contraseña) solo WEB
+   ============================================================ */
+@media (min-width: 769px) {
+  .extra {
+    margin-top: -0.6rem;      /* Más cerca de los inputs */
+    gap: 7.5rem;             /* Más espacio entre "Recuérdame" y "Olvidé contraseña" */
+    justify-content: flex-end; /* Alinea a la izquierda */
+    padding: 0 10.5rem;       /* Espacio lateral */
+  }
+
+  .remember-label {
+    gap: 0.5rem;             /* Separación entre checkbox y texto */
+  }
+
+  .extra a {
+    white-space: nowrap;     /* Evita que el enlace se rompa en dos líneas */
+  }
+}
+/* Ajustar espacio debajo del header fijo */
+main.container {
+  margin-top: calc(env(safe-area-inset-top, 24px) + 95px); /* 70px = altura de tu header */
+  padding: 1rem; /* opcional: espacio interno */
+}
+/* Ajustar sección Derecha (Registro) */
+.derecha {
+  margin-top: -20px; /* elimina márgenes grandes arriba */
+  padding: 2rem; /* espacio interno, opcional */
+}
+
+/* Ajustar título "Regístrate" */
+.registrate {
+  margin-top: 0; /* antes tenía 4em u otro valor grande */
+  margin-bottom: 1rem; /* separa del formulario */
+  font-size: 2rem;
+}

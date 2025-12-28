@@ -1,0 +1,130 @@
+
+<div class="container">
+	<!-- Lado izquierdo con logo e información -->
+	<div class="left-section">
+		<div class="logo-container">
+			<div class="logo-circle">
+				<div class="logo-text">
+					<img src="assets/iconos/logo.svg" alt="Logo" class="icon" />
+				</div>
+			</div>
+		</div>
+		<div class="info-section">
+			<h2>SinCola</h2>
+			<p class="subtitle">Tu tiempo es oro no lo pongas en espera</p>
+			<p class="description">
+				Gestiona tus citas de forma digital y eficiente. Recibe notificaciones en tiempo real y mantén a tus clientes siempre informados.
+			</p>
+			<div class="social-section">
+				<p>Síguenos en nuestras redes sociales</p>
+				<div class="social-icons">
+					<a href="#" class="social-icon whatsapp"><img src="assets/iconos/wspp.svg" alt="Icono whatsapp" class="icon"></a>
+					<a href="#" class="social-icon instagram"><img src="assets/iconos/ig.svg" alt="Icono instagram" class="icon"></a>
+					<a href="#" class="social-icon facebook"><img src="assets/iconos/fc.svg" alt="Icono facebook" class="icon"></a>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Lado derecho con el formulario -->
+	<div class="right-section">
+		<h1>Personalización de Branding</h1>
+
+		<!-- Mensajes de estado -->
+		@if (successMessage) {
+			<div class="success-message">
+				{{ successMessage }}
+			</div>
+		}
+		@if (errorMessage) {
+			<div class="error-message">
+				{{ errorMessage }}
+			</div>
+		}
+
+		<!-- Loading indicator -->
+		@if (isLoading) {
+			<div class="loading-message">
+				Cargando configuración...
+			</div>
+		}
+
+		@if (!isLoading) {
+			<form [formGroup]="brandingForm" (ngSubmit)="guardar()">
+					<div class="form-row">
+						<div class="form-group">
+							<label>Facebook</label>
+							<input formControlName="facebook_url" placeholder="URL de Facebook" />
+						</div>
+						<div class="form-group">
+							<label>Instagram</label>
+							<input formControlName="instagram_url" placeholder="URL de Instagram" />
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label>WhatsApp</label>
+							<input formControlName="whatsapp_numero" placeholder="Número de WhatsApp" />
+						</div>
+						<div class="form-group">
+							<label>Texto seguir redes</label>
+							<input formControlName="texto_seguir_redes" />
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label>Métodos de pago</label>
+							<div style="display: flex; gap: 12px;">
+								<label><input type="checkbox" formControlName="acepta_efectivo" /> Efectivo</label>
+								<label><input type="checkbox" formControlName="acepta_tarjeta" /> Tarjeta</label>
+								<label><input type="checkbox" formControlName="acepta_nequi" /> Nequi</label>
+								<label><input type="checkbox" formControlName="acepta_transferencia" /> Transferencia</label>
+							</div>
+						</div>
+						<div class="form-group">
+							<label>Texto métodos de pago</label>
+							<input formControlName="texto_metodos_pago" />
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label>Nombre comercial</label>
+							<input formControlName="nombre_comercial" />
+						</div>
+						<div class="form-group">
+							<label>Eslogan</label>
+							<input formControlName="eslogan" />
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label>Descripción</label>
+							<textarea formControlName="descripcion_negocio"></textarea>
+						</div>
+						<div class="form-group">
+							<label>Logo de la empresa</label>
+							<input type="file" formControlName="logo_empresa" accept="image/*" (change)="onFileSelected($event)" />
+							<small class="file-help">Formatos aceptados: JPG, PNG, GIF (máximo 5MB)</small>
+						</div>
+					</div>
+					<div class="form-row">
+						<div class="form-group">
+							<label>Color de fondo branding</label>
+							<input type="color" formControlName="color_fondo_branding" />
+						</div>
+						<div class="form-group">
+							<label>Color de letra branding</label>
+							<input type="color" formControlName="color_letra_branding" />
+						</div>
+					</div>
+					<button type="submit" class="continue-btn" [disabled]="isSaving">
+						@if (isSaving) {
+							<span>Guardando...</span>
+						} @else {
+							<span>Guardar</span>
+						}
+					</button>
+			</form>
+		}
+	</div>
+</div>

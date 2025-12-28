@@ -1,4 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
+
+/* Font Awesome */
+@import '@fortawesome/fontawesome-free/css/all.css';
+
 /* ========================================
    RESET Y ESTILOS BASE
    ======================================== */
@@ -8,11 +12,24 @@
     box-sizing: border-box;
   }
 
+  html {
+    /* Respetar safe area en dispositivos móviles */
+    padding-top: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    /* Asegurar que el scroll respete la barra de estado */
+    scroll-padding-top: env(safe-area-inset-top);
+  }
+
   body {
     font-family: -apple-system, BlinkMacMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background-color: #f5f5f5;
     color: #333;
     line-height: 1.6;
+    /* Asegurar que el scroll respete el safe area y no permita que el contenido pase por la barra de estado */
+    scroll-padding-top: env(safe-area-inset-top);
+    overflow-x: hidden;
   }
 
   /* ========================================
@@ -136,13 +153,14 @@
   }
 
   .main-container {
-    margin-top: 80px;
+    margin-top: calc(80px + env(safe-area-inset-top));
   }
 
   .sidebar {
     transform: translateX(-100%);
-    top: 80px;
-    height: calc(100vh - 80px);
+    /* El sidebar comienza debajo del header que cubre la barra de estado */
+    top: calc(80px + env(safe-area-inset-top));
+    height: calc(100vh - 80px - env(safe-area-inset-top));
   }
 
   .sidebar.open {
@@ -292,12 +310,13 @@
   }
 
   .main-container {
-    margin-top: 70px;
+    margin-top: calc(70px + env(safe-area-inset-top));
   }
 
   .sidebar {
-    top: 70px;
-    height: calc(100vh - 70px);
+    /* El sidebar comienza debajo del header que cubre la barra de estado */
+    top: calc(70px + env(safe-area-inset-top));
+    height: calc(100vh - 70px - env(safe-area-inset-top));
   }
 
   .form-row {
